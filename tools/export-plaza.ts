@@ -77,7 +77,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
   parts[layer].push(g)
   if (fascia) { loving = true; add('architecture', new BoxGeometry(fascia[3] + .04, .07, fascia[4] + .04), '#f7f5ee', fascia[0], fascia[1] - .02, fascia[2]); loving = false }
 }
-const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.0, clear: .8 }
+const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.6, clear: .8 } // open right through to the north end: pillars hold it up
 let cutting = false
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
   // Megabucks' drive-thru: a lane cut clean through the strip's north end, roofed over above car height.
@@ -239,7 +239,7 @@ wallRun(-89.9, 395.6, -85.7, 395.6) // straight across the station's south end
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-124.5, 382.6], [-124.5, 391.5], [-95.0, 391.5], [-93.95, 395.3]]
+  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-124.5, 382.6], [-124.5, 391.5], [-100.6, 391.5], [-100.6, 396.4], [-94.0, 395.6]] // round the 280 Floridian lot, so it's drivable
   for (let i = 0; i + 1 < W.length; i++) wallRun(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1])
 }
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.

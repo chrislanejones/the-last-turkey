@@ -223,9 +223,10 @@ export function dressStation(scene, U, apronY) {
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.22, 16), M('#d9d5c8')); bed.position.set(bx, lot + 0.11, bz); g.add(bed)
       const mulch = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.24, 16), M('#6b4f3a')); mulch.position.set(bx, lot + 0.12, bz); g.add(mulch)
       for (const [dx, dz, r] of [[0.4, 0.2, 0.5], [-0.4, 0.3, 0.45], [0, -0.45, 0.5]]) { const sh = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), M('#3f6b3a', { roughness: 1 })); sh.scale.y = 0.7; sh.position.set(bx + dx, lot + 0.45, bz + dz); sh.castShadow = true; g.add(sh) }
-      cyl(steel, bx, lot + 1.3, bz, 0.035, 2.4, 6)
+      const post = new THREE.Group(); post.position.set(bx, lot, bz); g.add(post); g.userData.pedSign = post
+      { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.4, 6), steel); m.position.y = 1.3; m.castShadow = true; post.add(m) }
       const ped = label('', { w: 128, h: 128, bg: 'rgba(0,0,0,0)', draw: (c) => { c.clearRect(0, 0, 128, 128); c.fillStyle = '#f1c62f'; c.beginPath(); c.moveTo(64, 4); c.lineTo(124, 64); c.lineTo(64, 124); c.lineTo(4, 64); c.fill(); c.strokeStyle = '#111'; c.lineWidth = 4; c.stroke(); c.fillStyle = '#111'; c.beginPath(); c.arc(66, 36, 8, 0, 7); c.fill(); c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(64, 48); c.lineTo(60, 76); c.lineTo(46, 100); c.moveTo(60, 76); c.lineTo(78, 98); c.moveTo(62, 54); c.lineTo(44, 68); c.moveTo(63, 54); c.lineTo(82, 66); c.stroke() } })
-      for (const ry of [t, t + Math.PI]) plane(ped, bx, lot + 2.2, bz, 0.85, 0.85, ry, { transparent: true, alphaTest: 0.5, side: THREE.DoubleSide })
+      for (const ry of [t, t + Math.PI]) { const m = plane(ped, bx, lot + 2.2, bz, 0.85, 0.85, ry, { transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }); g.remove(m); m.position.set(0, 2.2, 0); post.add(m) }
     }
   }
   
@@ -565,29 +566,17 @@ export function dressStation(scene, U, apronY) {
       plane(menu, x, lot + 1.9, z, 1.0, 1.5, t + Math.PI / 2 + 0.6) }
   }
 
-  // Megabucks in brick: a brick wainscot and brick pillars around the shop and both mouths of the drive-thru.
+  // The drive-thru's open north side: square stucco pillars on stone bases carry the roof over the lane.
   {
     const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t)
     const at = (lx, lz) => [(-93.25 + lx * c + lz * sn) * U, (364.09 - lx * sn + lz * c) * U]
-    const lot = 0.045 * U
-    const brickTex = (rep) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const x = cv.getContext('2d')
-      x.fillStyle = '#d9d0c0'; x.fillRect(0, 0, 256, 128)
-      const cols = ['#8e3b24', '#9c4429', '#7f3420', '#a44d2f', '#8a3a26']
-      for (let r = 0; r < 8; r++) for (let k = -1; k < 5; k++) { x.fillStyle = cols[(r * 7 + k * 3 + 10) % 5]; x.fillRect(k * 64 + (r % 2) * 32 + 2, r * 16 + 2, 60, 12) }
-      const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rep[0], rep[1]); return tx }
-    const brickBox = (lx, lz, w, h, d, y0 = 0) => { const [x, z] = at(lx, lz)
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w * U, h, d * U), new THREE.MeshStandardMaterial({ map: brickTex([Math.max(1, w * U / 1.6), Math.max(1, h / 0.8)]), roughness: 0.9 }))
-      m.position.set(x, lot + y0 + h / 2, z); m.rotation.y = t; m.castShadow = true; m.receiveShadow = true; g.add(m); return m }
-    const cap = M('#e9e2d2')
-    // Pillars at both sides of each lane mouth, and at the shop's corners.
-    for (const lz of [-1.65, 1.65]) for (const lx of [5.92, 7.08]) { brickBox(lx, lz + Math.sign(lz) * 0.02, 0.2, 3.4, 0.2); const [x, z] = at(lx, lz + Math.sign(lz) * 0.02); const k = new THREE.Mesh(new THREE.BoxGeometry(0.2 * U + 0.15, 0.18, 0.2 * U + 0.15), cap); k.position.set(x, lot + 3.49, z); k.rotation.y = t; g.add(k) }
-    brickBox(4.95, 1.67, 0.2, 3.4, 0.2); brickBox(7.38, 1.67, 0.15, 3.4, 0.2)
-    // Wainscot under the windows on the front, and on the north end and back.
-    brickBox(5.42, 1.66, 0.75, 0.95, 0.04)
-    { const [x, z] = at(7.46, 0); const m = new THREE.Mesh(new THREE.BoxGeometry(0.04 * U, 1.1, 3.3 * U), new THREE.MeshStandardMaterial({ map: brickTex([7, 1.4]), roughness: 0.9 })); m.position.set(x, lot + 0.55, z); m.rotation.y = t; g.add(m) }
-    brickBox(6.5, -1.67, 2.0, 0.95, 0.04)
-    // A soldier course of brick along the top of the lane openings.
-    for (const lz of [-1.66, 1.66]) brickBox(6.5, lz, 1.0, 0.35, 0.05, 0.8 * U - 0.35)
+    const lot = 0.045 * U, H = 0.8 * U
+    for (const lz of [-1.45, 0, 1.45]) {
+      const [x, z] = at(7.25, lz)
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.72, H, 0.72), M('#dcbf86', { roughness: 0.95 })); p.position.set(x, lot + H / 2, z); p.rotation.y = t; p.castShadow = true; p.receiveShadow = true; g.add(p)
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.9, 0.86), M('#b3a38b')); b.position.set(x, lot + 0.45, z); b.rotation.y = t; g.add(b)
+      const k = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.14, 0.86), M('#cfb07a')); k.position.set(x, lot + H - 0.07, z); k.rotation.y = t; g.add(k)
+    }
   }
   return g
 }

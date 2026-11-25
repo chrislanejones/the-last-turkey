@@ -444,7 +444,7 @@ const boxes = [
   { c: gAt(0, 0.45), a: GA.clone(), hx: 6.05 * U, hz: 5.25 * U },
   wingBox(-81.65, 339.8, 0, 11.1, 3.4),
   // The west strip in two pieces either side of Megabucks' drive-thru lane (local x 6.0 to 7.0).
-  ...(() => { const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t), mk = (a, b) => { const m = (a + b) / 2; return wingBox(-93.25 + m * c, 364.09 - m * sn, t, b - a, 3.3) }; return [mk(-7.45, 6.0), mk(7.0, 7.45)] })(),
+  ...(() => { const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t), mk = (a, b) => { const m = (a + b) / 2; return wingBox(-93.25 + m * c, 364.09 - m * sn, t, b - a, 3.3) }; return [mk(-7.45, 6.0), ...[-1.45, 0, 1.45].map((lz) => ({ c: u2(-93.25 + 7.25 * c + lz * sn, 364.09 - 7.25 * sn + lz * c), a: new V2(c, -sn), hx: 0.45, hz: 0.45 }))] })(), // and the pillars on its open north side
   { c: u2(-87.65, 372.6).add(new V2(0, 0.9)), a: new V2(1, 0), hx: 2.35 * U, hz: 1.9 * U + 0.9 }, // with its south walk
 ]
 // The Square K: the store (with its front walk), two pump islands, the canopy posts, the price pylon.
@@ -454,7 +454,7 @@ for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([(-88.6 + e * 1.1
 boxes.push({ c: new V2(-88.5 * U + 0.5, 380.0 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 2.3 * U + 0.6 })
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.0 - 2.3) * U - 3.25 + v * 2.6, 0.45])
 circles.push([-88.5 * U, (380.0 - 2.3) * U - 3.25, 0.6])
-circles.push([PED_BED[0] * U, PED_BED[1] * U, 1.35]) // the planted bed with the crossing sign
+// (the crossing-sign planter is a curb you hop, and its sign gets knocked down: see rideBeds and the crates)
 boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 0.2), a: new V2(1, 0), hx: 1.5, hz: 6.6 }) // enclosure and hedges on the north strip's east end
 circles.push(dressing.userData.cornerBed) // and the one off the end of the west strip
 // The drivable wedge is two convex areas that overlap: the plaza lot and the station pad.
@@ -550,6 +550,8 @@ circles.push(...tableSpots)
 boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(1, 0), hx: (POND.x1 - POND.x0) / 2 * U - 1, hz: (POND.z1 - POND.z0) / 2 * U - 1 }) // no swimming
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
 regions.push(mkRegion([[-124.5, 382.6], [-95.6, 382.6], [-95.6, 391.5], [-124.5, 391.5]].map(([x, z]) => [x * U, z * U])))
+// The 280 Floridian lot, south of the street, open up to the barrier at the road block.
+regions.push(mkRegion([[-100.75, 391.0], [-92.0, 391.0], [-92.0, 396.25], [-100.75, 396.25]].map(([x, z]) => [x * U, z * U])))
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
 for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45 })
 circles.push([-74.9 * U, 349.5 * U, 1.3]) // the plaza's pylon sign by its entrance
@@ -676,14 +678,14 @@ function collideCars(A, B) {
 // --- game state -------------------------------------------------------------------
 const P = new Vehicle()
 const R = new Vehicle({ half: SUV.half, r: 1.0, hl: 2.5, hw: 0.97, accel: 6.2, vmax: 13.5, mass: 1.15, wheelbase: 2.8 })
-const game = { state: 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, target: DOOR.clone(), bubbleT: 0, rams: 0, pathI: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 2, sodaReady: false, b2T: 0 }
+const game = { state: 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, target: DOOR.clone(), bubbleT: 0, rams: 0, pathI: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, sodaReady: false, b2T: 0 }
 const OUCH = ['HEY!', 'MY BUMPER!', "IT'S OUR TURKEY!", 'WATCH IT!', 'NOT THE FENDER!', 'WE CALLED DIBS!']
 function reset(toCutscene) {
   $('mission').style.display = ''; $('sodaBtn').style.display = ''
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
   resetCrates()
-  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 2, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
+  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
   for (const c of [...sodas, ...lattes]) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
   for (const c of cans) { c.live = false; c.mesh.visible = false }
@@ -957,6 +959,10 @@ function spillForks(c) {
     f.vel.set(c.vel.x * 0.7 + Math.cos(a) * sp, 2.5 + Math.random() * 2, c.vel.z * 0.7 + Math.sin(a) * sp); f.spin.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 10); f.awake = true
   }
 }
+// The pedestrian-crossing sign in its planter: knock it flat, and it scrapes the Galaxie on the way down.
+{ const post = dressing.userData.pedSign
+  if (post) { const wp = post.getWorldPosition(new V3()); post.parent.remove(post); scene.add(post); for (const ch of post.children) ch.position.y -= 1.25 // pivot at its middle
+    crates.push({ m: post, half: new V3(0.06, 1.25, 0.06), r: 0.25, home: { pos: new V3(wp.x, GY + 1.25, wp.z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, sign: true, pivotLow: true }) } }
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -997,6 +1003,7 @@ function pushCrates(car) {
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
+    if (c.sign && !c.spilled && car === P) { c.spilled = true; game.armor = Math.max(1, game.armor - 3); hurt(1); flash('SIGN DOWN!'); audio.clang(0.5); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
     c.awake = true
     car.vel.multiplyScalar(0.985)
   }
@@ -1021,12 +1028,12 @@ function updateCrates(dt) {
     // The ground: bounce a little, slide to a stop, and settle back flat on a face.
     // Round things (barrels, cans) can end up on their sides: rest on whichever way they fell.
     const up = _v.set(0, 1, 0).applyQuaternion(c.m.quaternion), uy = Math.abs(up.y)
-    const rolls = c.barrel || c.can || c.fork, lying = rolls && (uy < 0.6 || c.fork)
+    const rolls = c.barrel || c.can || c.fork || c.sign, lying = rolls && (uy < 0.6 || c.fork || c.sign)
     const floor = (c.gy ?? GY) + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
       const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
-      if (lying || c.fork) { const hz = new V3(up.x || 0.01, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
+      if (lying || c.fork || c.sign) { const hz = new V3(up.x || 0.01, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
       else { _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')) }
       c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
       if (c.vel.lengthSq() < 0.01 && c.spin.lengthSq() < 0.02) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.m.quaternion.copy(_q); c.awake = false }
@@ -1092,8 +1099,8 @@ function freeDrive() {
 const latteMat = [new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 }), new THREE.MeshStandardMaterial({ color: '#e7742a', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 })]
 const lattes = Array.from({ length: 2 }, () => { const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.075, 0.24, 12), latteMat); const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.096, 0.086, 0.09, 12), new THREE.MeshStandardMaterial({ color: '#8a5a2b' })); mesh.add(sleeve); mesh.visible = false; mesh.castShadow = true; scene.add(mesh); return { mesh, vel: new V3(), live: false, latte: true } })
 function throwSoda() {
-  if (game.state !== 'chase' || !game.sodaReady || (game.soda <= 0 && game.lattes <= 0)) return
-  const useLatte = game.soda <= 0
+  if (game.state !== 'chase' || ((!game.sodaReady || game.soda <= 0) && game.lattes <= 0)) return
+  const useLatte = !game.sodaReady || game.soda <= 0
   const c = (useLatte ? lattes : sodas).find((c) => !c.live); if (!c) return
   const dist = R.pos.distanceTo(P.pos); if (dist > 32) { flash('TOO FAR!'); return }
   const T = THREE.MathUtils.clamp(dist / 22, 0.5, 1.2)
@@ -1140,6 +1147,11 @@ function update(dt) {
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
   rideBeds(dt, live)
+  // Through the drive-thru: the barista hands over two pumpkin spice lattes to throw.
+  { const t = Math.atan2(0.968, -0.249), wx = (-93.25 + 6.5 * Math.cos(t) - 0.3 * Math.sin(t)) * U, wz = (364.09 - 6.5 * Math.sin(t) - 0.3 * Math.cos(t)) * U
+    if (!game.gotLattes && (s === 'chase' || s === 'claim') && Math.hypot(P.pos.x - wx, P.pos.y - wz) < 3.2) {
+      game.gotLattes = true; game.lattes = 2; flash('+2 PUMPKIN SPICE LATTES'); game.psT = 30
+      $('bubble2').textContent = TOUCH ? 'TWO PUMPKIN SPICE LATTES! TAP SODA TO THROW THEM AT HIM.' : 'TWO PUMPKIN SPICE LATTES! PRESS F TO THROW THEM AT HIM.'; $('bubble2').classList.add('show'); game.b2T = 3.5 } }
   // Past Megabucks, Becky's priorities change.
   { const t = Math.atan2(0.968, -0.249), mx = (-93.25 + 6.5 * Math.cos(t)) * U, mz = (364.09 - 6.5 * Math.sin(t)) * U
     if (Math.hypot(P.pos.x - mx, P.pos.y - mz) < 14 && (game.psT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'FORGET THE TURKEY, I’D RATHER HAVE PUMPKIN SPICE. CAN WE STOP? LET’S GET THE PUMPKIN SPICE.'; $('bubble2').classList.add('show'); game.b2T = 4.2; game.psT = 30 }
@@ -1187,6 +1199,7 @@ function update(dt) {
 // Mulch beds in the lot: the Galaxie hops up onto the concrete curb, rides over, and takes a scrape.
 const BEDS = (DATA.beds || []).map(([x, z, w, d, t, top]) => ({ x, z, hw: w / 2 + 0.05, hd: d / 2 + 0.05, c: Math.cos(t), s: Math.sin(t), h: top - GY }))
 const onBed = (x, z) => { for (const b of BEDS) { const dx = x - b.x, dz = z - b.z, lx = dx * b.c - dz * b.s, lz = dx * b.s + dz * b.c; if (Math.abs(lx) < b.hw && Math.abs(lz) < b.hd) return b.h } return 0 }
+BEDS.push({ x: PED_BED[0] * U, z: PED_BED[1] * U, hw: 1.3, hd: 1.3, c: 1, s: 0, h: 0.24 }) // the round crossing-sign planter
 Object.assign(P, { curbLift: 0, curbPitch: 0, curbRoll: 0, curbWheels: 0 })
 function rideBeds(dt, live) {
   const fx = Math.sin(P.heading), fz = Math.cos(P.heading), rx = fz, rz = -fx
@@ -1433,7 +1446,7 @@ function hud() {
   $('rivalFill').style.width = `${game.health}%`
   $('armorFill').style.width = `${game.armor}%`
   $('peopleFill').style.width = `${game.people}%`
-  $('sodas').innerHTML = game.sodaReady ? '●'.repeat(game.soda) + '<span style="color:#e7742a">' + '●'.repeat(game.lattes) + '</span>' : ''
+  $('sodas').innerHTML = (game.sodaReady ? '●'.repeat(game.soda) : '') + '<span style="color:#e7742a">' + '●'.repeat(game.lattes) + '</span>'
   $('cans').textContent = '●'.repeat(game.cans)
   $('grabFill').style.width = `${game.grab * 100}%`
   // Only while he is actually at the door grabbing it.
