@@ -109,7 +109,7 @@ scene.add(world.scene)
 const dressing = dressStation(scene, U, APRON.y)
 
 const BB_POLES = [], BB_VIEW = {}
-const SHERIFF = { x: -80.5, z: 378.4 }
+const SHERIFF = { x: -77.6, z: 377.2 }
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
 {
   const bb = new THREE.Group(); bb.position.set(-92.42 * U, 0, 377.5 * U); bb.rotation.y = Math.atan2(-0.962, 0.273) + Math.PI / 2; scene.add(bb)
@@ -137,7 +137,7 @@ const SHERIFF = { x: -80.5, z: 378.4 }
 // sign, with the face hanging out over the road for northbound drivers.
 {
   const bb = new THREE.Group(); bb.position.set(SHERIFF.x * U, 0, SHERIFF.z * U); scene.add(bb)
-  const W = 11, H = W * 445 / 832, base = 5.8, off = -5.2
+  const W = 11, H = W * 445 / 832, base = 8.6, off = -5.2
   const tex = new THREE.TextureLoader().load(SHERIFF_IMG); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4
   const dark = new THREE.MeshStandardMaterial({ color: '#2a2d31', roughness: 0.65, metalness: 0.35 })
   const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 }))
@@ -298,8 +298,8 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
       const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
-      // Pushed back east around the sheriff's billboard so its pole and face stand clear.
-      if (side > 0 && Math.abs(tz - SHERIFF.z) < 7) px += (3.6 - Math.abs(tz - SHERIFF.z) * 0.4) * U
+      // Cleared around the sheriff's billboard so its pole and face stand clear of the bushes.
+      if (side > 0 && Math.abs(tz - SHERIFF.z) < 1.9 && px / U > SHERIFF.x - 3.4 && px / U < SHERIFF.x + 1.2) continue
       if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.3 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.3 })) continue // not through a neighbor's roof
       const m = new THREE.Mesh(geo, leaf[(k + row) % 3]); m.scale.set(sc, sc * (0.8 + r(3) * 0.5), sc)
       m.position.set(px, sc * 0.75 + row * 1.2, pz); m.castShadow = row === 0; scene.add(m)
