@@ -126,8 +126,8 @@ export function dressStation(scene, U, apronY) {
   // Bank of the Gulf of America, between the gas station and the plaza: a white stucco box with a
   // flat roof and a drive-thru ATM canopy on its north side.
   {
-    const bx = -88.5 * U, bz = 380.5 * U, W = 2.6 * U, D = 3.6 * U, H = 3.7 // shortened at the north end: room for the OOPS Store's boxes
-    const stucco = M('#f1eee6'), trim = M('#dcd6c6'), glass = M('#31424a', { roughness: 0.15, metalness: 0.5 }), navy = '#14306b'
+    const bx = -88.5 * U, bz = 380.1 * U, W = 2.6 * U, D = 3.6 * U, H = 3.7 // shortened at the north end: room for the OOPS Store's boxes
+    const stucco = M('#cdbb98'), trim = M('#b9a783'), glass = M('#31424a', { roughness: 0.15, metalness: 0.5 }), navy = '#14306b'
     const lot = 0.045 * U
     box(stucco, bx, lot + H / 2, bz, W, H, D)
     box(trim, bx, lot + H + 0.2, bz, W + 0.3, 0.4, D + 0.3)
@@ -145,7 +145,7 @@ export function dressStation(scene, U, apronY) {
     } })
     const east = bx + W / 2, south = bz + D / 2
     plane(sign(), east + 0.03, lot + 3.0, bz, 9.6, 1.2, Math.PI / 2)
-    plane(sign(), bx, lot + 3.0, south + 0.03, 9.6, 1.2, 0)
+    plane(sign(), bx, lot + 3.0, bz - D / 2 - 0.03, 9.6, 1.2, Math.PI) // on the north wall, facing the OOPS Store; the south side has the drive-thru
     // East front: glass entry, windows, a red ATM surround, hedges and bollards.
     box(glass, east + 0.02, lot + 1.25, bz + 2.2, 0.06, 2.3, 2.6, false)
     box(trim, east + 0.25, lot + 2.55, bz + 2.2, 0.6, 0.18, 3.2)
@@ -157,13 +157,14 @@ export function dressStation(scene, U, apronY) {
     for (const [dz, len] of [[-4.2, 5.6], [6.75, 1.0]]) box(hedge, east + 0.7, lot + 0.4, bz + dz, 0.9, 0.8, len)
     box(hedge, bx, lot + 0.4, south + 0.7, W - 1.5, 0.8, 0.9)
     for (const dz of [0.6, 1.5, 2.9, 3.8]) cyl(yellow, east + 1.5, lot + 0.45, bz + dz, 0.09, 0.9)
-    // Drive-thru canopy to the north.
-    const cz2 = bz - D / 2 - 3.25
-    box(stucco, bx, lot + 3.3, cz2, W, 0.45, 6.5)
-    box(trim, bx, lot + 3.56, cz2, W + 0.2, 0.1, 6.7, false)
-    for (const ex of [-1, 1]) for (const ez of [-1, 1]) box(stucco, bx + ex * 4.7, lot + 1.55, cz2 + ez * 2.6, 0.5, 3.1, 0.5)
+    // Drive-thru canopy on the south side, towards the Square K and Bumpkin.
+    const cz2 = bz + D / 2 + 2.3
+    box(stucco, bx, lot + 3.3, cz2, W, 0.45, 4.6)
+    box(trim, bx, lot + 3.56, cz2, W + 0.2, 0.1, 4.8, false)
+    for (const ex of [-1, 1]) box(stucco, bx + ex * 4.7, lot + 1.55, cz2 + 1.9, 0.5, 3.1, 0.5)
     plane(label('DRIVE-THRU Mo-Fee-ATM', { w: 512, h: 80, bg: '#f1eee6', fg: navy, font: 'bold 40px Oswald, Impact, sans-serif' }), east + 0.03, lot + 3.3, cz2, 4.6, 0.42, Math.PI / 2)
-    box(M('#c8302b'), bx, lot + 1.0, cz2, 0.7, 1.9, 0.7); box(M('#d9d5c8'), bx, lot + 0.1, cz2, 1.4, 0.2, 5.6, false)
+    box(M('#c8302b'), bx, lot + 1.0, cz2 - 1.2, 0.7, 1.9, 0.7); box(M('#d9d5c8'), bx, lot + 0.1, cz2 - 1.2, 5.6, 0.2, 1.4, false)
+    for (const ex of [-1, 1]) { box(M('#d9b21f'), bx + ex * 3.1, lot + 0.11, cz2 - 1.2, 0.7, 0.22, 1.42, false); box(M('#d9b21f'), bx + ex * 4.7, lot + 0.11, cz2 + 1.9, 1.5, 0.22, 0.9, false); cyl(M('#6b6f72'), bx + ex * 2.3, lot + 0.65, cz2 - 1.2, 0.07, 1.1) }
   }
   
   // Megabucks Coffee: the end unit of the west strip, next to publick. The strip's frame is

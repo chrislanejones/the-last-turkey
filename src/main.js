@@ -33,7 +33,7 @@ const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street to A1A S, south past the wall to the station's tip, north up the
 // west side of the station and round the back of the Square K, through the gap by the bank, up the lot.
-const PATH = [u2(-113.5, 389.3), u2(-105, 389.2), u2(-97.5, 389.6), u2(-94.4, 390.4), u2(-93.6, 392.8), u2(-91.3, 394.0), u2(-90.7, 391.2), u2(-91.2, 386.5), u2(-91.0, 384.3), u2(-90.4, 383.3), u2(-86.4, 383.3), u2(-85.3, 380.6), u2(-84.8, 377.4), u2(-84.7, 375), u2(-84.75, 370.5), u2(-84.8, 364)]
+const PATH = [u2(-113.5, 389.3), u2(-105, 389.2), u2(-97.5, 389.6), u2(-94.4, 390.4), u2(-93.6, 392.8), u2(-91.3, 394.0), u2(-90.7, 391.2), u2(-91.2, 386.5), u2(-91.0, 384.3), u2(-90.4, 383.7), u2(-86.4, 383.7), u2(-85.3, 380.6), u2(-84.8, 377.4), u2(-84.7, 375), u2(-84.75, 370.5), u2(-84.8, 364)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -551,9 +551,9 @@ const boxes = [
 boxes.push(wingBox(-88.76, 385.71, 0.035, 3.46, 2.6), wingBox(-88.6, 389.65, 0, 2.6, 0.2), wingBox(-88.6, 390.55, 0, 2.6, 0.2)) // (the price pylon is a knock-over prop now)
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([(-88.6 + e * 1.15) * U, (390.1 + v * 0.45) * U, 0.3])
 // Bank of the Gulf of America (with its front hedge) and the four posts of its drive-thru canopy.
-boxes.push({ c: new V2(-88.5 * U + 0.5, 380.5 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 1.8 * U + 0.6 })
-for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.5 - 1.8) * U - 3.25 + v * 2.6, 0.45])
-circles.push([-88.5 * U, (380.5 - 1.8) * U - 3.25, 0.6])
+boxes.push({ c: new V2(-88.5 * U + 0.5, 380.1 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 1.8 * U + 0.6 })
+for (const e of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.1 + 1.8) * U + 4.2, 0.45])
+boxes.push({ c: new V2(-88.5 * U, (380.1 + 1.8) * U + 1.1), a: new V2(1, 0), hx: 2.8, hz: 0.7, low: true }) // the ATM island under the canopy
 // (the crossing-sign planter is a curb you hop, and its sign gets knocked down: see rideBeds and the crates)
 boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 2.5), a: new V2(1, 0), hx: 1.5, hz: 2.95 }) // the utility enclosure on the north strip's east end
 // (the stop-sign planter off the west strip's end is a curb you hop now, not a wall)
