@@ -110,6 +110,7 @@ scene.add(world.scene)
 const dressing = dressStation(scene, U, APRON.y)
 
 const BB_POLES = [], BB_VIEW = {}
+let catTail = null, catHead = null, CAT_X = 1.2, CAT_Y = 1.0, CAT_Z = 0.05
 const SHERIFF = { x: -77.6, z: 377.2 }
 const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, hanging out over A1A Beach Blvd
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
@@ -173,6 +174,27 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.1), dark); arm.position.set(x, base + H + 0.35, 0.5); bb.add(arm)
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.05); bb.add(lamp) }
   BB_POLES.push([FORT.x * U, FORT.z * U])
+}
+
+// A cat in the front window of our house on Floridian, watching the street.
+{
+  const h = HOME.me, cat = new THREE.Group()
+  const fur = new THREE.MeshStandardMaterial({ color: '#d98a3c', roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: '#8a4a1c', roughness: 0.9 }), eye = new THREE.MeshStandardMaterial({ color: '#c8e04a', emissive: '#556600', emissiveIntensity: 0.4 }), pink = new THREE.MeshStandardMaterial({ color: '#e89aa0' })
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), fur); body.scale.set(1, 1.15, 0.85); body.position.y = 0.2; cat.add(body)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), fur); head.position.set(0, 0.5, 0.05); cat.add(head)
+  for (const e of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.14, 4), fur); ear.position.set(e * 0.08, 0.66, 0.03); ear.rotation.z = -e * 0.3; cat.add(ear)
+    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 4), pink); inner.position.set(e * 0.08, 0.65, 0.06); inner.rotation.z = -e * 0.3; cat.add(inner)
+    for (const k of [0, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.004, 0.004), new THREE.MeshBasicMaterial({ color: '#ffffff' })); w.position.set(e * 0.1, 0.47 + k * 0.02, 0.15); w.rotation.z = e * (k ? -0.15 : 0.15); cat.add(w) }
+    const ey = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), eye); ey.position.set(e * 0.05, 0.52, 0.165); cat.add(ey)
+    const paw = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), fur); paw.position.set(e * 0.08, 0.04, 0.14); cat.add(paw)
+
+  }
+  for (const dx of [-0.035, 0, 0.035]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.06, 0.02), dark); st.position.set(dx, 0.6, 0.1); st.rotation.x = -0.6; cat.add(st) } // tabby stripes
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), pink); nose.position.set(0, 0.48, 0.18); cat.add(nose)
+  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 12, Math.PI * 1.1), fur); tail.position.set(0.12, 0.08, -0.05); tail.rotation.set(Math.PI / 2, 0, 0.6); cat.add(tail)
+  cat.position.set(-471.04, 1.08, 1581.33); cat.rotation.y = 0.017; scene.add(cat); window.__cat = cat // on the sill of the front window, watching the street
+  catTail = tail; catHead = head
 }
 
 // --- the big sign, the turkey, the marker -----------------------------------------------
@@ -437,6 +459,8 @@ const chrisHead = chris.getObjectByName('Head')
 
 // The cart driver from pga-golf-game, riding shotgun.
 const woman = womanGltf.scene; castAll(woman)
+// Becky's a blonde.
+woman.traverse((m) => { if (!m.isMesh) return; for (const mat of [].concat(m.material)) { if (mat.name === 'hair') mat.color.set('#e8c870'); if (mat.name === 'brows') mat.color.set('#a07a3a') } })
 const womanMixer = new THREE.AnimationMixer(woman)
 const sitting = womanGltf.animations.find((a) => a.name === 'Sitting')
 womanMixer.clipAction(sitting).play()
@@ -1687,4 +1711,4 @@ if (params.has('play')) start()
 requestAnimationFrame(frame)
 
 // Test hooks.
-window.__game = { crates, throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }
+window.__game = { THREE, world: world.scene, crates, throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }
