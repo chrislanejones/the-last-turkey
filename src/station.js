@@ -559,11 +559,13 @@ export function dressStation(scene, U, apronY) {
       add(new THREE.CylinderGeometry(0.062, 0.062, 0.02, 10), M('#4a3020'), 0.18, 1.71, 0.5)
       add(new THREE.BoxGeometry(1.6, 0.08, 0.32), M('#c9c2b0'), 0, 1.15, 0.16) // sill
     }
-    // Menu board at the lane's back entrance.
+    // Menu board at the lane's front entrance.
     { const menu = label('', { w: 256, h: 384, draw: (x) => { x.fillStyle = '#1d2a24'; x.fillRect(0, 0, 256, 384); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 34px Oswald, sans-serif'; x.fillText('MEGABUCKS', 128, 50)
         x.font = '22px Oswald, sans-serif'; ['PUMPKIN SPICE  $9', 'TURKEY LATTE  $11', 'GRAVY MOCHA  $10', 'CRANBERRY COLD BREW $12', 'BLACK COFFEE  $8'].forEach((l, i) => x.fillText(l, 128, 110 + i * 52)) } })
-      const [x, z] = at(6.0 - 0.15, -1.65 - 0.9); cyl(M('#2b2d31'), x, lot + 0.7, z, 0.06, 1.4, 6)
-      plane(menu, x, lot + 1.9, z, 1.0, 1.5, t + Math.PI / 2 + 0.6) }
+      // At the front mouth of the lane, facing cars as they pull in off the lot.
+      const [x, z] = at(6.0 - 0.15, 1.65 + 0.9); cyl(M('#2b2d31'), x, lot + 0.7, z, 0.06, 1.4, 6)
+      const nx = 0.5 * c + 0.85 * sn, nz = -0.5 * sn + 0.85 * c
+      plane(menu, x, lot + 1.9, z, 1.0, 1.5, Math.atan2(nx, nz)) }
   }
 
   // The drive-thru's open north side: square stucco pillars on stone bases carry the roof over the lane.
