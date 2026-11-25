@@ -351,23 +351,57 @@ parade(-69.9 * U, 339.3 * U, Math.atan2(-0.3, 0.954), 5.2, 'ROAD CLOSED · DETOU
 parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T FIGURED OUT WHY WE DO THIS', 2)
 // The wooded east side of A1A Beach Blvd: a tree line behind the invisible wall.
 {
-  const leaf = [new THREE.MeshStandardMaterial({ color: '#3d6b3c', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#4f7f45', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#2f5a34', roughness: 1 })]
-  const geo = new THREE.IcosahedronGeometry(1, 1)
+  // Live oaks, not hedges: a trunk, a spreading canopy of several clumps, and scrub underneath so nothing shows through.
+  const geo = new THREE.IcosahedronGeometry(1, 1), GATE = { z: 352.1, x: -72.9 }
+  const leafI = [], trunkI = [], scrubI = [], M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), greens = ['#35602f', '#44743a', '#2b5230', '#557f3c', '#3c6a44']
+  const inst = (list, x, y, z, sx, sy, sz, ry = 0, rz = 0, col = 0) => { M4.compose(new V3(x, y, z), Q.setFromEuler(E.set(0, ry, rz)), new V3(sx, sy, sz)); list.push([M4.clone(), col]) }
   let k = 0
-  for (const [pts, side] of [[[[-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
+  for (const [pts, side] of [[[[-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
     const [ax, az] = pts[i], [bx, bz] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 1.1)
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
       const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
+      if (side > 0 && Math.abs(tz - GATE.z) < 1.25) px += 2.3 * U // set back behind the neighborhood's gate
       // Cleared around the sheriff's billboard so its pole and face stand clear of the bushes.
       if (side > 0 && Math.abs(tz - SHERIFF.z) < 1.9 && px / U > SHERIFF.x - 3.4 && px / U < SHERIFF.x + 1.2) continue
       if (side > 0 && Math.abs(tz - FORT.z) < 1.4 && Math.abs(px / U - FORT.x) < 1.6) continue
       if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.3 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.3 })) continue // not through a neighbor's roof
-      const m = new THREE.Mesh(geo, leaf[(k + row) % 3]); m.scale.set(sc, sc * (0.8 + r(3) * 0.5), sc)
-      m.position.set(px, sc * 0.75 + row * 1.2, pz); m.castShadow = row === 0; scene.add(m)
+      const hgt = sc * (1.25 + r(3) * 0.5) + row * 1.6, ci = Math.floor(r(5) * 5)
+      inst(trunkI, px, hgt * 0.5, pz, 0.22 + sc * 0.06, hgt, 0.22 + sc * 0.06, r(6) * 6, (r(7) - 0.5) * 0.25)
+      inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, r(8) * 6, 0, ci)
+      for (let c = 0; c < 3; c++) { const a = r(9 + c) * 6.28, d = sc * (0.6 + r(12 + c) * 0.35); inst(leafI, px + Math.cos(a) * d, hgt - sc * (0.05 + r(15 + c) * 0.3), pz + Math.sin(a) * d, sc * 0.72, sc * 0.5, sc * 0.72, a, 0, (ci + c + 1) % 5) }
+      inst(scrubI, px + (r(20) - 0.5) * 2, sc * 0.3, pz + (r(21) - 0.5) * 2, sc * 0.9, sc * 0.42, sc * 0.9, r(22) * 6, 0, (ci + 2) % 5)
+      if (row === 0 && k % 3 === 0) inst(scrubI, px - side * sc * 0.9, 0.45, pz + (r(23) - 0.5) * 3, 1.1, 0.6, 1.1, r(24) * 6, 0, 3)
     }
+  }
+  const mk = (list, g, mat, shadow) => { const im = new THREE.InstancedMesh(g, mat, list.length), col = new THREE.Color(); list.forEach(([m, c], n) => { im.setMatrixAt(n, m); im.setColorAt(n, col.set(greens[c])) }); im.castShadow = shadow; im.receiveShadow = true; im.frustumCulled = false; scene.add(im) }
+  mk(leafI, geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), true)
+  mk(scrubI, geo, new THREE.MeshStandardMaterial({ color: '#c9d6c0', roughness: 1, flatShading: true }), false)
+  { const im = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 1, 1, 6), new THREE.MeshStandardMaterial({ color: '#5a4a3a', roughness: 1 }), trunkI.length); trunkI.forEach(([m], n) => im.setMatrixAt(n, m)); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
+  // The private neighborhood's gate, across from the plaza entrance: two capped pillars, low walls, a drive that vanishes into the oaks.
+  { const g = new THREE.Group(); g.position.set(GATE.x * U, 0, GATE.z * U); g.rotation.y = -0.305; scene.add(g)
+    const stone = new THREE.MeshStandardMaterial({ color: '#e4dccb', roughness: 0.9 }), capM = new THREE.MeshStandardMaterial({ color: '#9fb0ae', roughness: 0.5, metalness: 0.3, flatShading: true }), yel = new THREE.MeshStandardMaterial({ color: '#b9c24a', roughness: 1, flatShading: true })
+    const pl = document.createElement('canvas'); pl.width = 256; pl.height = 256; const x = pl.getContext('2d'); x.fillStyle = '#d2c8b2'; x.fillRect(0, 0, 256, 256); x.strokeStyle = '#7d745f'; x.lineWidth = 6; x.strokeRect(10, 10, 236, 236); x.fillStyle = '#4f4a3c'; x.textAlign = 'center'; x.font = 'italic 54px Georgia, serif'; x.fillText('Sea', 128, 86); x.fillText('Baloney', 128, 146, 210); x.font = '22px Georgia, serif'; x.fillText('PRIVATE · NO TURKEYS', 128, 204, 214)
+    const plT = new THREE.CanvasTexture(pl); plT.colorSpace = THREE.SRGBColorSpace; const plM = new THREE.MeshStandardMaterial({ map: plT, roughness: 0.9 })
+    // The planted median with the little gatehouse.
+    { const isl = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.25, 14), stone); isl.scale.set(3.2, 1, 0.75); isl.position.set(5.2, 0.12, 0); g.add(isl)
+      const hutM = new THREE.MeshStandardMaterial({ color: '#f1efe8', roughness: 0.9 }); const hut = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.2, 1.1), hutM); hut.position.set(6.2, 1.35, 0); hut.castShadow = true; g.add(hut)
+      const hr = new THREE.Mesh(new THREE.ConeGeometry(1.25, 0.8, 4), capM); hr.rotation.y = Math.PI / 4; hr.position.set(6.2, 2.85, 0); g.add(hr)
+      for (let n = 0; n < 9; n++) { const f = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.5, 4), new THREE.MeshStandardMaterial({ color: '#4c7f3a', roughness: 1, flatShading: true })); const a = n * 0.7; f.scale.z = 0.2; f.rotation.set(Math.cos(a) * 0.9, a, 0); const pv = new THREE.Group(); pv.position.set(3.4, 0.5, 0); pv.rotation.y = a; f.position.set(0, 0.5, 0.45); f.rotation.set(0.8, 0, 0); pv.add(f); g.add(pv) }
+      for (const [fx, fc] of [[2.6, '#d8436a'], [2.9, '#f0f0f0'], [4.3, '#d8436a']]) { const fl = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: fc, roughness: 1, flatShading: true })); fl.scale.set(0.3, 0.2, 0.3); fl.position.set(fx, 0.38, fx % 1 > 0.5 ? 0.3 : -0.3); g.add(fl) } }
+    const drive = new THREE.Mesh(new THREE.PlaneGeometry(13, 7), new THREE.MeshStandardMaterial({ color: '#4d5356', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); drive.rotation.x = -Math.PI / 2; drive.position.set(3.5, 0.06, 0); drive.receiveShadow = true; g.add(drive)
+    for (const sz of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.7, 1.7), stone); p.position.set(1.2, 1.35, sz * 4.6); p.castShadow = true; g.add(p)
+      const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.4, 2.0), stone); base.position.set(1.2, 0.2, sz * 4.6); g.add(base); const ledge = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.16, 2.1), stone); ledge.position.set(1.2, 2.78, sz * 4.6); g.add(ledge)
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.1, 4), capM); cap.rotation.y = Math.PI / 4; cap.position.set(1.2, 3.4, sz * 4.6); cap.castShadow = true; g.add(cap)
+      const pq = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 1.45), plM); pq.rotation.y = -Math.PI / 2; pq.position.set(0.34, 1.6, sz * 4.6); g.add(pq)
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.95, 9), stone); wall.position.set(1.3, 0.47, sz * 9.7); wall.castShadow = true; g.add(wall); const end = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.25, 0.7), stone); end.position.set(1.3, 0.62, sz * 14.3); g.add(end)
+      // Closed to the public: a striped arm down across each lane.
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, 3.4), new THREE.MeshStandardMaterial({ color: '#f2f2ee', roughness: 0.6 })); arm.position.set(4.2, 1.0, sz * 2.3); g.add(arm)
+      for (let n = 0; n < 4; n++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.15, 0.35), new THREE.MeshStandardMaterial({ color: '#c8302b' })); st.position.set(4.2, 1.0, sz * (1.1 + n * 0.8)); g.add(st) }
+      const ab = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.35), stone); ab.position.set(4.2, 0.55, sz * 4.1); g.add(ab)
+      for (let n = 0; n < 7; n++) { const b = new THREE.Mesh(geo, yel); b.scale.set(0.6, 0.42, 0.65); b.position.set(0.4, 0.4, sz * (5.9 + n * 1.25)); g.add(b) } }
   }
 }
 const tableSpots = []
@@ -387,7 +421,7 @@ const POND = { x0: -111.4, x1: -100.6, z0: 392.5, z1: 401.5 }
   const wood = new THREE.MeshStandardMaterial({ color: '#9a6a3f', roughness: 0.9 }), leg = new THREE.MeshStandardMaterial({ color: '#5b5f63', metalness: 0.4, roughness: 0.6 })
   const turn = Math.atan2(2.2, 9.4) // along the wall
   // Spread out in two staggered rows across the gap; the stagger leaves no lane a car could thread.
-  const spots = [[349.15, 0.25, 0.3], [350.25, 0.25, -0.2], [351.35, 0.25, 0.45], [349.7, -0.45, -0.5], [350.8, -0.45, 0.15], [351.85, -0.5, -0.35]]
+  const spots = [[349.3, 1.25, 0.3], [350.3, 1.35, -0.2], [351.3, 1.25, 0.45]] // on the lot side of the entrance island, which is what blocks the gap now
   for (const [z0, off, spin] of spots) {
     const z = z0 + off * 0.228, x = -102.7 + (z0 - 345.9) * (2.2 / 9.4) + off * 0.973
     const t = new THREE.Group(); t.position.set(x * U, 0.12, z * U); t.rotation.y = turn + Math.PI / 2 + spin; scene.add(t)
@@ -1304,6 +1338,7 @@ const lotIslands = []
         if (ch.w >= 4.9 && Math.floor(run / 95) !== Math.floor((run - len / n) / 95)) manholes.push([mxp + nx * 1.6, mzp + nz * 1.6, y])
         for (const [o, w, c, dash] of stripes) {
           if (dash && Math.floor(run / 3) % 3 !== 0) continue
+          { const px = mxp + nx * o, pz = mzp + nz * o; let inside = false; chains.forEach((oc, oi) => { if (oi === ci || inside || (c === YEL && oi > ci)) return; for (let j = 0; j + 1 < oc.p.length; j++) if (segD(px, pz, oc.p[j], oc.p[j + 1]) < oc.w * 0.75 - 0.3) { inside = true; break } }); if (inside) continue } // where two carriageways merge, don't paint one's lines across the other
           const q = [[s0, o - w / 2], [s1, o - w / 2], [s1, o + w / 2], [s0, o + w / 2]].map(([s, d]) => [a[0] + tx * s + nx * d, y, a[1] + tz * s + nz * d])
           for (const t of [0, 2, 1, 0, 3, 2]) { pos.push(...q[t]); col.push(...c) }
         }
@@ -1377,6 +1412,38 @@ const lotIslands = []
         const g = new THREE.Group(); g.position.set(cx, surfaceAt(cx, cz), cz); g.rotation.y = rot; scene.add(g)
         const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(4.6, 1.0, 0.9, 0.9), 5).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.03; bark.material.polygonOffset = true; bark.material.polygonOffsetFactor = -2; bark.material.polygonOffsetUnits = -2; bark.receiveShadow = true; g.add(bark)
         for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(blob, hedgeM[(i + e) % 2]); b.scale.set(0.8, 0.55, 0.62); b.position.set(-3.6 + i * 1.44, 0.4, 0); b.castShadow = true; g.add(b) } } } }
+
+  // --- The old side entrance off A1A S (where the picnic tables are): a curbed island fills the gap in the wall,
+  // with the little hip-roofed pump house, hedges, palms, a stop sign nobody can reach and a fire hydrant.
+  { const dx = 0.228, dz = 0.974, mx = -101.68 * U, mz = 350.28 * U, g = new THREE.Group(); g.position.set(mx, GY, mz); g.rotation.y = Math.atan2(-dz, dx); scene.add(g)
+    const A = 5.7, H = 1.9
+    const curb = new THREE.Mesh(new THREE.ExtrudeGeometry(pad(A, H, 1.6, 1.6), { depth: 0.26, bevelEnabled: false, curveSegments: 6 }).rotateX(-Math.PI / 2), curbM); curb.castShadow = curb.receiveShadow = true; g.add(curb)
+    const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(A - 0.18, H - 0.18, 1.45, 1.45), 6).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.268; bark.receiveShadow = true; g.add(bark)
+    const turf = new THREE.Mesh(new THREE.ShapeGeometry(pad(1.5, H - 0.5, 0.9, 0.9), 5).rotateX(-Math.PI / 2), turfM); turf.position.set(3.7, 0.276, 0); turf.receiveShadow = true; g.add(turf)
+    const tan = new THREE.MeshStandardMaterial({ color: '#d6b274', roughness: 0.9 }), roofM = new THREE.MeshStandardMaterial({ color: '#6a4b3a', roughness: 0.95, flatShading: true }), board = new THREE.MeshStandardMaterial({ color: '#e6dcc0', roughness: 0.9 }), grey = new THREE.MeshStandardMaterial({ color: '#8d9194', roughness: 0.6, metalness: 0.4 })
+    const hut = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.2, 2.3), tan); hut.position.set(-0.6, 1.36, 0); hut.castShadow = hut.receiveShadow = true; g.add(hut)
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.45, 1.25, 4), roofM); roof.rotation.y = Math.PI / 4; roof.position.set(-0.6, 3.08, 0); roof.castShadow = true; g.add(roof)
+    for (const sz of [1, -1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.8, 0.04), board); b.position.set(-0.6, 1.6, sz * 1.16); g.add(b) }
+    for (const [ex, ez] of [[-1.9, 0.5], [-1.9, 0.1]]) { const e = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5, 0.3), grey); e.position.set(ex, 1.1, ez); g.add(e) }
+    for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(blob, hedgeM[i % 2]); const along = -4.6 + i * 0.75; b.scale.set(0.62, 0.5, 0.6); b.position.set(i < 5 ? along : along - 0.2, 0.62, i < 5 ? (i % 2 ? 1.1 : -1.1) : (i % 2 ? -1.15 : 1.15)); if (Math.abs(b.position.x + 0.6) < 1.7) b.position.x = 1.2 + (i % 3) * 0.7; b.castShadow = true; g.add(b) }
+    const big = new THREE.Mesh(blob, hedgeM[1]); big.scale.set(1.3, 0.85, 1.2); big.position.set(-3.6, 0.9, 0); big.castShadow = true; g.add(big)
+    const trunkM = new THREE.MeshStandardMaterial({ color: '#8a7658', roughness: 1 }), frondM = new THREE.MeshStandardMaterial({ color: '#4f7f3a', roughness: 1, side: THREE.DoubleSide, flatShading: true })
+    for (const [px, pz, ph] of [[2.3, 0.5, 5.2], [3.0, -0.6, 4.3], [-4.6, 0.3, 4.8]]) { const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, ph, 7), trunkM); tr.position.set(px, 0.26 + ph / 2, pz); tr.castShadow = true; g.add(tr)
+      const boot = new THREE.Mesh(new THREE.SphereGeometry(0.42, 7, 5), trunkM); boot.position.set(px, 0.2 + ph, pz); g.add(boot)
+      for (let k = 0; k < 11; k++) { const f = new THREE.Mesh(new THREE.ConeGeometry(0.42, 2.3, 4), frondM); f.scale.z = 0.12; const piv = new THREE.Group(); piv.position.set(px, 0.4 + ph, pz); piv.rotation.set(0, k * 0.571 + px, 0); f.position.set(0, 0.55 - (k % 3) * 0.22, 1.0); f.rotation.x = 1.15 + (k % 3) * 0.3; f.castShadow = true; piv.add(f); g.add(piv) } }
+    // The stop sign and its no-left-turn plate, a yellow bollard, a hydrant.
+    const stopT = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#c1272d'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#fff'; x.font = '900 46px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('STOP', 64, 68); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+    const noLeft = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 128, 128); x.strokeStyle = '#111'; x.lineWidth = 10; x.lineJoin = 'round'; x.beginPath(); x.moveTo(84, 100); x.lineTo(84, 52); x.lineTo(40, 52); x.stroke(); x.fillStyle = '#111'; x.beginPath(); x.moveTo(26, 52); x.lineTo(48, 36); x.lineTo(48, 68); x.fill()
+      x.strokeStyle = '#c1272d'; x.lineWidth = 11; x.beginPath(); x.arc(64, 64, 50, 0, 7); x.stroke(); x.beginPath(); x.moveTo(29, 29); x.lineTo(99, 99); x.stroke(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+    const sg = new THREE.Group(); sg.position.set(4.9, 0.26, 0); sg.rotation.y = Math.PI / 2 + 0.3; g.add(sg)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.5, 6), grey); pole.position.y = 1.25; sg.add(pole)
+    for (const sgn of [1, -1]) { const oct = new THREE.Mesh(new THREE.CircleGeometry(0.42, 8), sgn > 0 ? new THREE.MeshStandardMaterial({ map: stopT, roughness: 0.6 }) : grey); oct.rotation.set(0, sgn > 0 ? 0 : Math.PI, sgn * Math.PI / 8); oct.position.set(0, 2.25, sgn * 0.04); sg.add(oct)
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), sgn > 0 ? new THREE.MeshStandardMaterial({ map: noLeft, roughness: 0.6 }) : grey); pl.rotation.y = sgn > 0 ? 0 : Math.PI; pl.position.set(0, 1.45, sgn * 0.04); sg.add(pl) }
+    const bol = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.0, 8), new THREE.MeshStandardMaterial({ color: '#d9b21f', roughness: 0.7 })); bol.position.set(1.0, 0.76, 1.3); g.add(bol)
+    const red = new THREE.MeshStandardMaterial({ color: '#c8302b', roughness: 0.6 }), hy = new THREE.Group(); hy.position.set(4.2, 0.27, -0.9); g.add(hy)
+    const hb = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.55, 8), red); hb.position.y = 0.28; hy.add(hb); const hc = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), red); hc.position.y = 0.56; hy.add(hc); const hn = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.42, 6), red); hn.rotation.z = Math.PI / 2; hn.position.y = 0.36; hy.add(hn)
+    boxes.push({ c: new V2(mx, mz), a: new V2(dx, dz), hx: A, hz: H })
+  }
 
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
   { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
