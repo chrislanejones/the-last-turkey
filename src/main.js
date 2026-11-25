@@ -889,12 +889,13 @@ const _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new V3()
 // Three galvanized trash cans by Bumpkin's drive-thru window, each stuffed with yesterday's donuts.
 const tinMat = new THREE.MeshStandardMaterial({ color: '#b9bec2', metalness: 0.85, roughness: 0.35 })
 const canGeoT = (() => { const g = new THREE.CylinderGeometry(0.34, 0.3, 0.95, 18); g.translate(0, 0, 0); return g })()
-const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18)
+const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18), domeGeo = new THREE.SphereGeometry(0.37, 18, 6, 0, Math.PI * 2, 0, 0.5), handleGeo = new THREE.TorusGeometry(0.09, 0.018, 6, 12, Math.PI)
 {
   const a = 0.035, ox = -88.76 * U, oz = 385.41 * U
   for (const lz of [1.3, 2.3, 3.3]) {
     const lx = -1.68 * U - 1.55, x = ox + lx * Math.cos(a) + lz * Math.sin(a), z = oz - lx * Math.sin(a) + lz * Math.cos(a)
     const m = new THREE.Group(), body = new THREE.Mesh(canGeoT, tinMat), lid = new THREE.Mesh(lidGeo, tinMat); lid.position.y = 0.49; body.castShadow = lid.castShadow = true; m.add(body, lid)
+    const dome = new THREE.Mesh(domeGeo, tinMat); dome.scale.y = 0.6; dome.position.y = 0.43; dome.castShadow = true; const hdl = new THREE.Mesh(handleGeo, tinMat); hdl.position.y = 0.62; m.add(dome, hdl)
     for (let r = 0; r < 6; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.325, 0.012, 4, 18), tinMat); rib.rotation.x = Math.PI / 2; rib.position.y = -0.36 + r * 0.14; m.add(rib) }
     scene.add(m)
     crates.push({ m, half: new V3(0.34, 0.475, 0.34), r: 0.36, home: { pos: new V3(x, GY + 0.475, z), yaw: lz }, vel: new V3(), spin: new V3(), awake: false, can: true })

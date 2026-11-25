@@ -40,7 +40,13 @@ const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb'
 const inHood = (x: number, z: number) => (x < -98.5 || (x < -96 && z > 391)) && x > -131 && z > 377 && z < 397
 // The corner office at A1A S and Floridian (Farmers Defending Farmers), drawn by the game instead.
 const FARMERS = { x: -100.2, z: 384.9, hw: 1.95, hd: 1.35, t: 0.19 }
-const inFarmers = (x: number, z: number) => { const dx = x - FARMERS.x, dz = z - FARMERS.z, lx = dx * Math.cos(FARMERS.t) - dz * Math.sin(FARMERS.t), lz = dx * Math.sin(FARMERS.t) + dz * Math.cos(FARMERS.t); return Math.abs(lx) < FARMERS.hw + .3 && Math.abs(lz) < FARMERS.hd + .3 }
+const inFarmersOnly = (x: number, z: number) => { const dx = x - FARMERS.x, dz = z - FARMERS.z, lx = dx * Math.cos(FARMERS.t) - dz * Math.sin(FARMERS.t), lz = dx * Math.sin(FARMERS.t) + dz * Math.cos(FARMERS.t); return Math.abs(lx) < FARMERS.hw + .9 && Math.abs(lz) < FARMERS.hd + .9 }
+// 280 Floridian Ave, the stucco office across the street: also drawn by the game.
+const OFFICE280 = { x: -97.8, z: 393.0, hw: 2.25, hd: 1.85 }
+const in280 = (x: number, z: number) => Math.abs(x - OFFICE280.x) < OFFICE280.hw + .9 && Math.abs(z - OFFICE280.z) < OFFICE280.hd + .9
+// ...and the house the map squeezes in right behind the corner office, which overlapped it.
+const inBehind = (x: number, z: number) => Math.hypot(x + 100.58, z - 381.06) < 1.9
+const inFarmers = (x: number, z: number) => inFarmersOnly(x, z) || in280(x, z) || inBehind(x, z)
 // Which neighborhood home's footprint (padded) holds a point, or -1.
 const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([hx, hz, w, d, deg]) => {
   const t = deg * Math.PI / 180, dx = x - hx, dz = z - hz, lx = dx * Math.cos(t) + dz * Math.sin(t), lz = -dx * Math.sin(t) + dz * Math.cos(t)
@@ -48,7 +54,7 @@ const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([h
 })
 const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: number, z: number, rotation = 0, _glow?: string | null) => {
   if ((input as any).parameters?.height === 2.5 && layer === 'wood') DATA.poles.push([x * UNIT, z * UNIT])
-  if (wb && !loving && inFarmers(x, z)) { input.dispose(); return } // the corner office is built by the game
+  if (wb && inFarmers(x, z)) { input.dispose(); return } // the corner office is built by the game
   let g = input.index ? input.toNonIndexed() : input.clone()
   input.dispose()
   for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k)
@@ -117,9 +123,9 @@ const whole = (x: number, build: () => void) => {
   LAYERS.forEach((l, i) => parts[l].slice(start[i]).forEach((g) => { g.userData.dx = mode === 'layout' ? boulevardOffset(x) : 0 }))
 }
 const plants = vegetationKit(add as any, false)
-const palm = (...a: Parameters<typeof plants.palm>) => { if (thin) DATA.palms.push([a[0] * UNIT, a[1] * UNIT]); whole(a[0], () => plants.palm(...a)) }
+const palm = (...a: Parameters<typeof plants.palm>) => { if (wb && inFarmers(a[0], a[1])) return; if (thin) DATA.palms.push([a[0] * UNIT, a[1] * UNIT]); whole(a[0], () => plants.palm(...a)) }
 // No shrubs or oaks growing up through the neighbors' roofs.
-const inAHome = (x: number, z: number) => wb && x < -97 && x > -131 && z > 376 && z < 397 && homeAt(x, z, .45) >= 0
+const inAHome = (x: number, z: number) => wb && (inFarmers(x, z) || x < -97 && x > -131 && z > 376 && z < 397 && homeAt(x, z, .45) >= 0)
 const bush = (...a: Parameters<typeof plants.bush>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.bush(...a)) }
 const tree = (...a: Parameters<typeof plants.tree>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.tree(...a)) }
 const rand = (seed: number) => { const v = Math.sin(seed * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v) }
@@ -271,6 +277,7 @@ buildWestBlocks(kit)
 wb = false
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
 DATA.homes.push([FARMERS.x * UNIT, FARMERS.z * UNIT, FARMERS.hw * 2 * UNIT, FARMERS.hd * 2 * UNIT, FARMERS.t])
+DATA.homes.push([OFFICE280.x * UNIT, OFFICE280.z * UNIT, OFFICE280.hw * 2 * UNIT, OFFICE280.hd * 2 * UNIT, 0])
 
 // Shoppers on the walk along the grocery front and under the north arcade.
 const crowd: BeachPerson[] = []

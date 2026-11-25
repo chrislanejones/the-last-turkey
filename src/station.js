@@ -414,7 +414,7 @@ export function dressStation(scene, U, apronY) {
   {
     const F = new THREE.Group(); F.position.set(-100.2 * U, 0.045 * U, 384.9 * U); F.rotation.y = 0.19; g.add(F)
     const W = 3.9 * U - 0.8, D = 2.7 * U - 0.8, H = 4.3
-    const stucco = M('#e2bb7d', { roughness: 0.95 }), trim = M('#c99a5a'), tile = M('#b5532e', { roughness: 0.8 }), dk = M('#4a2a1c'), glass = M('#2f5f8f', { roughness: 0.2, metalness: 0.3 })
+    const stucco = M('#e2bb7d', { roughness: 0.95 }), trim = M('#c99a5a'), tile = M('#b5532e', { roughness: 0.8 }), dk = M('#4a2a1c'), glass = M('#25343a', { roughness: 0.15, metalness: 0.4 })
     const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; F.add(m); return m }
     const hip = (w, d, h, x, y, z) => { const r = add(new THREE.ConeGeometry(Math.SQRT1_2, 1, 4), tile, x, y + h / 2, z, Math.PI / 4); r.scale.set(w + 0.9, h, d + 0.9); r.rotation.y = 0; r.geometry = r.geometry.clone().rotateY(Math.PI / 4); return r }
     // Two wings stepped like the real one, each under its own hip roof.
@@ -477,6 +477,40 @@ export function dressStation(scene, U, apronY) {
       const bar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.04, 0.04), tine); bar.position.y = 2.2; fork.add(bar)
       for (const t of [-0.15, 0, 0.15]) { const tn = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.4, 5), tine); tn.position.set(t, 2.42, 0); fork.add(tn) }
     }
+  }
+
+  // 280 Floridian Ave: a one-storey stucco office in the same Tuscan dress, low terracotta hip roof,
+  // dark window bands with a red brick sill, banded pilasters, mulch beds, a magnolia and tall palms.
+  {
+    const O = new THREE.Group(); O.position.set(-97.8 * U, 0.045 * U, 393.0 * U); g.add(O)
+    const W = 4.5 * U - 1.0, D = 3.7 * U - 1.0, H = 3.9
+    const stucco = M('#e6c48c', { roughness: 0.95 }), base = M('#d9a24e'), band = M('#b04a2e'), tile = M('#b5532e', { roughness: 0.8 }), glass = M('#1f2c30', { roughness: 0.15, metalness: 0.4 }), cream = M('#f1e3c4')
+    const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; O.add(m); return m }
+    add(new THREE.BoxGeometry(W, H, D), stucco, 0, H / 2, 0)
+    add(new THREE.BoxGeometry(W + 0.06, 0.9, D + 0.06), base, 0, 0.45, 0)
+    add(new THREE.BoxGeometry(W + 0.1, 0.12, D + 0.1), band, 0, 0.95, 0)
+    add(new THREE.BoxGeometry(W + 1.4, 0.18, D + 1.4), cream, 0, H, 0) // deep eaves
+    const roof = add(new THREE.ConeGeometry(Math.SQRT1_2, 1, 4).rotateY(Math.PI / 4), tile, 0, H + 1.09, 0); roof.scale.set(W + 1.6, 2.0, D + 1.6)
+    for (const [nx, nz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      const len = nz ? W : D, n = Math.max(2, Math.round(len / 4.2))
+      for (let i = 0; i < n; i++) {
+        const t = -len / 2 + (i + 0.5) * len / n, x = nz ? t : nx * (W / 2 + 0.03), z = nz ? nz * (D / 2 + 0.03) : t
+        add(new THREE.BoxGeometry(nz ? len / n - 1.0 : 0.06, 1.9, nz ? 0.06 : len / n - 1.0), glass, x, 2.0, z)
+        if (i) { const px = nz ? -len / 2 + i * len / n : nx * (W / 2 + 0.12), pz = nz ? nz * (D / 2 + 0.12) : -len / 2 + i * len / n
+          add(new THREE.BoxGeometry(nz ? 0.55 : 0.3, H - 0.2, nz ? 0.3 : 0.55), base, px, H / 2, pz); for (const y of [2.6, 2.85]) add(new THREE.BoxGeometry(nz ? 0.62 : 0.36, 0.06, nz ? 0.36 : 0.62), band, px, y, pz) }
+      }
+    }
+    const mulch = M('#6b3a24', { roughness: 1 }), leaf = M('#3d6a32', { roughness: 1 }), mag = M('#2f4f2a', { roughness: 1 }), rust = M('#7a4a26', { roughness: 1 }), trunk = M('#8a7a62')
+    add(new THREE.BoxGeometry(W + 3, 0.08, 2.4), mulch, 0, 0.045, -D / 2 - 1.7)
+    add(new THREE.BoxGeometry(2.4, 0.08, D + 3), mulch, W / 2 + 1.7, 0.047, 0)
+    for (let i = 0; i < 7; i++) { const b = add(new THREE.SphereGeometry(0.55 + (i % 3) * 0.15, 8, 6), leaf, -W / 2 + 1 + i * (W - 2) / 6, 0.45, -D / 2 - 1.3); b.scale.y = 0.8 }
+    { const mx = -W / 2 + 2.2, mz = -D / 2 - 2.2; add(new THREE.CylinderGeometry(0.15, 0.2, 2.2, 6), trunk, mx, 1.1, mz)
+      for (const [dx, dy, dz, r, m] of [[0, 3.4, 0, 1.6, mag], [0.7, 4.3, 0.3, 1.1, rust], [-0.6, 2.7, -0.4, 1.2, mag]]) add(new THREE.IcosahedronGeometry(r, 1), m, mx + dx, dy, mz + dz) }
+    for (const [x, z, h] of [[W / 2 + 1.4, -D / 2 - 1.2, 11], [W / 2 + 1.6, D / 2 - 1.5, 9]]) {
+      add(new THREE.CylinderGeometry(0.17, 0.25, h, 8), trunk, x, h / 2, z)
+      for (let k = 0; k < 9; k++) { const fr = add(new THREE.ConeGeometry(0.35, 2.6, 4), leaf, x + Math.cos(k * 0.7) * 0.9, h + 0.1, z + Math.sin(k * 0.7) * 0.9); fr.rotation.set(Math.sin(k * 0.7) * 1.9, 0, -Math.cos(k * 0.7) * 1.9) }
+    }
+    add(new THREE.BoxGeometry(1.3, 0.8, 0.9), M('#c9cbc6'), W / 2 + 1.2, 0.4, 1.0) // AC unit
   }
   return g
 }
