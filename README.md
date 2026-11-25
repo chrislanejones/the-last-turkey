@@ -41,6 +41,10 @@ Chris and Becky are in a red '64 Ford Galaxie convertible. Phillip, the neighbor
 - `pub/`: the built, playable page
 - `tools/`: the world exporter and headless test scripts
 
+## Deploy
+
+The built game lives in `pub/`, with nothing left to build. `vercel.json` points Vercel at that folder, so importing this repo at [vercel.com/new](https://vercel.com/new) deploys it as-is.
+
 ## Build
 
 ```sh
