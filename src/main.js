@@ -1475,7 +1475,11 @@ function frame() {
 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight) })
 reset(false)
-$('loading').classList.add('gone'); $('intro').classList.remove('gone')
+// Keep the title up long enough to read, however fast the load was: at least 3.5 s on screen,
+// and always a beat after the bar fills.
+{ const shown = performance.now() - (window.__loadStart ?? 0), wait = params.has('shot') ? 0 : Math.max(1200, 3500 - shown)
+  try { $('bar').style.width = '100%' } catch {}
+  setTimeout(() => { $('loading').classList.add('gone'); $('intro').classList.remove('gone') }, wait) }
 if (params.has('play')) start()
 requestAnimationFrame(frame)
 
