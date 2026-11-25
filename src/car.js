@@ -56,25 +56,48 @@ const cyl = (r0, r1, h, mat, seg = 24) => { const m = new THREE.Mesh(new THREE.C
 /** The wheel-arch cut in a profile's bottom edge. */
 const arch = (zc, r = 0.47) => ({ arc: [zc, 0.36, r, Math.PI, 0, true] })
 
-function makeWheel(M) {
+// A wheel facing out along local ±x. 'cover': the Galaxie's whitewall tire under a full chrome
+// wheel cover (fluted turbine fins, a domed centre and a three-bar spinner). 'steel': the wagon's
+// blackwall tire on a painted steel wheel with vent holes, lug nuts and a small chrome dog-dish.
+const darkChrome = new THREE.MeshStandardMaterial({ color: '#6f757b', metalness: 1, roughness: 0.3 })
+const coverChrome = new THREE.MeshStandardMaterial({ color: '#b9bec4', metalness: 0.9, roughness: 0.22 })
+const sidewall = new THREE.MeshStandardMaterial({ color: '#242424', roughness: 0.85 })
+const steelPaint = new THREE.MeshStandardMaterial({ color: '#c9c6bc', metalness: 0.35, roughness: 0.45 })
+function lathe(pts, mat, side) { const m = new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, h]) => new THREE.Vector2(r, h)), 40), mat); m.rotation.z = -side * Math.PI / 2; return m }
+function makeWheel(M, style = 'cover') {
   const w = new THREE.Group()
   const spin = new THREE.Group(); w.add(spin)
-  const tire = cyl(CAR.wheelR, CAR.wheelR, 0.22, M.tire, 32); tire.rotation.z = Math.PI / 2; spin.add(tire)
-  // Rounded shoulders so the tread doesn't read as a flat-edged drum.
+  const R = CAR.wheelR
+  const tire = cyl(R, R, 0.2, M.tire, 40); tire.rotation.z = Math.PI / 2; spin.add(tire)
   for (const side of [-1, 1]) {
-    const shoulder = new THREE.Mesh(new THREE.TorusGeometry(CAR.wheelR - 0.035, 0.035, 8, 32), M.tire)
-    shoulder.rotation.y = Math.PI / 2; shoulder.position.x = side * 0.075; spin.add(shoulder)
-    const ww = new THREE.Mesh(new THREE.RingGeometry(0.245, 0.285, 40), M.whitewall)
-    ww.position.x = side * 0.118; ww.rotation.y = side * Math.PI / 2; spin.add(ww)
-    // A flat dog-dish hubcap that sits inside the tire's face, with lug slots so the roll shows.
-    const cap = cyl(0.235, 0.245, 0.012, M.chrome, 28); cap.rotation.z = Math.PI / 2; cap.position.x = side * 0.122; spin.add(cap)
-    const dish = new THREE.Mesh(new THREE.SphereGeometry(0.1, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome)
-    dish.rotation.z = -side * Math.PI / 2; dish.scale.y = 0.22; dish.position.x = side * 0.128; spin.add(dish)
-    const dot = cyl(0.035, 0.035, 0.02, new THREE.MeshStandardMaterial({ color: '#b3161c', roughness: 0.4 }), 12); dot.rotation.z = Math.PI / 2; dot.position.x = side * 0.15; spin.add(dot)
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2
-      const slot = rbox(0.012, 0.05, 0.022, 0.004, M.black, side * 0.128, Math.cos(a) * 0.17, Math.sin(a) * 0.17)
-      slot.rotation.x = -a; slot.castShadow = false; spin.add(slot)
+    const shoulder = new THREE.Mesh(new THREE.TorusGeometry(R - 0.04, 0.042, 10, 40), M.tire)
+    shoulder.rotation.y = Math.PI / 2; shoulder.position.x = side * 0.07; spin.add(shoulder)
+    // Sidewall face, bulging slightly, then the rim lip.
+    const wall = lathe([[R - 0.03, 0], [R - 0.06, 0.012], [0.25, 0.018], [0.235, 0.01]], sidewall, side); wall.position.x = side * 0.1; spin.add(wall)
+    if (style === 'cover') {
+      const ww = lathe([[0.305, 0.0], [0.298, 0.016], [0.276, 0.02], [0.27, 0.018]], M.whitewall, side); ww.position.x = side * 0.102; spin.add(ww)
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.243, 0.011, 8, 48), M.chrome); ring.rotation.y = Math.PI / 2; ring.position.x = side * 0.118; spin.add(ring)
+      // The cover: a shallow chrome dish rising to a domed hub.
+      const dish = lathe([[0.238, 0], [0.225, 0.014], [0.2, 0.006], [0.16, 0.012], [0.11, 0.024], [0.075, 0.04], [0.04, 0.05], [0, 0.052]], coverChrome, side); dish.position.x = side * 0.115; spin.add(dish)
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2, fin = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.11, 0.014), darkChrome)
+        const g = new THREE.Group(); g.rotation.x = -a; g.position.x = side * 0.131; fin.position.y = 0.16; fin.rotation.x = 0.3; g.add(fin); spin.add(g)
+      }
+      const cap = lathe([[0.042, 0], [0.04, 0.01], [0.02, 0.02], [0, 0.022]], darkChrome, side); cap.position.x = side * 0.165; spin.add(cap)
+      for (let i = 0; i < 3; i++) {
+        const g = new THREE.Group(); g.rotation.x = -(i / 3) * Math.PI * 2; g.position.x = side * 0.178; spin.add(g)
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.075, 0.018), M.chrome); bar.position.y = 0.05; g.add(bar)
+      }
+    } else {
+      // Painted steel wheel: a stepped rim, vent holes, lug nuts and a dog-dish.
+      const rim = lathe([[0.245, 0], [0.235, 0.014], [0.2, 0.016], [0.17, 0.03], [0.11, 0.032], [0.1, 0.02], [0, 0.02]], steelPaint, side); rim.position.x = side * 0.1; spin.add(rim)
+      const lip = new THREE.Mesh(new THREE.TorusGeometry(0.242, 0.009, 8, 48), darkChrome); lip.rotation.y = Math.PI / 2; lip.position.x = side * 0.112; spin.add(lip)
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + 0.26, hole = cyl(0.028, 0.028, 0.01, M.black, 12); hole.rotation.z = Math.PI / 2
+        hole.position.set(side * 0.128, Math.cos(a) * 0.185, Math.sin(a) * 0.185); spin.add(hole)
+      }
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2, nut = cyl(0.011, 0.011, 0.02, darkChrome, 6); nut.rotation.z = Math.PI / 2; nut.position.set(side * 0.135, Math.cos(a) * 0.075, Math.sin(a) * 0.075); spin.add(nut) }
+      const dog = lathe([[0.058, 0], [0.05, 0.016], [0.025, 0.026], [0, 0.028]], M.chrome, side); dog.position.x = side * 0.13; spin.add(dog)
     }
   }
   return { group: w, spin }
@@ -376,8 +399,8 @@ export function buildSUV(paintColor = '#7d8a3c') {
   const wheels = []
   for (const [x, z, front] of [[0.76, 1.4, true], [-0.76, 1.4, true], [0.76, -1.4, false], [-0.76, -1.4, false]]) {
     // Chunkier blackwall tires on painted steel wheels.
-    const w = makeWheel(M); w.group.scale.set(1.15, 1.1, 1.1); w.group.position.set(x, CAR.wheelR * 1.1, z); car.add(w.group); wheels.push({ ...w, front })
-    w.spin.traverse((m) => { if (m.geometry?.type === 'RingGeometry') m.visible = false })
+    const w = makeWheel(M, 'steel'); w.group.scale.set(1.15, 1.1, 1.1); w.group.position.set(x, CAR.wheelR * 1.1, z); car.add(w.group); wheels.push({ ...w, front })
+
   }
   body.position.y = 0; car.userData.lift = 0.04
   return { car, body, wheels, steering, M }
