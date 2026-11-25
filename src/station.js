@@ -295,7 +295,7 @@ export function dressStation(scene, U, apronY) {
     }
     // West strip: an awning over every other bay that has no name on it.
     const strip = frame(-93.25, 364.09, Math.atan2(0.968, -0.249)), bay = 14.7 / 12
-    const cols = ['#2f7d5a', '#2f6fc4', '#c8302b', '#2f7d5a', '#e8a020']
+    const cols = ['#2f7d5a', '#2f6fc4', '#22305c', '#2f7d5a', '#e8a020'] // navy over Joisey Mick's
     ;[1, 3, 5, 10].forEach((k, i) => awning(strip, -7.35 + (k + 0.5) * bay, 1.65 + 0.03, lot + 1.0 * U, bay * U - 1.6, cols[i]))
     // The ice-cream shop next door to Megabucks, on the bay that had no name.
     { const ice = label('', { w: 512, h: 160, draw: (x) => {
@@ -357,6 +357,53 @@ export function dressStation(scene, U, apronY) {
     }
     // On the grass strip between the lot and the road (the road itself is drivable).
     for (const [px, pz, h, lean] of [[-72.0, 341.6, 6.5, 0.06], [-73.05, 345.0, 7.4, -0.05], [-74.2, 348.6, 6.8, 0.08], [-76.5, 356.0, 7.8, -0.04], [-78.1, 361.5, 6.2, 0.05], [-80.2, 368.5, 7.0, 0.04]]) palmAt(px * U, pz * U, h, lean)
+  }
+
+  // Joisey Mick's Subs, in an empty bay of the south strip between the stretch shop and the pizza place,
+  // with a window banner taking a shot at the competition and two patio tables out front.
+  {
+    const t = Math.atan2(0.968, -0.249), X = [Math.cos(t), -Math.sin(t)], Z = [Math.sin(t), Math.cos(t)]
+    const at = (lx, lz) => [(-93.25 + lx * X[0] + lz * Z[0]) * U, (364.09 + lx * X[1] + lz * Z[1]) * U]
+    const bay = -14.9 / 2 + 0.1 + 5.5 * (14.9 - 0.2) / 12, front = 3.3 / 2
+    const sign = label('', { w: 512, h: 192, draw: (x) => {
+      x.fillStyle = '#1d2a4a'; x.beginPath(); x.roundRect(6, 10, 500, 172, 40); x.fill(); x.strokeStyle = '#c8302b'; x.lineWidth = 8; x.stroke()
+      x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.font = 'bold 26px Oswald, sans-serif'; x.fillText('SINCE 1957', 256, 48)
+      x.font = 'italic bold 84px Georgia, serif'; x.fillText("Joisey Mick's", 256, 128)
+      x.font = 'bold 30px Oswald, sans-serif'; x.fillText('S U B S', 256, 168)
+    } })
+    { const [x, z] = at(bay, front + 0.035); plane(sign, x, (1.45 - 0.2) * U, z, 3.6, 1.35, t, { emissive: '#ffffff', emissiveMap: sign, emissiveIntensity: 0.18 }) }
+    const banner = label('', { w: 512, h: 200, draw: (x) => {
+      x.fillStyle = '#fffdf3'; x.fillRect(0, 0, 512, 200); x.strokeStyle = '#c8302b'; x.lineWidth = 12; x.strokeRect(6, 6, 500, 188)
+      x.textAlign = 'center'; const fit = (t, px, y, c) => { x.fillStyle = c; do { x.font = `bold ${px}px Oswald, Impact, sans-serif`; px -= 2 } while (x.measureText(t).width > 470); x.fillText(t, 256, y) }; fit('BEST SUBS AROUND', 64, 92, '#1d2a4a')
+      fit("DON'T GO TO THAT OTHER PLACE", 36, 152, '#c8302b')
+    } })
+    { const [x, z] = at(bay, front - 0.75 + 0.035); plane(banner, x, 0.8 * U, z, 2.6, 1.02, t) }
+    // Patio: two blue umbrellas over little tables with red stools.
+    const pole = M('#3b3f44', { metalness: 0.5 }), cloth = M('#22305c', { side: THREE.DoubleSide }), top = M('#2a4f9e'), red = M('#c8302b')
+    for (const e of [-0.42, 0.42]) {
+      const [x, z] = at(bay + e, front - 0.12)
+      cyl(pole, x, 1.25, z, 0.04, 2.45, 6)
+      const um = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 8, 1, true), cloth); um.position.set(x, 2.35, z); um.castShadow = true; g.add(um)
+      cyl(top, x, 0.0451 * U + 0.72, z, 0.38, 0.04, 14)
+      for (let k = 0; k < 3; k++) { const a = k * 2.1 + e, sx = x + Math.cos(a) * 0.62, sz = z + Math.sin(a) * 0.62; cyl(red, sx, 0.0451 * U + 0.42, sz, 0.17, 0.05, 10); for (const d of [[-1, -1], [1, 1], [-1, 1], [1, -1]]) cyl(red, sx + d[0] * 0.1, 0.0451 * U + 0.2, sz + d[1] * 0.1, 0.015, 0.42, 4) }
+    }
+  }
+
+  // The pylon sign at the A1A Beach Blvd entrance, re-faced: PONCE PLAZA up top, publick and two tenants below.
+  {
+    const x = -74.9 * U, z = 349.5 * U
+    const head = label('', { w: 512, h: 448, draw: (c) => { c.fillStyle = '#f4efe2'; c.fillRect(0, 0, 512, 448); c.fillStyle = '#2b5a3f'; c.textAlign = 'center'
+      c.font = 'bold 150px Oswald, Impact, sans-serif'; c.fillText('PONCE', 256, 200); c.font = 'bold 150px Oswald, Impact, sans-serif'; c.fillText('PLAZA', 256, 370) } })
+    const body = label('', { w: 256, h: 840, draw: (c) => {
+      c.fillStyle = '#dcbf86'; c.fillRect(0, 0, 256, 840); c.textAlign = 'center'
+      c.fillStyle = '#fffdf5'; c.fillRect(14, 262, 228, 150); c.fillStyle = '#4fae2c'; c.font = 'italic bold 66px Georgia, serif'; c.fillText('publick', 128, 360)
+      c.fillStyle = '#1d2a4a'; c.fillRect(14, 432, 228, 150); c.fillStyle = '#fff'; c.font = 'italic bold 44px Georgia, serif'; c.fillText("Joisey", 128, 492); c.fillText("Mick's", 128, 540); c.font = 'bold 20px Oswald, sans-serif'; c.fillText('S U B S', 128, 568)
+      c.fillStyle = '#fffdf5'; c.fillRect(14, 602, 228, 150); c.fillStyle = '#3a8a3a'; c.font = 'bold 54px Oswald, Impact, sans-serif'; c.fillText('DOLLAR', 128, 667); c.fillText('PALM', 128, 727)
+    } })
+    for (const sd of [-1, 1]) {
+      plane(head, x + sd * 0.2 * U, 1.55 * U, z, 0.62 * U, 0.55 * U, sd * Math.PI / 2, { emissive: '#ffffff', emissiveMap: head, emissiveIntensity: 0.15 })
+      plane(body, x + sd * 0.175 * U, 0.9 * U, z, 0.55 * U, 1.8 * U, sd * Math.PI / 2)
+    }
   }
   return g
 }
