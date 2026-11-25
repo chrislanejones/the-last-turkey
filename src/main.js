@@ -1513,6 +1513,31 @@ const lotIslands = []
     circles.push([ox, oz, 0.55])
   }
 
+  // --- PCN Bank across A1A S: a green standing-seam roof, its lot, oaks, and the power line marching up the road.
+  { const bx = -96.65 * U, bz = 400.85 * U, yaw = 0.32, g = new THREE.Group(); g.position.set(bx, surfaceAt(bx + 9, bz - 12), bz); g.rotation.y = yaw; scene.add(g)
+    const seam = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#7fae98'; x.fillRect(0, 0, 64, 64); x.fillStyle = '#5f8f7a'; for (let i = 0; i < 64; i += 16) x.fillRect(i, 0, 3, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 1); return t })()
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4, 1), new THREE.MeshStandardMaterial({ map: seam, roughness: 0.5, metalness: 0.3, flatShading: true })); roof.rotation.y = Math.PI / 4; const rg = new THREE.Group(); rg.add(roof); rg.scale.set(10.6, 2.0, 8.6); rg.position.y = 5.3; g.add(rg); roof.castShadow = true
+    const fascia = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.5, 12.0), new THREE.MeshStandardMaterial({ color: '#e9e6dc', roughness: 0.8 })); fascia.position.y = 4.3; g.add(fascia)
+    const lot = new THREE.Mesh(new THREE.PlaneGeometry(30, 15), new THREE.MeshStandardMaterial({ color: '#3f4447', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); lot.rotation.x = -Math.PI / 2; lot.position.set(3, 0.04, 14.5); lot.receiveShadow = true; g.add(lot)
+    for (let i = 0; i < 9; i++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 4.6), new THREE.MeshBasicMaterial({ color: '#d8d4c4', polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); st.rotation.x = -Math.PI / 2; st.position.set(-7 + i * 2.8, 0.05, 9.6); g.add(st) }
+    const hedge = new THREE.MeshStandardMaterial({ color: '#3d6b3c', roughness: 1, flatShading: true }); for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(blob, hedge); b.scale.set(0.8, 0.5, 0.6); b.position.set(-6.5 + i * 1.45, 0.4, 6.7); g.add(b) }
+    const bark = new THREE.MeshStandardMaterial({ color: '#4f4336', roughness: 1 }), leaf = [new THREE.MeshStandardMaterial({ color: '#35602f', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#44743a', roughness: 1, flatShading: true })]
+    const oak = (x, z, sc) => { const y = surfaceAt(x, z), t = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * sc, 0.4 * sc, 2.6 * sc, 7), bark); t.position.set(x, y + 1.3 * sc, z); t.rotation.z = 0.12; t.castShadow = true; scene.add(t)
+      for (let i = 0; i < 4; i++) { const a = i * 1.57 + x, c = new THREE.Mesh(blob, leaf[i % 2]); c.scale.set(2.2 * sc, 1.1 * sc, 2.2 * sc); c.position.set(x + Math.sin(a) * 1.9 * sc, y + (3.6 + (i % 2) * 0.5) * sc, z + Math.cos(a) * 1.9 * sc); c.castShadow = true; scene.add(c) }
+      const top = new THREE.Mesh(blob, leaf[0]); top.scale.set(2.5 * sc, 1.2 * sc, 2.5 * sc); top.position.set(x, y + 4.5 * sc, z); scene.add(top) }
+    for (const [ox, oz, sc] of [[-93.6, 397.6, 1.1], [-94.6, 400.6, 1.0], [-93.9, 403.2, 1.2], [-99.8, 398.2, 1.3], [-100.6, 402.4, 1.2], [-97.2, 404.4, 1.1]]) oak(ox * U, oz * U, sc)
+    // Concrete utility poles with crossarms and a transformer now and then; sagging wires between them.
+    const conc = new THREE.MeshStandardMaterial({ color: '#b3ada0', roughness: 0.9 }), dk = new THREE.MeshStandardMaterial({ color: '#4a4d50', roughness: 0.7 }), wire = new THREE.LineBasicMaterial({ color: '#1b1b1b' })
+    const line = [[-91.9, 401.5], ...ROAD_W].map(([x, z]) => [(x - 2.62) * U, z * U]), tops = []
+    line.forEach(([x, z], i) => { const y = surfaceAt(x, z), nxt = line[Math.min(i + 1, line.length - 1)], prv = line[Math.max(i - 1, 0)], ry = Math.atan2(nxt[0] - prv[0], nxt[1] - prv[1])
+      circles.push([x, z, 0.3])
+      const p = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.2, 10.5, 7), conc); p.position.set(x, y + 5.25, z); p.castShadow = true; scene.add(p)
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 0.12), dk); arm.position.set(x, y + 9.9, z); arm.rotation.y = ry; scene.add(arm)
+      if (i % 2 === 0) { const tf = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.8, 10), dk); tf.position.set(x + Math.cos(ry) * 0.42, y + 8.5, z - Math.sin(ry) * 0.42); scene.add(tf) }
+      tops.push([-1.1, 0, 1.1].map((o) => new V3(x + Math.cos(ry) * o, y + 10.0, z - Math.sin(ry) * o)).concat([new V3(x, y + 7.6, z)])) })
+    for (let i = 0; i + 1 < tops.length; i++) for (let w = 0; w < 4; w++) { const a = tops[i][w], b = tops[i + 1][w], pts = []; for (let k = 0; k <= 12; k++) { const t = k / 12, q = a.clone().lerp(b, t); q.y -= Math.sin(t * Math.PI) * (w === 3 ? 1.1 : 0.7); pts.push(q) } scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wire)) }
+  }
+
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
   { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
     const W = (sA, d0) => { const d = d0 - 0.0175 * sA; return [-394.6 + tx * sA + nx * d, 1432.5 + tz * sA + nz * d] } // the wall isn't quite square to the lot
