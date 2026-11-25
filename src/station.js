@@ -342,7 +342,7 @@ export function dressStation(scene, U, apronY) {
     box(M('#cfcabb'), ex + 1.3, lot + 2.65, zc - 2.5, 2.8, 0.12, 5.7)
     box(M('#1c1d1f'), ex + 1.0, lot + 1.0, zc - 6.3, 2.0, 2.0, 0.1)
     const hedge = M('#3f6b3a', { roughness: 1 })
-    for (const [dz, len] of [[2.2, 3.4], [5.6, 1.8]]) box(hedge, ex + 1.1, lot + 0.5, zc + dz, 1.3, 1.0, len)
+    // (the hedge here is gone: three roll-out trash bins stand in its place, built by the game)
     const trunk = M('#8a7a5e', { roughness: 1 }), frond = M('#4f7a45', { roughness: 1, side: THREE.DoubleSide })
     const palmAt = (x, z, h, lean) => {
       const p = new THREE.Group(); p.position.set(x, 0.05, z); p.rotation.z = lean; g.add(p)

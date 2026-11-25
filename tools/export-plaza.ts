@@ -206,7 +206,7 @@ const inStation = (x: number, z: number) => {
   }
   return hit
 }
-box('ground', '#80868a', -88.1, .034, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
+box('ground', '#80868a', -88.1, .05, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
 // Palms on the grass at the very tip, where the welcome sign stands.
 for (const [px, pz, sd] of [[-88.5, 398.5, 11], [-87.3, 399.2, 12], [-89.7, 399.1, 13], [-88.4, 400.1, 14], [-90.9, 396.2, 15], [-85.6, 396.4, 16]]) plants.palm(px, pz, sd, false)
 
@@ -253,7 +253,7 @@ wallRun(-94.0, 395.2, -89.9, 395.6); wallRun(-108.6, 340.2, -99.9, 342.54) // th
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
 wallRun(-85.7, 395.6, -82.1, 395.4); wallRun(-71.1, 338.95, -68.7, 339.65)
 // Driveway aprons across the grass at both openings.
-box('ground', '#80868a', -84.4, .036, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .036, 352.1, 2.6, .03, 2.8)
+box('ground', '#80868a', -84.4, .053, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8)
 
 // The streets and neighbors around it, from the town's OSM data.
 const X0 = -110, X1 = -64, Zs = 328, Zn = 402
@@ -263,7 +263,7 @@ for (const r of PONCE_ROADS) for (let i = 0; i + 1 < r.p.length; i++) {
   const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2
   if (!near(mx, mz) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz)) continue
   const len = Math.hypot(bx - ax, bz - az)
-  box('ground', '#737b7c', mx, .031 + (roads.length % 3) * .0006, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
+  box('ground', '#737b7c', mx, .029 + (roads.length % 4) * .003, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
   roads.push([ax, az, bx, bz, r.w])
 }
 const houses: number[][] = []

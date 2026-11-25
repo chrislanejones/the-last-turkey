@@ -75,7 +75,7 @@ scene.fog = new THREE.Fog('#bcd6e6', 120, 420)
 scene.add(new THREE.HemisphereLight('#d6e6ff', '#8c8468', 1.2))
 const sun = new THREE.DirectionalLight('#fff1dc', 3.4)
 sun.castShadow = true
-sun.shadow.mapSize.set(2048, 2048)
+sun.shadow.mapSize.set(matchMedia('(pointer:coarse)').matches ? 2048 : 4096, matchMedia('(pointer:coarse)').matches ? 2048 : 4096) // crisper shadow edges on desktop
 Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 400 })
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03
 scene.add(sun, sun.target)
@@ -455,7 +455,7 @@ boxes.push({ c: new V2(-88.5 * U + 0.5, 380.0 * U + 0.4), a: new V2(1, 0), hx: 1
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.0 - 2.3) * U - 3.25 + v * 2.6, 0.45])
 circles.push([-88.5 * U, (380.0 - 2.3) * U - 3.25, 0.6])
 // (the crossing-sign planter is a curb you hop, and its sign gets knocked down: see rideBeds and the crates)
-boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 0.2), a: new V2(1, 0), hx: 1.5, hz: 6.6 }) // enclosure and hedges on the north strip's east end
+boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 2.5), a: new V2(1, 0), hx: 1.5, hz: 2.95 }) // the utility enclosure on the north strip's east end
 circles.push(dressing.userData.cornerBed) // and the one off the end of the west strip
 // The drivable wedge is two convex areas that overlap: the plaza lot and the station pad.
 const mkRegion = (pts) => {
@@ -685,7 +685,7 @@ function reset(toCutscene) {
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
   resetCrates()
-  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
+  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, conspiracy: false, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
   for (const c of [...sodas, ...lattes]) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
   for (const c of cans) { c.live = false; c.mesh.visible = false }
@@ -939,7 +939,7 @@ const forkCrates = []
     x.strokeStyle = '#2a1a0c'; x.lineWidth = 3; x.beginPath(); x.moveTo(64, 140); x.lineTo(64, 200); x.moveTo(44, 160); x.lineTo(64, 140); x.lineTo(84, 160); x.stroke()
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
   const card = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.9 }), cardTop = new THREE.MeshStandardMaterial({ color: '#a77a48', roughness: 0.9 })
-  for (const [x, z, yaw] of [[-96.3, 387.2, 0.3], [-95.2, 386.6, -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
+  for (const [x, z, yaw] of [[-96.3, 387.2, 0.3], [-97.05, 386.5, -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
     const m = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.22, 0.62), [card, card, cardTop, cardTop, card, card]); b.castShadow = true; m.add(b)
     const inner = new THREE.Group(); m.add(inner)
     for (const [dx, dz, r] of [[-0.14, 0.1, 0.08], [0.12, -0.1, -0.1], [0.0, 0.14, 0.12]]) { const f = makeFork(); f.position.set(dx, 0.75, dz); f.rotation.set(r, dx * 3, -r); inner.add(f) }
@@ -963,6 +963,32 @@ function spillForks(c) {
 { const post = dressing.userData.pedSign
   if (post) { const wp = post.getWorldPosition(new V3()); post.parent.remove(post); scene.add(post); for (const ch of post.children) ch.position.y -= 1.25 // pivot at its middle
     crates.push({ m: post, half: new V3(0.06, 1.25, 0.06), r: 0.25, home: { pos: new V3(wp.x, GY + 1.25, wp.z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, sign: true, pivotLow: true }) } }
+// Three roll-out trash bins behind the north strip: the conspiracy. Hit one and turkeys tumble out.
+const binTurkeys = []
+{
+  const body = new THREE.MeshStandardMaterial({ color: '#2f4a3a', roughness: 0.7 }), lidM = new THREE.MeshStandardMaterial({ color: '#1e2a24', roughness: 0.6 }), tyreM = new THREE.MeshStandardMaterial({ color: '#151515', roughness: 0.9 })
+  const binGeo = new THREE.CylinderGeometry(0.36, 0.3, 1.0, 4, 1).rotateY(Math.PI / 4)
+  for (const dz of [1.4, 2.8, 4.2]) {
+    const m = new THREE.Group()
+    const b = new THREE.Mesh(binGeo, body); b.scale.set(1, 1, 1.15); b.castShadow = true; m.add(b)
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.06, 0.68), lidM); lid.position.set(0, 0.53, 0.02); lid.castShadow = true; m.add(lid)
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 8), lidM); bar.rotation.z = Math.PI / 2; bar.position.set(0, 0.5, -0.4); m.add(bar)
+    for (const e of [-1, 1]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.07, 14), tyreM); w.rotation.z = Math.PI / 2; w.position.set(e * 0.27, -0.42, -0.3); m.add(w) }
+    scene.add(m)
+    crates.push({ m, half: new V3(0.3, 0.5, 0.36), r: 0.42, home: { pos: new V3(-76.1 * U + 1.1, GY + 0.5, 339.8 * U + dz), yaw: -Math.PI / 2 }, vel: new V3(), spin: new V3(), awake: false, turkeyBin: true })
+  }
+}
+function spillTurkeys(c) {
+  for (let i = 0; i < 4; i++) {
+    let t = binTurkeys.find((t) => !t.m.visible)
+    if (!t) { const m = new THREE.Group(), bird = makeTurkey(); bird.scale.setScalar(0.42); bird.position.y = -0.26; m.add(bird); scene.add(m); t = { m, half: new V3(0.28, 0.24, 0.28), r: 0.3, home: null, vel: new V3(), spin: new V3(), awake: false, bird: true }; binTurkeys.push(t); crates.push(t) }
+    const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 3
+    t.gy = c.gy; t.m.visible = true; t.m.position.set(c.m.position.x, c.m.position.y + 0.5, c.m.position.z); t.m.quaternion.setFromEuler(new THREE.Euler(0, a, 0))
+    t.vel.set(c.vel.x * 0.6 + Math.cos(a) * sp, 2 + Math.random() * 2.5, c.vel.z * 0.6 + Math.sin(a) * sp); t.spin.set((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 8); t.awake = true
+  }
+  if (!game.conspiracy) { game.conspiracy = true; $('bubble2').textContent = 'WHAT IN THE WORLD? HOW IS THERE ONLY ONE TURKEY? THEY’RE ALL IN THESE TRASH CANS!'; $('bubble2').classList.add('show'); game.b2T = 4.5
+    chrisSays('IT’S A CONSPIRACY!', 3) }
+}
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -982,7 +1008,7 @@ const groundRay = new THREE.Raycaster(), groundMeshes = []
 world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
-function resetCrates() { for (const c of crates) { if (c.donut || c.fork) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+function resetCrates() { for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
@@ -1003,6 +1029,7 @@ function pushCrates(car) {
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
+    if (c.turkeyBin && !c.spilled) { c.spilled = true; spillTurkeys(c) }
     if (c.sign && !c.spilled && car === P) { c.spilled = true; game.armor = Math.max(1, game.armor - 3); hurt(1); flash('SIGN DOWN!'); audio.clang(0.5); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
     c.awake = true
     car.vel.multiplyScalar(0.985)
