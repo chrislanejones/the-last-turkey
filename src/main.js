@@ -448,7 +448,7 @@ const boxes = [
   { c: u2(-87.65, 372.6).add(new V2(0, 0.9)), a: new V2(1, 0), hx: 2.35 * U, hz: 1.9 * U + 0.9 }, // with its south walk
 ]
 // The Square K: the store (with its front walk), two pump islands, the canopy posts, the price pylon.
-boxes.push(wingBox(-88.76, 385.71, 0.035, 3.46, 2.6), wingBox(-88.6, 389.65, 0, 2.6, 0.2), wingBox(-88.6, 390.55, 0, 2.6, 0.2), wingBox(-86.4, 394.4, 0, 0.3, 0.8))
+boxes.push(wingBox(-88.76, 385.71, 0.035, 3.46, 2.6), wingBox(-88.6, 389.65, 0, 2.6, 0.2), wingBox(-88.6, 390.55, 0, 2.6, 0.2)) // (the price pylon is a knock-over prop now)
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([(-88.6 + e * 1.15) * U, (390.1 + v * 0.45) * U, 0.3])
 // Bank of the Gulf of America (with its front hedge) and the four posts of its drive-thru canopy.
 boxes.push({ c: new V2(-88.5 * U + 0.5, 380.0 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 2.3 * U + 0.6 })
@@ -998,7 +998,7 @@ function spillTurkeys(c) {
   const pole = new THREE.MeshStandardMaterial({ color: '#3b3f44', metalness: 0.5 }), cloth = new THREE.MeshStandardMaterial({ color: '#22305c', side: THREE.DoubleSide }), topM = new THREE.MeshStandardMaterial({ color: '#2a4f9e' }), red = new THREE.MeshStandardMaterial({ color: '#c8302b' })
   const bay = -0.6125, front = 1.65
   for (const e of [-0.42, 0.42]) {
-    const [x, z] = at(bay + e, front - 0.12)
+    const [x, z] = at(bay + e * 1.1, front + 0.62) // out past the curb, where a car can reach them
     const m = new THREE.Group()
     const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.45, 6), pole); m.add(p)
     const um = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 8, 1, true), cloth); um.position.y = 1.1; um.castShadow = true; m.add(um)
@@ -1026,6 +1026,19 @@ function spillTurkeys(c) {
     scene.add(m); crates.push({ m, half: new V3(0.1, 1.1, 0.1), r: 0.3, home: { pos: new V3(x, GY + 1.0, z), yaw: t + Math.random() }, vel: new V3(), spin: new V3(), awake: false, rod: true })
   }
 }
+// The Square K price pylon: hit it hard enough and it topples, the LED prices die in a shower of sparks.
+const pylonProp = (() => {
+  const T = dressing.userData.pylon; if (!T) return null
+  const H = 1.6 * U, m = new THREE.Group()
+  const brick = new THREE.MeshStandardMaterial({ color: '#7a4a32', roughness: 0.9 }), black = new THREE.MeshStandardMaterial({ color: '#2b2e30', roughness: 0.6 })
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.2 * U, 0.5 * U, 0.7 * U), brick); base.position.y = 0.25 * U - H / 2; base.castShadow = true; m.add(base)
+  const col = new THREE.Mesh(new THREE.BoxGeometry(0.15 * U, 1.1 * U, 0.6 * U), black); col.position.y = 1.05 * U - H / 2; col.castShadow = true; m.add(col)
+  const faceMat = new THREE.MeshStandardMaterial({ map: T.lit, emissive: '#ffffff', emissiveMap: T.lit, emissiveIntensity: 0.25 })
+  for (const s of [-1, 1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.58 * U, 1.08 * U), faceMat); f.position.set(s * 0.08 * U, 1.05 * U - H / 2, 0); f.rotation.y = s * Math.PI / 2; m.add(f) }
+  scene.add(m)
+  const c = { m, half: new V3(0.1 * U, H / 2, 0.35 * U), r: 0.45 * U, home: { pos: new V3(-86.4 * U, GY + H / 2, 394.4 * U), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, rod: true, pylon: true, faceMat, lit: T.lit, dead: T.dead }
+  crates.push(c); return c
+})()
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -1045,15 +1058,17 @@ const groundRay = new THREE.Raycaster(), groundMeshes = []
 world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
-function resetCrates() { for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+function resetCrates() { if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
+  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
   for (const c of crates) {
     if (!c.m.visible) continue
     const p = c.m.position, dx = p.x - car.pos.x, dz = p.z - car.pos.y
-    if (dx * dx + dz * dz > 16 || p.y > (c.gy ?? GY) + 1.5) continue
+    if (dx * dx + dz * dz > (c.pylon ? 36 : 16) || p.y - c.half.y > (c.gy ?? GY) + 1.0) continue
     const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
+    if (c.pylon && c.spilled) continue // once it's falling, let it fall
     const pa = 2.75 + c.r * 0.8 - Math.abs(along), pc = 1.05 + c.r * 0.8 - Math.abs(across)
     if (pa <= 0 || pc <= 0) continue
     // Knock it clear of the car, carrying the car's speed plus a hop and a tumble.
@@ -1067,12 +1082,20 @@ function pushCrates(car) {
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
     if (c.turkeyBin && !c.spilled) { c.spilled = true; spillTurkeys(c) }
+    if (c.pylon && !c.spilled) { c.spilled = true
+      // Topple away from the car rather than fly: a slow shove and a tip about the horizontal axis.
+      const sp2 = Math.hypot(car.vel.x, car.vel.y) || 1, dx = car.vel.x / sp2, dz = car.vel.y / sp2
+      c.vel.set(dx * 1.5, 0.5, dz * 1.5); c.spin.set(dz * 1.9, 0, -dx * 1.9)
+      c.faceMat.map = c.dead; c.faceMat.emissiveMap = c.dead; c.faceMat.emissiveIntensity = 0.05; c.faceMat.needsUpdate = true; c.sparkT = 1.6
+      if (car === P) { game.armor = Math.max(1, game.armor - 4); hurt(1); audio.clang(0.8); flash('PRICES DOWN!')
+        $('bubble2').textContent = 'THAT’S NOT EVEN THE FIRST TIME THAT SIGN HAS BEEN KNOCKED OVER.'; $('bubble2').classList.add('show'); game.b2T = 3.8 } }
     if (c.sign && !c.spilled && car === P) { c.spilled = true; game.armor = Math.max(1, game.armor - 3); hurt(1); flash('SIGN DOWN!'); audio.clang(0.5); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
     c.awake = true
     car.vel.multiplyScalar(0.985)
   }
 }
 function updateCrates(dt) {
+  if (pylonProp && pylonProp.sparkT > 0) { pylonProp.sparkT -= dt; if (Math.random() < 0.35) { const p = pylonProp.m.position; burst(new V2(p.x + (Math.random() - 0.5) * 2, p.z + (Math.random() - 0.5) * 2), 2, true, false, Math.random() < 0.5 ? '#ffe27a' : '#9fd8ff') } }
   pushCrates(P); pushCrates(R)
   for (const c of crates) {
     if (!c.awake) continue
@@ -1096,10 +1119,13 @@ function updateCrates(dt) {
     const floor = (c.gy ?? GY) + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
-      const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
+      if (c.pylon && c.spilled && !c.fell && uy < 0.25) { c.fell = true; c.spin.set(0, 0, 0); c.vel.multiplyScalar(0.3) }
+      const tipping = c.pylon && c.spilled && !c.fell // a toppling pylon keeps falling until it's down, then stays down
+      const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; if (!tipping) c.spin.multiplyScalar(Math.exp(-5 * dt))
+      if (tipping) { c.spin.multiplyScalar(1 + dt * 2.5) } else {
       if (lying || c.fork || c.sign) { const hz = new V3(up.x || 0.01, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
       else { _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')) }
-      c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
+      c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt)) }
       if (c.vel.lengthSq() < 0.01 && c.spin.lengthSq() < 0.02) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.m.quaternion.copy(_q); c.awake = false }
     }
   }
@@ -1220,6 +1246,11 @@ function update(dt) {
   { const t = Math.atan2(0.968, -0.249), mx = (-93.25 + 6.5 * Math.cos(t)) * U, mz = (364.09 - 6.5 * Math.sin(t)) * U
     if (Math.hypot(P.pos.x - mx, P.pos.y - mz) < 14 && (game.psT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'FORGET THE TURKEY, I’D RATHER HAVE PUMPKIN SPICE. CAN WE STOP? LET’S GET THE PUMPKIN SPICE.'; $('bubble2').classList.add('show'); game.b2T = 4.2; game.psT = 30 }
     game.psT = (game.psT ?? 0) - dt }
+  // Under the sheriff's dog billboard.
+  { const d = Math.hypot(P.pos.x - SHERIFF.x * U, P.pos.y - SHERIFF.z * U)
+    if (d < 16 && (game.dogT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'MAN, ALL OF A SUDDEN I REALLY WANT A DOG.'; $('bubble2').classList.add('show'); game.b2T = 3; game.dogT = 30; game.dog2 = 2.4 }
+    if (game.dog2 > 0 && (game.dog2 -= dt) <= 0) chrisSays('BUT WE HAVE CATS ALREADY.', 3)
+    game.dogT = (game.dogT ?? 0) - dt }
   // Driving around or under the Call Christy Homes billboard, Becky notices the necklace.
   if (BB_VIEW.look) { const d = Math.hypot(P.pos.x - BB_VIEW.look.x, P.pos.y - BB_VIEW.look.z)
     if (d < 13 && (game.necklaceT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'THAT’S MY HOUSE NECKLACE. CHRISTY STILL OWES IT TO ME.'; $('bubble2').classList.add('show'); game.b2T = 3.4; game.necklaceT = 25; game.necklace2 = 3.6 }

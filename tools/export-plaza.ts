@@ -54,7 +54,8 @@ const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([h
 })
 const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: number, z: number, rotation = 0, _glow?: string | null) => {
   if ((input as any).parameters?.height === 2.5 && layer === 'wood') DATA.poles.push([x * UNIT, z * UNIT])
-  if (wb && inFarmers(x, z)) { input.dispose(); return } // the corner office is built by the game
+  if (wb && inFarmers(x, z)) { input.dispose(); return }
+  if (!wb && layer === 'architecture' && Math.hypot(x + 86.4, z - 394.4) < .5 && y > .05) { input.dispose(); return } // the price pylon: the game builds it, so it can fall // the corner office is built by the game
   let g = input.index ? input.toNonIndexed() : input.clone()
   input.dispose()
   for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k)

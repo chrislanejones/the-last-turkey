@@ -94,14 +94,17 @@ export function dressStation(scene, U, apronY) {
     x.fillStyle = '#1e2124'; x.fillRect(0, 0, 256, 448)
     x.fillStyle = '#d0282e'; x.fillRect(12, 12, 232, 130)
     x.fillStyle = '#ffffff'; x.fillRect(28, 26, 100, 100); x.fillStyle = '#d0282e'; x.font = 'bold 96px Oswald, Impact, sans-serif'; x.textAlign = 'center'; x.fillText('K', 78, 112)
-    x.fillStyle = '#ffffff'; x.font = 'bold 34px Oswald, Impact, sans-serif'; x.fillText('SQUARE', 184, 70); x.fillText('K', 184, 110)
+    x.fillStyle = '#ffffff'; x.font = 'bold 30px Oswald, Impact, sans-serif'; x.fillText('SQUARE K', 186, 92)
     x.fillStyle = '#f1c62f'; x.fillRect(12, 152, 232, 70); x.fillStyle = '#d0282e'; x.font = 'bold 44px Oswald, Impact, sans-serif'; x.fillText('FUEL', 128, 204)
     const rows = [['REGULAR', '3.09'], ['PLUS', '3.49'], ['DIESEL', '3.59']]
     rows.forEach(([name, price], i) => { const y = 236 + i * 70
       x.fillStyle = '#0b0d0e'; x.fillRect(12, y, 232, 60); x.fillStyle = '#e8e8e8'; x.font = 'bold 22px Oswald, sans-serif'; x.textAlign = 'left'; x.fillText(name, 22, y + 38)
       x.fillStyle = '#47f06a'; x.font = 'bold 44px monospace'; x.textAlign = 'right'; x.fillText(price, 238, y + 46); x.textAlign = 'center' })
   } })
-  for (const s of [-1, 1]) plane(pylon, (-86.4 + s * 0.085) * U, 1.05 * U, 394.4 * U, 0.58 * U, 1.08 * U, s * Math.PI / 2, { emissive: '#ffffff', emissiveMap: pylon, emissiveIntensity: 0.25 })
+  // The game builds the pylon itself (it can be knocked over); hand it both faces: lit, and dead.
+  const dead = label('', { w: 256, h: 448, draw: (x) => { x.drawImage(pylon.image, 0, 0); x.fillStyle = '#0b0d0e'; for (let i = 0; i < 3; i++) x.fillRect(150, 240 + i * 70, 92, 52)
+    x.strokeStyle = 'rgba(200,220,255,.5)'; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 250); x.lineTo(120, 330); x.lineTo(80, 420); x.moveTo(200, 160); x.lineTo(150, 260); x.stroke() } })
+  g.userData.pylon = { lit: pylon, dead }
   
   // Bumpkin' Donuts shares the Square K building: a dark parapet block over its west end.
   {
@@ -584,7 +587,7 @@ export function dressStation(scene, U, apronY) {
     const sign = label('', { w: 1024, h: 160, draw: (x) => {
       x.fillStyle = '#dcbf86'; x.fillRect(0, 0, 1024, 160); x.fillStyle = '#b3261e'; x.beginPath(); x.roundRect(20, 14, 984, 132, 26); x.fill()
       x.strokeStyle = '#f4f1e8'; x.lineWidth = 6; x.setLineDash([22, 14]); x.strokeRect(34, 28, 956, 104); x.setLineDash([])
-      x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 92px Georgia, serif'; x.fillText('NORTH POLE OUTLET', 512, 112)
+      x.fillStyle = '#fff'; x.textAlign = 'center'; let px = 92; do { x.font = `bold ${px}px Georgia, serif`; px -= 2 } while (x.measureText('NORTH POLE OUTLET').width > 780); x.fillText('NORTH POLE OUTLET', 512, 80 + px * 0.36)
       x.fillStyle = '#2f7d32'; for (const px of [70, 954]) { x.beginPath(); x.moveTo(px, 40); x.lineTo(px + 26, 110); x.lineTo(px - 26, 110); x.fill() }
     } })
     { const [x, z] = at((bayC(3) + bayC(4)) / 2, 1.65 + 0.075); plane(sign, x, (1.45 - 0.2) * U, z, 2.35 * U, 2.35 * U * 160 / 1024, t, { emissive: '#ffffff', emissiveMap: sign, emissiveIntensity: 0.15 }) }
