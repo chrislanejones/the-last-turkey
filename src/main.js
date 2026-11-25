@@ -49,7 +49,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuff
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 renderer.setSize(innerWidth, innerHeight)
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 0.6
+renderer.toneMappingExposure = 0.62
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 $('stage').appendChild(renderer.domElement)
@@ -62,19 +62,33 @@ const sunDir = new V3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 
 const makeSky = () => {
   const sky = new Sky(); sky.scale.setScalar(10000)
   const u = sky.material.uniforms
-  u.turbidity.value = 2.6; u.rayleigh.value = 1.5; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.86
+  u.turbidity.value = 1.6; u.rayleigh.value = 2.6; u.mieCoefficient.value = 0.0028; u.mieDirectionalG.value = 0.86 // a clear Florida morning: deep blue up top, pale toward the horizon
   u.sunPosition.value.copy(sunDir)
   return sky
 }
-scene.background = new THREE.Color('#bcd6e6') // plain sky; the Sky shader only lights the chrome
+// The same physically based sky lights the scene and is the backdrop: rendered once into a cube map.
+const skyCube = new THREE.WebGLCubeRenderTarget(512, { type: THREE.HalfFloatType })
+{ const envSky = new THREE.Scene(); envSky.add(makeSky()); new THREE.CubeCamera(1, 20000, skyCube).update(renderer, envSky) }
+scene.background = skyCube.texture
+scene.backgroundIntensity = 0.42 // keep ACES from washing the sky out to white
+// A few soft fair-weather clouds, painted once and placed far out over the town.
+{
+  const tex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d')
+    for (let i = 0; i < 22; i++) { const px = 40 + Math.random() * 176, py = 50 + Math.random() * 40, r = 18 + Math.random() * 30
+      const gr = x.createRadialGradient(px, py, 0, px, py, r); gr.addColorStop(0, 'rgba(255,255,255,.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(px - r, py - r, r * 2, r * 2) }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false, opacity: 0.85, toneMapped: false, color: '#f4f7fb' })
+  for (let i = 0; i < 14; i++) { const sp = new THREE.Sprite(mat), a = (i / 14) * Math.PI * 2 + Math.random() * 0.3, d = 650 + Math.random() * 350, w = 140 + Math.random() * 160
+    sp.scale.set(w, w * 0.42, 1); sp.position.set(G.x + Math.cos(a) * d, 70 + Math.random() * 90, G.y + Math.sin(a) * d); sp.renderOrder = -1; scene.add(sp) }
+}
 const pmrem = new THREE.PMREMGenerator(renderer)
 const envScene = new THREE.Scene(); envScene.add(makeSky())
 scene.environment = pmrem.fromScene(envScene, 0, 0.1, 20000).texture
 scene.environmentIntensity = 0.75
-scene.fog = new THREE.Fog('#bcd6e6', 120, 420)
+scene.fog = new THREE.Fog('#c6d6e2', 160, 520) // matched to the sky near the horizon
 
-scene.add(new THREE.HemisphereLight('#d6e6ff', '#8c8468', 1.2))
-const sun = new THREE.DirectionalLight('#fff1dc', 3.4)
+scene.add(new THREE.HemisphereLight('#bcd4f0', '#7d7458', 1.0)) // blue sky above, warm sandy bounce below
+const sun = new THREE.DirectionalLight('#ffe7c4', 3.9) // warm morning sun
 sun.castShadow = true
 sun.shadow.mapSize.set(matchMedia('(pointer:coarse)').matches ? 2048 : 4096, matchMedia('(pointer:coarse)').matches ? 2048 : 4096) // crisper shadow edges on desktop
 Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 400 })
