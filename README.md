@@ -21,7 +21,7 @@ Chris and his wife are in a red '64 Ford Galaxie convertible. Phillip, the neigh
 | Throw soda | F | SODA |
 | Camera | V, drag to orbit, mouse wheel or Ctrl +/− to zoom | CAM, drag, pinch |
 | Horn / sound / restart | H / M / R | |
-| Show these controls | hold Ctrl, or the KEYS button | |
+| Show these controls | hold Ctrl, or the CTRLS button | |
 
 ## Rules
 
