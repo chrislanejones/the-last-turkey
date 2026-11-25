@@ -11,6 +11,7 @@ function label(text, { w = 256, h = 128, bg = '#ffffff', fg = '#c8302b', font = 
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t
 }
 
+export const PED_BED = [-86.8, 364.6]
 export function dressStation(scene, U, apronY) {
   const g = new THREE.Group(); g.name = 'station-dressing'; scene.add(g)
   const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, ...o })
@@ -198,15 +199,15 @@ export function dressStation(scene, U, apronY) {
     const gAt = (lx, lz) => [(gx + lx * 0.6 + lz * 0.8) * U, (gz - lx * 0.8 + lz * 0.6) * U]
     const pronto = label('', { w: 256, h: 112, draw: (x) => { x.fillStyle = '#ecdcb6'; x.fillRect(0, 0, 256, 112); x.fillStyle = '#c8302b'; x.beginPath(); x.roundRect(8, 8, 240, 96, 22); x.fill(); x.fillStyle = '#fff'; x.font = 'italic bold 64px Georgia, serif'; x.textAlign = 'center'; x.fillText('Pronto!', 128, 78) } })
     { const [x, z] = gAt(3.4, 4.8 + 0.19); plane(pronto, x, lot + 2.9, z, 1.5, 0.66, t) }
-    // Bike rack with three bikes, right of the door.
+    // Bike rack with three bikes, out of the way on the other side of the entry.
     const bikeM = [M('#2f6fc4'), M('#c8302b'), M('#2b2d31')], tyre = M('#1b1b1b')
     for (let i = 0; i < 3; i++) {
-      const [x, z] = gAt(6.35 + i * 0.13, 4.8 + 0.42), b = new THREE.Group(); b.position.set(x, lot + 0.06, z); b.rotation.y = t + 0.25; b.rotation.z = 0.12; g.add(b)
+      const [x, z] = gAt(0.95 + i * 0.13, 4.8 + 0.42), b = new THREE.Group(); b.position.set(x, lot + 0.06, z); b.rotation.y = t + 0.25; b.rotation.z = 0.12; g.add(b)
       for (const e of [-0.5, 0.5]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.03, 6, 16), tyre); w.rotation.y = Math.PI / 2; w.position.set(0, 0.36, e); b.add(w) }
       for (const [y, zz, len, rx] of [[0.62, 0, 0.95, Math.PI / 2], [0.5, -0.22, 0.6, 0.9], [0.5, 0.25, 0.62, -0.75], [0.85, 0.42, 0.5, 0]]) { const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, len, 5), bikeM[i]); tb.position.set(0, y, zz); tb.rotation.x = rx; b.add(tb) }
       const seat = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.25), tyre); seat.position.set(0, 0.92, -0.38); b.add(seat)
     }
-    { const [x, z] = gAt(6.5, 4.8 + 0.28); const r = cyl(steel, x, lot + 0.45, z, 0.03, 1.7, 6); r.rotation.x = Math.PI / 2; r.rotation.z = -t }
+    { const [x, z] = gAt(1.1, 4.8 + 0.28); const r = cyl(steel, x, lot + 0.45, z, 0.03, 1.7, 6); r.rotation.x = Math.PI / 2; r.rotation.z = -t }
     // A sandwich board by the door.
     { const [x, z] = gAt(5.75, 4.8 + 0.5); const board = label('', { w: 160, h: 256, draw: (c) => { c.fillStyle = '#fffdf5'; c.fillRect(0, 0, 160, 256); c.fillStyle = '#2f7d32'; c.fillRect(0, 0, 160, 54); c.fillStyle = '#fff'; c.font = 'bold 30px Oswald, sans-serif'; c.textAlign = 'center'; c.fillText('publick', 80, 38); c.fillStyle = '#c8302b'; c.font = 'bold 34px Oswald, sans-serif'; c.fillText('TURKEYS:', 80, 110); c.font = 'bold 76px Oswald, sans-serif'; c.fillText('1', 80, 196); c.font = 'bold 26px Oswald, sans-serif'; c.fillText('LEFT', 80, 236) } })
       for (const sgn of [-1, 1]) { const m = plane(board, x, lot + 0.6, z, 0.7, 1.1, t + (sgn > 0 ? 0 : Math.PI), { side: THREE.DoubleSide }); m.rotation.x = -sgn * 0.18; m.position.x += Math.sin(t) * 0.12 * sgn; m.position.z += Math.cos(t) * 0.12 * sgn } }
@@ -217,8 +218,8 @@ export function dressStation(scene, U, apronY) {
       plane(label(txt, { w: 256, h: 128, bg, fg, font: 'bold 34px Oswald, Impact, sans-serif' }), x + 0.9, 0.42 * U, z, 1.3, 0.65)
       plane(label(String(1011 + k * 2), { w: 128, h: 48, bg: '#2f3a3c', fg: '#fff', font: 'bold 34px Oswald, sans-serif' }), x - 0.3 * U, 0.7 * U, z + 0.03, 0.6, 0.22)
     })
-    // The planted bed at the inside corner, with the pedestrian-crossing sign.
-    { const bx = -87.7 * U, bz = 342.5 * U
+    // The planted bed with the pedestrian-crossing sign, out in the lot at the end of a parking row.
+    { const bx = PED_BED[0] * U, bz = PED_BED[1] * U
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.22, 16), M('#d9d5c8')); bed.position.set(bx, lot + 0.11, bz); g.add(bed)
       const mulch = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.24, 16), M('#6b4f3a')); mulch.position.set(bx, lot + 0.12, bz); g.add(mulch)
       for (const [dx, dz, r] of [[0.4, 0.2, 0.5], [-0.4, 0.3, 0.45], [0, -0.45, 0.5]]) { const sh = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), M('#3f6b3a', { roughness: 1 })); sh.scale.y = 0.7; sh.position.set(bx + dx, lot + 0.45, bz + dz); sh.castShadow = true; g.add(sh) }

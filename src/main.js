@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { Sky } from 'three/examples/jsm/objects/Sky.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { buildGalaxie, buildSUV, CAR, SUV } from './car.js'
-import { dressStation } from './station.js'
+import { dressStation, PED_BED } from './station.js'
 import BILLBOARD from './billboard-img.js'
 import SHERIFF_IMG from './sheriff-img.js'
 
@@ -44,7 +44,7 @@ const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
 // --- renderer, scene, sky ---------------------------------------------------------
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('shot') })
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('shot') })
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 renderer.setSize(innerWidth, innerHeight)
 renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -322,8 +322,11 @@ const POND = { x0: -111.4, x1: -100.6, z0: 392.5, z1: 401.5 }
 {
   const wood = new THREE.MeshStandardMaterial({ color: '#9a6a3f', roughness: 0.9 }), leg = new THREE.MeshStandardMaterial({ color: '#5b5f63', metalness: 0.4, roughness: 0.6 })
   const turn = Math.atan2(2.2, 9.4) // along the wall
-  for (const z of [349.35, 349.95, 350.55, 351.15]) {
-    const x = -102.7 + (z - 345.9) * (2.2 / 9.4), t = new THREE.Group(); t.position.set(x * U, 0.12, z * U); t.rotation.y = turn + Math.PI / 2; scene.add(t)
+  // Spread out in two staggered rows across the gap; the stagger leaves no lane a car could thread.
+  const spots = [[349.15, 0.25, 0.3], [350.25, 0.25, -0.2], [351.35, 0.25, 0.45], [349.7, -0.45, -0.5], [350.8, -0.45, 0.15], [351.85, -0.5, -0.35]]
+  for (const [z0, off, spin] of spots) {
+    const z = z0 + off * 0.228, x = -102.7 + (z0 - 345.9) * (2.2 / 9.4) + off * 0.973
+    const t = new THREE.Group(); t.position.set(x * U, 0.12, z * U); t.rotation.y = turn + Math.PI / 2 + spin; scene.add(t)
     const top = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.07, 0.8), wood); top.position.y = 0.76; top.castShadow = true; t.add(top)
     for (const e of [-1, 1]) {
       const bench = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.06, 0.3), wood); bench.position.set(0, 0.45, e * 0.62); bench.castShadow = true; t.add(bench)
@@ -450,7 +453,7 @@ for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([(-88.6 + e * 1.1
 boxes.push({ c: new V2(-88.5 * U + 0.5, 380.0 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 2.3 * U + 0.6 })
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.0 - 2.3) * U - 3.25 + v * 2.6, 0.45])
 circles.push([-88.5 * U, (380.0 - 2.3) * U - 3.25, 0.6])
-circles.push([-87.7 * U, 342.5 * U, 1.35]) // the planted bed with the crossing sign
+circles.push([PED_BED[0] * U, PED_BED[1] * U, 1.35]) // the planted bed with the crossing sign
 boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 0.2), a: new V2(1, 0), hx: 1.5, hz: 6.6 }) // enclosure and hedges on the north strip's east end
 circles.push(dressing.userData.cornerBed) // and the one off the end of the west strip
 // The drivable wedge is two convex areas that overlap: the plaza lot and the station pad.
@@ -988,6 +991,7 @@ function update(dt) {
   }
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
+  rideBeds(dt, live)
   if (bumped > 3) { S.hit = Math.min(1, bumped / 15); audio.crash(Math.min(1, bumped / 16)) }
   // Hitting things hurts the Galaxie too: walls, buildings, pumps, parked cars, poles.
   game.wallCool = (game.wallCool ?? 0) - dt
@@ -1023,12 +1027,32 @@ function update(dt) {
   if (game.armor < 45 && Math.random() < (1 - game.armor / 45) * 0.4) burst(P.pos.clone().addScaledVector(P.f, 2.2), 1, false, false)
 }
 
+// Mulch beds in the lot: the Galaxie hops up onto the concrete curb, rides over, and takes a scrape.
+const BEDS = (DATA.beds || []).map(([x, z, w, d, t, top]) => ({ x, z, hw: w / 2 + 0.05, hd: d / 2 + 0.05, c: Math.cos(t), s: Math.sin(t), h: top - GY }))
+const onBed = (x, z) => { for (const b of BEDS) { const dx = x - b.x, dz = z - b.z, lx = dx * b.c - dz * b.s, lz = dx * b.s + dz * b.c; if (Math.abs(lx) < b.hw && Math.abs(lz) < b.hd) return b.h } return 0 }
+Object.assign(P, { curbLift: 0, curbPitch: 0, curbRoll: 0, curbWheels: 0 })
+function rideBeds(dt, live) {
+  const fx = Math.sin(P.heading), fz = Math.cos(P.heading), rx = fz, rz = -fx
+  const h = [[1.55, 0.78], [1.55, -0.78], [-1.5, 0.78], [-1.5, -0.78]].map(([a, c]) => onBed(P.pos.x + fx * a + rx * c, P.pos.y + fz * a + rz * c))
+  const on = h.filter((v) => v > 0).length, k = 1 - Math.exp(-dt * 14)
+  P.curbLift += ((h[0] + h[1] + h[2] + h[3]) / 4 - P.curbLift) * k
+  P.curbPitch += (((h[2] + h[3]) - (h[0] + h[1])) / 2 / 3.05 - P.curbPitch) * k
+  P.curbRoll += (((h[1] + h[3]) - (h[0] + h[2])) / 2 / 1.56 - P.curbRoll) * k
+  // Each wheel that bangs up onto the curb is a jolt and a little scrape; the bed also scrubs speed.
+  if (on > P.curbWheels) {
+    const sp = Math.hypot(P.vel.x, P.vel.y)
+    if (sp > 1.5) { S.hit = Math.max(S.hit, 0.25); audio.crash(0.12); if (live) { game.armor = Math.max(1, game.armor - 0.6 * (on - P.curbWheels)); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') } }
+  }
+  if (on) P.vel.multiplyScalar(Math.exp(-dt * 0.8 * on))
+  P.curbWheels = on
+}
+
 // S keeps the camera's shake; the vehicles carry the rest.
 const S = { hit: 0 }
 function placeCars(t) {
   const k = 0.25
   P.gy = P.gy === undefined ? groundAt(P.pos) : P.gy + (groundAt(P.pos) - P.gy) * k; R.gy = R.gy === undefined ? groundAt(R.pos) : R.gy + (groundAt(R.pos) - R.gy) * k
-  car.position.set(P.pos.x, P.gy, P.pos.y); car.rotation.y = P.heading
+  car.position.set(P.pos.x, P.gy + P.curbLift, P.pos.y); car.rotation.set(P.curbPitch, P.heading, P.curbRoll, 'YXZ')
   body.position.y = P.bounce; body.rotation.set(P.pitch, 0, P.roll)
   for (const w of wheels) { w.spin.rotation.x = P.wheelRot; if (w.front) w.group.rotation.y = P.steer * 0.7 }
   steering.userData.spin.rotation.z = -P.steer * 2.2

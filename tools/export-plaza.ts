@@ -81,6 +81,8 @@ const box = (layer: Layer, color: string, x: number, y: number, z: number, w: nu
     for (let k = 1; k * .13 < h - .05; k++) add('architecture', new BoxGeometry(w + .012, .008, d + .012), '#b9b2a0', x, y0 + k * .13, z, turn) // clapboard lines
     loving = false
   }
+  // Mulch beds in the lot: cars can hop up onto these.
+  if (!wb && layer === 'ground' && color === '#6b4f3a') DATA.beds.push([x * UNIT, z * UNIT, w * UNIT, d * UNIT, turn, (y + h / 2) * UNIT])
   if (wb && color === '#c7c3b4' && w === .7 && inHood(x, z)) DATA.drives.push([x * UNIT, z * UNIT, Math.sin(turn), Math.cos(turn), d * UNIT])
   add(layer, new BoxGeometry(w, h, d), color, x, y, z, turn, glow)
 }
@@ -115,7 +117,7 @@ const inAHome = (x: number, z: number) => wb && x < -97 && x > -131 && z > 376 &
 const bush = (...a: Parameters<typeof plants.bush>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.bush(...a)) }
 const tree = (...a: Parameters<typeof plants.tree>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.tree(...a)) }
 const rand = (seed: number) => { const v = Math.sin(seed * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v) }
-const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][] }
+const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][], beds: [] as number[][] }
 let thin = false
 const car = (x: number, z: number, seed: number, turn = 0, _driving = false, family?: number) => {
   if (wb && inHood(x, z)) return // keep the neighbors' driveways clear
@@ -175,7 +177,7 @@ const inStation = (x: number, z: number) => {
   }
   return hit
 }
-box('ground', '#80868a', -88.1, .03, 389.45, 8.2, .03, 16.1)
+box('ground', '#80868a', -88.1, .034, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
 // Palms on the grass at the very tip, where the welcome sign stands.
 for (const [px, pz, sd] of [[-88.5, 398.5, 11], [-87.3, 399.2, 12], [-89.7, 399.1, 13], [-88.4, 400.1, 14], [-90.9, 396.2, 15], [-85.6, 396.4, 16]]) plants.palm(px, pz, sd, false)
 
@@ -223,7 +225,7 @@ wallRun(-94.0, 395.2, -89.9, 395.6); wallRun(-108.6, 340.2, -99.9, 342.54) // th
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
 wallRun(-85.7, 395.6, -82.1, 395.4); wallRun(-71.1, 338.95, -68.7, 339.65)
 // Driveway aprons across the grass at both openings.
-box('ground', '#80868a', -84.4, .032, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .032, 352.1, 2.6, .03, 2.8)
+box('ground', '#80868a', -84.4, .036, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .036, 352.1, 2.6, .03, 2.8)
 
 // The streets and neighbors around it, from the town's OSM data.
 const X0 = -110, X1 = -64, Zs = 328, Zn = 402
@@ -233,7 +235,7 @@ for (const r of PONCE_ROADS) for (let i = 0; i + 1 < r.p.length; i++) {
   const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2
   if (!near(mx, mz) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz)) continue
   const len = Math.hypot(bx - ax, bz - az)
-  box('ground', '#737b7c', mx, .03, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
+  box('ground', '#737b7c', mx, .031 + (roads.length % 3) * .0006, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
   roads.push([ax, az, bx, bz, r.w])
 }
 const houses: number[][] = []
