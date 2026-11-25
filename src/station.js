@@ -117,7 +117,7 @@ export function dressStation(scene, U, apronY) {
     mk(lx - 0.25, D / 2 + 0.52, 0, 4.4); mk(lx - 0.25 - (w + 0.5) / 2 - 0.02, 0.05, -Math.PI / 2, 4.2); mk(lx - 0.25, -D / 2 - 0.42, Math.PI, 4.4)
     // The drive-thru window and menu board round the west side.
     const win = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.1, 1.5), M('#3d4e53', { roughness: 0.2 })); win.position.set(-1.68 * U - 0.06, 1.6, -1.2); d.add(win)
-    const menu = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.5, 1.1), M('#2b2d31')); menu.position.set(-1.68 * U - 1.6, 1.3, 2.4); menu.castShadow = true; d.add(menu)
+    // (the menu board is gone; three trash cans stand here instead, see main.js)
   }
 
   // Bank of the Gulf of America, between the gas station and the plaza: a white stucco box with a

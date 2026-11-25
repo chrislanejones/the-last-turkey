@@ -840,11 +840,40 @@ const crates = []
   }
 }
 const _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new V3()
-function resetCrates() { for (const c of crates) { c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+// Three galvanized trash cans by Bumpkin's drive-thru window, each stuffed with yesterday's donuts.
+const tinMat = new THREE.MeshStandardMaterial({ color: '#b9bec2', metalness: 0.85, roughness: 0.35 })
+const canGeoT = (() => { const g = new THREE.CylinderGeometry(0.34, 0.3, 0.95, 18); g.translate(0, 0, 0); return g })()
+const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18)
+{
+  const a = 0.035, ox = -88.76 * U, oz = 385.41 * U
+  for (const lz of [1.3, 2.3, 3.3]) {
+    const lx = -1.68 * U - 1.55, x = ox + lx * Math.cos(a) + lz * Math.sin(a), z = oz - lx * Math.sin(a) + lz * Math.cos(a)
+    const m = new THREE.Group(), body = new THREE.Mesh(canGeoT, tinMat), lid = new THREE.Mesh(lidGeo, tinMat); lid.position.y = 0.49; body.castShadow = lid.castShadow = true; m.add(body, lid)
+    for (let r = 0; r < 6; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.325, 0.012, 4, 18), tinMat); rib.rotation.x = Math.PI / 2; rib.position.y = -0.36 + r * 0.14; m.add(rib) }
+    scene.add(m)
+    crates.push({ m, half: new V3(0.34, 0.475, 0.34), r: 0.36, home: { pos: new V3(x, GY + 0.475, z), yaw: lz }, vel: new V3(), spin: new V3(), awake: false, can: true })
+  }
+}
+const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
+const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
+const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
+const donuts = []
+function spillDonuts(c) {
+  const p = c.m.position
+  for (let i = 0; i < 9; i++) {
+    let d = donuts.find((d) => !d.m.visible)
+    if (!d) { const m = new THREE.Mesh(donutGeo, donutMats[donuts.length % 5]); m.castShadow = true; scene.add(m); d = { m, half: new V3(0.17, 0.055, 0.17), r: 0.17, home: null, vel: new V3(), spin: new V3(), awake: false, donut: true }; donuts.push(d); crates.push(d) }
+    const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 4
+    d.m.visible = true; d.m.position.set(p.x, p.y + 0.3, p.z); d.vel.set(c.vel.x * 0.6 + Math.cos(a) * sp, 2 + Math.random() * 3, c.vel.z * 0.6 + Math.sin(a) * sp)
+    d.spin.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 14); d.awake = true
+  }
+}
+function resetCrates() { for (const c of crates) { if (c.donut) { c.m.visible = false; c.awake = false; continue } c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
-  const fx = Math.cos(car.heading), fz = -Math.sin(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
+  const fx = Math.sin(car.heading), fz = Math.cos(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
   for (const c of crates) {
+    if (!c.m.visible) continue
     const p = c.m.position, dx = p.x - car.pos.x, dz = p.z - car.pos.y
     if (dx * dx + dz * dz > 16 || p.y > GY + 1.5) continue
     const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
@@ -857,7 +886,8 @@ function pushCrates(car) {
     const kick = 1.5 + speed * 0.35
     c.vel.set(car.vel.x * 0.85 + nx * kick, Math.min(5.5, 1.2 + speed * 0.28) * (0.7 + Math.random() * 0.5), car.vel.y * 0.85 + nz * kick)
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
-    if (!c.awake && speed > 3) audio.crash(0.12)
+    if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
+    if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     c.awake = true
     car.vel.multiplyScalar(0.985)
   }
@@ -890,7 +920,7 @@ function updateCrates(dt) {
   }
   // Boxes shove each other apart (as rounded blocks) and wake their neighbors.
   for (let i = 0; i < crates.length; i++) for (let j = i + 1; j < crates.length; j++) {
-    const a = crates[i], b = crates[j]; if (!a.awake && !b.awake) continue
+    const a = crates[i], b = crates[j]; if ((!a.awake && !b.awake) || !a.m.visible || !b.m.visible) continue
     const pa = a.m.position, pb = b.m.position, d = _v.subVectors(pb, pa), dist = d.length(), min = (a.r + b.r) * 0.85
     if (dist >= min || dist < 1e-5) continue
     d.divideScalar(dist); const push = (min - dist) / 2
@@ -1209,6 +1239,24 @@ const audio = (() => {
       src.connect(lp); lp.connect(g); g.connect(master); src.start()
       const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.value = 62; og.gain.value = 0.5 * s
       og.gain.setTargetAtTime(0, ctx.currentTime, 0.09); o.connect(og); og.connect(master); o.start(); o.stop(ctx.currentTime + 0.5)
+    },
+    // A dull cardboard thump for the boxes.
+    thud(s) {
+      if (!ctx || muted) return
+      const src = ctx.createBufferSource(); src.buffer = noise; src.playbackRate.value = 0.6 + Math.random() * 0.3
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420 + Math.random() * 200
+      const g = ctx.createGain(); g.gain.value = 0.55 * s; g.gain.setTargetAtTime(0, ctx.currentTime + 0.03, 0.05)
+      src.connect(lp); lp.connect(g); g.connect(master); src.start(); src.stop(ctx.currentTime + 0.35)
+      const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.value = 110 + Math.random() * 40; og.gain.value = 0.35 * s
+      og.gain.setTargetAtTime(0, ctx.currentTime, 0.04); o.connect(og); og.connect(master); o.start(); o.stop(ctx.currentTime + 0.3)
+    },
+    // A galvanized trash can: a ringing, inharmonic clang plus a crash of noise.
+    clang(s) {
+      if (!ctx || muted) return
+      const t = ctx.currentTime
+      for (const f of [523, 811, 1187, 1659]) { const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f * (0.97 + Math.random() * 0.06); const g = ctx.createGain(); g.gain.value = 0.09 * s; g.gain.setTargetAtTime(0, t, 0.18 + Math.random() * 0.12); o.connect(g); g.connect(master); o.start(); o.stop(t + 1.2) }
+      const src = ctx.createBufferSource(); src.buffer = noise; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1500
+      const g = ctx.createGain(); g.gain.value = 0.5 * s; src.connect(hp); hp.connect(g); g.connect(master); src.start()
     },
     fanfare() {
       if (!ctx || muted) return
