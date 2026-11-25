@@ -245,7 +245,7 @@ wallRun(-89.9, 395.6, -85.7, 395.6) // straight across the station's south end
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
 // You have to come in past the gas station.
 wallRun(-102.7, 345.9, -101.99, 348.95); wallRun(-101.37, 351.6, -100.5, 355.3); // gap for the picnic tables
-wallRun(-100.5, 355.3, -92.5, 383.5); wallRun(-92.5, 383.5, -92.25, 385.6); wallRun(-92.25, 385.6, -92.2, 387.3) // ...and along the station, ending just past Bumpkin'
+wallRun(-100.5, 355.3, -92.5, 383.5) // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
 // Road closed across A1A S too, at the same two places.
 wallRun(-94.0, 395.2, -89.9, 395.6); wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot's corner barrier
 // East side of the station: open at the pumps' exit to A1A Beach Blvd.

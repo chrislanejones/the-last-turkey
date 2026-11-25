@@ -431,7 +431,7 @@ export function dressStation(scene, U, apronY) {
     // The corner clock tower.
     const tx = W / 2 - 1.6, tz = D * 0.47 - 1.6, TH = 9.5
     add(new THREE.BoxGeometry(3.4, TH, 3.4), stucco, tx, TH / 2, tz)
-    add(new THREE.BoxGeometry(3.7, 0.4, 3.7), dk, tx, TH - 0.1, tz); add(new THREE.BoxGeometry(3.6, 0.3, 3.6), trim, tx, TH - 2.8, tz)
+    add(new THREE.BoxGeometry(3.7, 0.4, 3.7), dk, tx, TH - 0.1, tz)
     const tr = add(new THREE.ConeGeometry(2.75, 1.9, 4), tile, tx, TH + 0.95, tz, Math.PI / 4)
     // Belfry: three arched openings on each face, drawn as one clean panel (cream surround, dark arches, sills).
     const belfry = label('', { w: 512, h: 384, draw: (c) => {
@@ -463,7 +463,7 @@ export function dressStation(scene, U, apronY) {
       words.forEach(([t], k) => { c.font = `bold ${sizes[k]}px Georgia, serif`; y += sizes[k] * 0.78; c.fillText(t, 256, y); y += gap })
     } })
     for (const [nx, nz, ry] of [[1, 0, Math.PI / 2], [0, 1, 0]]) {
-      const p2 = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 6.6), new THREE.MeshStandardMaterial({ map: towerSign, emissive: '#ffffff', emissiveMap: towerSign, emissiveIntensity: 0.12 })); p2.position.set(tx + nx * 1.72, 3.95, tz + nz * 1.72); p2.rotation.y = ry; F.add(p2)
+      const p2 = new THREE.Mesh(new THREE.PlaneGeometry(2.85, 6.25), new THREE.MeshStandardMaterial({ map: towerSign, emissive: '#ffffff', emissiveMap: towerSign, emissiveIntensity: 0.12 })); p2.position.set(tx + nx * 1.72, 3.55, tz + nz * 1.72); p2.rotation.y = ry; F.add(p2)
     }
     // ...and along the main building's fascia, facing A1A.
     const fascia = label('', { w: 2048, h: 160, draw: (c) => { c.fillStyle = '#f6ead0'; c.fillRect(0, 0, 2048, 160); c.fillStyle = '#c8241a'; c.textAlign = 'center'; let px = 120; do { c.font = `bold ${px}px Georgia, serif`; px -= 4 } while (c.measureText('FARMERS WITH PITCHFORKS DEFENDING FARMERS').width > 1960); c.fillText('FARMERS WITH PITCHFORKS DEFENDING FARMERS', 1024, 112) } })
@@ -543,7 +543,7 @@ export function dressStation(scene, U, apronY) {
     { const [x, z] = at(6.0 + 0.012, -0.3); plane(win, x, lot + 1.75, z, 1.6, 1.2, t + Math.PI / 2) }
     // The barista, leaning out of the window.
     {
-      const [x, z] = at(6.0 + 0.22, -0.3), b = new THREE.Group(); b.position.set(x, lot, z); b.rotation.y = t + Math.PI / 2; g.add(b)
+      const [x, z] = at(6.0 + 0.03, -0.3), b = new THREE.Group(); b.position.set(x, lot, z); b.rotation.y = t + Math.PI / 2; g.add(b) // standing in the window, not out in the lane
       const skin = M('#c98a6a'), apron = M(green), shirt = M('#2a2a2a'), hair = M('#3a2416')
       const add = (geo, mat, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.castShadow = true; b.add(m); return m }
       add(new THREE.CylinderGeometry(0.2, 0.22, 0.6, 12), shirt, 0, 1.55, -0.05)
@@ -556,13 +556,38 @@ export function dressStation(scene, U, apronY) {
       const arm = add(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), shirt, 0.18, 1.55, 0.25); arm.rotation.x = 1.25
       add(new THREE.CylinderGeometry(0.06, 0.045, 0.16, 10), M('#f4f1e8'), 0.18, 1.62, 0.5)
       add(new THREE.CylinderGeometry(0.062, 0.062, 0.02, 10), M('#4a3020'), 0.18, 1.71, 0.5)
-      add(new THREE.BoxGeometry(0.9, 0.06, 0.3), M('#c9c2b0'), 0, 1.28, 0.22) // sill
+      add(new THREE.BoxGeometry(1.6, 0.08, 0.32), M('#c9c2b0'), 0, 1.15, 0.16) // sill
     }
     // Menu board at the lane's back entrance.
     { const menu = label('', { w: 256, h: 384, draw: (x) => { x.fillStyle = '#1d2a24'; x.fillRect(0, 0, 256, 384); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 34px Oswald, sans-serif'; x.fillText('MEGABUCKS', 128, 50)
         x.font = '22px Oswald, sans-serif'; ['PUMPKIN SPICE  $9', 'TURKEY LATTE  $11', 'GRAVY MOCHA  $10', 'CRANBERRY COLD BREW $12', 'BLACK COFFEE  $8'].forEach((l, i) => x.fillText(l, 128, 110 + i * 52)) } })
       const [x, z] = at(6.0 - 0.15, -1.65 - 0.9); cyl(M('#2b2d31'), x, lot + 0.7, z, 0.06, 1.4, 6)
       plane(menu, x, lot + 1.9, z, 1.0, 1.5, t + Math.PI / 2 + 0.6) }
+  }
+
+  // Megabucks in brick: a brick wainscot and brick pillars around the shop and both mouths of the drive-thru.
+  {
+    const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t)
+    const at = (lx, lz) => [(-93.25 + lx * c + lz * sn) * U, (364.09 - lx * sn + lz * c) * U]
+    const lot = 0.045 * U
+    const brickTex = (rep) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const x = cv.getContext('2d')
+      x.fillStyle = '#d9d0c0'; x.fillRect(0, 0, 256, 128)
+      const cols = ['#8e3b24', '#9c4429', '#7f3420', '#a44d2f', '#8a3a26']
+      for (let r = 0; r < 8; r++) for (let k = -1; k < 5; k++) { x.fillStyle = cols[(r * 7 + k * 3 + 10) % 5]; x.fillRect(k * 64 + (r % 2) * 32 + 2, r * 16 + 2, 60, 12) }
+      const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rep[0], rep[1]); return tx }
+    const brickBox = (lx, lz, w, h, d, y0 = 0) => { const [x, z] = at(lx, lz)
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w * U, h, d * U), new THREE.MeshStandardMaterial({ map: brickTex([Math.max(1, w * U / 1.6), Math.max(1, h / 0.8)]), roughness: 0.9 }))
+      m.position.set(x, lot + y0 + h / 2, z); m.rotation.y = t; m.castShadow = true; m.receiveShadow = true; g.add(m); return m }
+    const cap = M('#e9e2d2')
+    // Pillars at both sides of each lane mouth, and at the shop's corners.
+    for (const lz of [-1.65, 1.65]) for (const lx of [5.92, 7.08]) { brickBox(lx, lz + Math.sign(lz) * 0.02, 0.2, 3.4, 0.2); const [x, z] = at(lx, lz + Math.sign(lz) * 0.02); const k = new THREE.Mesh(new THREE.BoxGeometry(0.2 * U + 0.15, 0.18, 0.2 * U + 0.15), cap); k.position.set(x, lot + 3.49, z); k.rotation.y = t; g.add(k) }
+    brickBox(4.95, 1.67, 0.2, 3.4, 0.2); brickBox(7.38, 1.67, 0.15, 3.4, 0.2)
+    // Wainscot under the windows on the front, and on the north end and back.
+    brickBox(5.42, 1.66, 0.75, 0.95, 0.04)
+    { const [x, z] = at(7.46, 0); const m = new THREE.Mesh(new THREE.BoxGeometry(0.04 * U, 1.1, 3.3 * U), new THREE.MeshStandardMaterial({ map: brickTex([7, 1.4]), roughness: 0.9 })); m.position.set(x, lot + 0.55, z); m.rotation.y = t; g.add(m) }
+    brickBox(6.5, -1.67, 2.0, 0.95, 0.04)
+    // A soldier course of brick along the top of the lane openings.
+    for (const lz of [-1.66, 1.66]) brickBox(6.5, lz, 1.0, 0.35, 0.05, 0.8 * U - 0.35)
   }
   return g
 }

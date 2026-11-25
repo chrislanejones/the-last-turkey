@@ -676,15 +676,15 @@ function collideCars(A, B) {
 // --- game state -------------------------------------------------------------------
 const P = new Vehicle()
 const R = new Vehicle({ half: SUV.half, r: 1.0, hl: 2.5, hw: 0.97, accel: 6.2, vmax: 13.5, mass: 1.15, wheelbase: 2.8 })
-const game = { state: 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, target: DOOR.clone(), bubbleT: 0, rams: 0, pathI: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, sodaReady: false, b2T: 0 }
+const game = { state: 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, target: DOOR.clone(), bubbleT: 0, rams: 0, pathI: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 2, sodaReady: false, b2T: 0 }
 const OUCH = ['HEY!', 'MY BUMPER!', "IT'S OUR TURKEY!", 'WATCH IT!', 'NOT THE FENDER!', 'WE CALLED DIBS!']
 function reset(toCutscene) {
   $('mission').style.display = ''; $('sodaBtn').style.display = ''
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
   resetCrates()
-  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
-  for (const c of sodas) { c.live = false; c.mesh.visible = false }
+  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 2, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
+  for (const c of [...sodas, ...lattes]) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
   for (const c of cans) { c.live = false; c.mesh.visible = false }
   splatI = 0; splats.count = 0
@@ -937,7 +937,7 @@ const forkCrates = []
     x.strokeStyle = '#2a1a0c'; x.lineWidth = 3; x.beginPath(); x.moveTo(64, 140); x.lineTo(64, 200); x.moveTo(44, 160); x.lineTo(64, 140); x.lineTo(84, 160); x.stroke()
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
   const card = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.9 }), cardTop = new THREE.MeshStandardMaterial({ color: '#a77a48', roughness: 0.9 })
-  for (const [x, z, yaw] of [[-97.05, 384.1, 0.3], [-96.85, 385.5, -0.2]]) {
+  for (const [x, z, yaw] of [[-96.3, 387.2, 0.3], [-95.2, 386.6, -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
     const m = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.22, 0.62), [card, card, cardTop, cardTop, card, card]); b.castShadow = true; m.add(b)
     const inner = new THREE.Group(); m.add(inner)
     for (const [dx, dz, r] of [[-0.14, 0.1, 0.08], [0.12, -0.1, -0.1], [0.0, 0.14, 0.12]]) { const f = makeFork(); f.position.set(dx, 0.75, dz); f.rotation.set(r, dx * 3, -r); inner.add(f) }
@@ -953,7 +953,7 @@ function spillForks(c) {
     let f = looseForks.find((f) => !f.m.visible)
     if (!f) { const m = makeFork(); scene.add(m); f = { m, half: new V3(0.08, 0.85, 0.08), r: 0.25, home: null, vel: new V3(), spin: new V3(), awake: false, fork: true }; looseForks.push(f); crates.push(f) }
     const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 3
-    f.m.visible = true; f.m.position.set(c.m.position.x, c.m.position.y + 1.0, c.m.position.z); f.m.quaternion.setFromEuler(new THREE.Euler(Math.random() - 0.5, a, Math.random() - 0.5))
+    f.gy = c.gy; f.m.visible = true; f.m.position.set(c.m.position.x, c.m.position.y + 1.0, c.m.position.z); f.m.quaternion.setFromEuler(new THREE.Euler(Math.random() - 0.5, a, Math.random() - 0.5))
     f.vel.set(c.vel.x * 0.7 + Math.cos(a) * sp, 2.5 + Math.random() * 2, c.vel.z * 0.7 + Math.sin(a) * sp); f.spin.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 10); f.awake = true
   }
 }
@@ -967,10 +967,15 @@ function spillDonuts(c) {
     let d = donuts.find((d) => !d.m.visible)
     if (!d) { const m = new THREE.Mesh(donutGeo, donutMats[donuts.length % 5]); m.castShadow = true; scene.add(m); d = { m, half: new V3(0.17, 0.055, 0.17), r: 0.17, home: null, vel: new V3(), spin: new V3(), awake: false, donut: true }; donuts.push(d); crates.push(d) }
     const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 4
-    d.m.visible = true; d.m.position.set(p.x, p.y + 0.3, p.z); d.vel.set(c.vel.x * 0.6 + Math.cos(a) * sp, 2 + Math.random() * 3, c.vel.z * 0.6 + Math.sin(a) * sp)
+    d.gy = c.gy; d.m.visible = true; d.m.position.set(p.x, p.y + 0.3, p.z); d.vel.set(c.vel.x * 0.6 + Math.cos(a) * sp, 2 + Math.random() * 3, c.vel.z * 0.6 + Math.sin(a) * sp)
     d.spin.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 14); d.awake = true
   }
 }
+// Rest everything on whatever is actually under it (lawn, walk or asphalt), not one fixed height.
+const groundRay = new THREE.Raycaster(), groundMeshes = []
+world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
+const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
+for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
 function resetCrates() { for (const c of crates) { if (c.donut || c.fork) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
@@ -978,7 +983,7 @@ function pushCrates(car) {
   for (const c of crates) {
     if (!c.m.visible) continue
     const p = c.m.position, dx = p.x - car.pos.x, dz = p.z - car.pos.y
-    if (dx * dx + dz * dz > 16 || p.y > GY + 1.5) continue
+    if (dx * dx + dz * dz > 16 || p.y > (c.gy ?? GY) + 1.5) continue
     const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
     const pa = 2.75 + c.r * 0.8 - Math.abs(along), pc = 1.05 + c.r * 0.8 - Math.abs(across)
     if (pa <= 0 || pc <= 0) continue
@@ -1017,7 +1022,7 @@ function updateCrates(dt) {
     // Round things (barrels, cans) can end up on their sides: rest on whichever way they fell.
     const up = _v.set(0, 1, 0).applyQuaternion(c.m.quaternion), uy = Math.abs(up.y)
     const rolls = c.barrel || c.can || c.fork, lying = rolls && (uy < 0.6 || c.fork)
-    const floor = GY + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
+    const floor = (c.gy ?? GY) + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
       const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
@@ -1083,29 +1088,33 @@ function freeDrive() {
   for (const c of cans) { c.live = false; c.mesh.visible = false }
   $('mission').style.display = 'none'; $('sodaBtn').style.display = 'none'; flash('FREE DRIVE'); objective('<b>Free drive</b> — no turkey, no Phillip. <b>R</b> to play again.')
 }
+// Two pumpkin spice lattes after her three sodas: hot, sticky, and they hurt him more.
+const latteMat = [new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 }), new THREE.MeshStandardMaterial({ color: '#e7742a', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 })]
+const lattes = Array.from({ length: 2 }, () => { const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.075, 0.24, 12), latteMat); const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.096, 0.086, 0.09, 12), new THREE.MeshStandardMaterial({ color: '#8a5a2b' })); mesh.add(sleeve); mesh.visible = false; mesh.castShadow = true; scene.add(mesh); return { mesh, vel: new V3(), live: false, latte: true } })
 function throwSoda() {
-  if (game.state !== 'chase' || !game.sodaReady || game.soda <= 0) return
-  const c = sodas.find((c) => !c.live); if (!c) return
+  if (game.state !== 'chase' || !game.sodaReady || (game.soda <= 0 && game.lattes <= 0)) return
+  const useLatte = game.soda <= 0
+  const c = (useLatte ? lattes : sodas).find((c) => !c.live); if (!c) return
   const dist = R.pos.distanceTo(P.pos); if (dist > 32) { flash('TOO FAR!'); return }
   const T = THREE.MathUtils.clamp(dist / 22, 0.5, 1.2)
   const aim = R.pos.clone().addScaledVector(R.vel, T * 0.9).add(new V2((Math.random() - 0.5) * 1.6, (Math.random() - 0.5) * 1.6))
   const from = P.pos.clone().addScaledVector(new V2(Math.cos(P.heading), -Math.sin(P.heading)), -0.5), y0 = GY + 1.7, y1 = GY + 1.2
   c.mesh.position.set(from.x, y0, from.y); c.mesh.visible = true; c.live = true
   c.vel.set((aim.x - from.x) / T, (y1 - y0 + 0.5 * CAN_G * T * T) / T, (aim.y - from.y) / T)
-  game.soda--
+  if (useLatte) { game.lattes--; if (game.lattes === 1) { $('bubble2').textContent = 'PUMPKIN SPICE TO THE FACE!'; $('bubble2').classList.add('show'); game.b2T = 1.8 } } else game.soda--
 }
 function updateSodas(dt) {
   if (game.b3T > 0) { game.b3T -= dt; if (game.b3T <= 0) $('bubble3').classList.remove('show') }
   if (game.b2T > 0) { game.b2T -= dt; if (game.b2T <= 0 && game.state !== 'cutscene') $('bubble2').classList.remove('show') }
-  for (const c of sodas) {
+  for (const c of [...sodas, ...lattes]) {
     if (!c.live) continue
     c.vel.y -= CAN_G * dt; c.mesh.position.addScaledVector(c.vel, dt); c.mesh.rotation.x += dt * 10; c.mesh.rotation.z += dt * 6
     const p = c.mesh.position, rel = new V2(p.x - R.pos.x, p.z - R.pos.y), f = R.f
     if (c.vel.y < 0 && Math.abs(rel.dot(f)) < R.hl && Math.abs(rel.x * f.y - rel.y * f.x) < R.hw && p.y < GY + 2.0) {
       // Fizz: a good deal less than a ram.
-      c.live = false; c.mesh.visible = false; burst(new V2(p.x, p.z), 7, true, false, '#bfe3ff'); audio.crash(0.25)
+      c.live = false; c.mesh.visible = false; burst(new V2(p.x, p.z), 7, true, false, c.latte ? '#e7742a' : '#bfe3ff'); audio.crash(0.25)
       if (game.state === 'chase') {
-        game.health = Math.max(0, game.health - 6); say('HEY! THAT’S STICKY!', 1.4); chrisSays('GREAT THROW, HONEY!', 2)
+        game.health = Math.max(0, game.health - (c.latte ? 10 : 6)); say(c.latte ? 'AAH! PUMPKIN SPICE!' : 'HEY! THAT’S STICKY!', 1.4); chrisSays('GREAT THROW, HONEY!', 2)
         $('rivalBar').classList.remove('flashbar'); void $('rivalBar').offsetWidth; $('rivalBar').classList.add('flashbar')
         if (game.health <= 0) { game.state = 'claim'; say('OKAY, OKAY! TAKE THE BIRD!', 4); flash('WRECKED!'); objective('Now grab the <b>last turkey</b> at the publick door.'); rival.M.paint.color.set('#5b5f52') }
       }
@@ -1131,6 +1140,10 @@ function update(dt) {
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
   rideBeds(dt, live)
+  // Past Megabucks, Becky's priorities change.
+  { const t = Math.atan2(0.968, -0.249), mx = (-93.25 + 6.5 * Math.cos(t)) * U, mz = (364.09 - 6.5 * Math.sin(t)) * U
+    if (Math.hypot(P.pos.x - mx, P.pos.y - mz) < 14 && (game.psT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'FORGET THE TURKEY, I’D RATHER HAVE PUMPKIN SPICE. CAN WE STOP? LET’S GET THE PUMPKIN SPICE.'; $('bubble2').classList.add('show'); game.b2T = 4.2; game.psT = 30 }
+    game.psT = (game.psT ?? 0) - dt }
   // Driving around or under the Call Christy Homes billboard, Becky notices the necklace.
   if (BB_VIEW.look) { const d = Math.hypot(P.pos.x - BB_VIEW.look.x, P.pos.y - BB_VIEW.look.z)
     if (d < 13 && (game.necklaceT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'THAT’S MY HOUSE NECKLACE. CHRISTY STILL OWES IT TO ME.'; $('bubble2').classList.add('show'); game.b2T = 3.4; game.necklaceT = 25; game.necklace2 = 3.6 }
@@ -1420,7 +1433,7 @@ function hud() {
   $('rivalFill').style.width = `${game.health}%`
   $('armorFill').style.width = `${game.armor}%`
   $('peopleFill').style.width = `${game.people}%`
-  $('sodas').textContent = game.sodaReady ? '●'.repeat(game.soda) : ''
+  $('sodas').innerHTML = game.sodaReady ? '●'.repeat(game.soda) + '<span style="color:#e7742a">' + '●'.repeat(game.lattes) + '</span>' : ''
   $('cans').textContent = '●'.repeat(game.cans)
   $('grabFill').style.width = `${game.grab * 100}%`
   // Only while he is actually at the door grabbing it.
