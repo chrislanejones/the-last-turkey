@@ -896,7 +896,7 @@ const boxMat = new THREE.MeshStandardMaterial({ map: boxTex, roughness: 0.9 })
 const crates = []
 {
   const sizes = [[0.6, 0.45, 0.5], [0.8, 0.5, 0.55], [0.5, 0.6, 0.5], [1.1, 0.45, 0.6], [0.45, 0.4, 0.45], [0.7, 0.7, 0.6]]
-  const piles = [[-88.75, 375.7], [-87.6, 376.25], [-86.5, 375.75]]
+  const piles = [[-89.85, 376.15], [-88.75, 375.7], [-87.6, 376.25], [-86.5, 375.75]] // four stacks of six, all the same box
   let n = 0
   for (const [px, pz] of piles) {
     let y = GY
@@ -904,10 +904,10 @@ const crates = []
       const per = 3 - layer
       let top = 0
       for (let i = 0; i < per; i++, n++) {
-        const [w, h, d] = sizes[(n * 7 + layer) % sizes.length].map((v) => v * 1.35)
+        const [w, h, d] = [0.8, 0.8, 0.8]
         const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), boxMat); m.castShadow = true; m.receiveShadow = true; scene.add(m)
-        const ox = (i - (per - 1) / 2) * 1.25 + Math.sin(n * 3.1) * 0.08, oz = Math.cos(n * 2.3) * 0.12
-        const home = { pos: new V3(px * U + ox, y + h / 2, pz * U + oz), yaw: Math.sin(n * 1.7) * 0.35 }
+        const ox = (i - (per - 1) / 2) * 0.86 + Math.sin(n * 3.1) * 0.03, oz = Math.cos(n * 2.3) * 0.04
+        const home = { pos: new V3(px * U + ox, y + h / 2, pz * U + oz), yaw: Math.sin(n * 1.7) * 0.08 }
         crates.push({ m, half: new V3(w / 2, h / 2, d / 2), r: Math.max(w, d) * 0.5, home, vel: new V3(), spin: new V3(), awake: false })
         top = Math.max(top, h)
       }
