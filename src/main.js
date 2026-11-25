@@ -1407,6 +1407,12 @@ const audio = (() => {
 })()
 
 // --- HUD ------------------------------------------------------------------------
+// Little ammo icons: his cranberry cans, her soda cans, and the lattes once she has them.
+const CRAN_SVG = '<svg viewBox="0 0 12 18"><rect x="1" y="2" width="10" height="14" rx="1.5" fill="#a3152f"/><rect x="1" y="2" width="10" height="2" fill="#c9cdd0"/><rect x="1" y="14" width="10" height="2" fill="#c9cdd0"/><rect x="2.5" y="7" width="7" height="4" fill="#f4ecd8"/></svg>'
+const SODA_SVG = '<svg viewBox="0 0 12 18"><rect x="1.5" y="1.5" width="9" height="15" rx="2" fill="#1f6fd0"/><rect x="2.5" y="1" width="7" height="1.6" rx=".8" fill="#c9cdd0"/><path d="M1.5 9 C4 7 8 11 10.5 9" stroke="#fff" stroke-width="1.6" fill="none"/></svg>'
+const LATTE_SVG = '<svg viewBox="0 0 14 18"><path d="M2 3 H12 L10.5 17 H3.5 Z" fill="#f4efe4"/><rect x="1.3" y="1" width="11.4" height="2.4" rx="1" fill="#e7742a"/><path d="M2.6 8 H11.4 L11 12 H3 Z" fill="#8a5a2b"/></svg>'
+const icon = (svg, gone) => gone ? svg.replace('<svg', '<svg class="gone"') : svg
+let hudAmmoKey = ''
 const mm = $('minimap').getContext('2d')
 function drawMinimap() {
   const W = 200, s = 0.62, rot = P.heading - Math.PI
@@ -1446,8 +1452,11 @@ function hud() {
   $('rivalFill').style.width = `${game.health}%`
   $('armorFill').style.width = `${game.armor}%`
   $('peopleFill').style.width = `${game.people}%`
-  $('sodas').innerHTML = (game.sodaReady ? '●'.repeat(game.soda) : '') + '<span style="color:#e7742a">' + '●'.repeat(game.lattes) + '</span>'
-  $('cans').textContent = '●'.repeat(game.cans)
+  { const key = `${game.cans}|${game.soda}|${game.lattes}|${game.gotLattes}|${game.sodaReady}`
+    if (key !== hudAmmoKey) { hudAmmoKey = key
+      $('cans').innerHTML = Array.from({ length: 10 }, (_, i) => icon(CRAN_SVG, i >= game.cans)).join('')
+      $('sodas').innerHTML = Array.from({ length: 3 }, (_, i) => icon(SODA_SVG, !game.sodaReady || i >= game.soda)).join('') + (game.gotLattes ? Array.from({ length: 2 }, (_, i) => icon(LATTE_SVG, i >= game.lattes)).join('') : '') } }
+  
   $('grabFill').style.width = `${game.grab * 100}%`
   // Only while he is actually at the door grabbing it.
   const grabbing = game.grab > (game.lastGrab ?? 0) + 1e-6 && game.state === 'chase'; game.lastGrab = game.grab

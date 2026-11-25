@@ -23,7 +23,7 @@ button.big:hover{background:#f5d27a;color:#111}
 #mission{position:absolute;right:26px;top:20px;width:min(300px,44vw);text-shadow:2px 2px 0 #000}
 .row{margin-bottom:10px}.row label{display:block;font-size:14px;letter-spacing:2.5px;text-align:right;margin-bottom:3px}
 .meter{height:14px;background:rgba(0,0,0,.6);border:2px solid #000;outline:1px solid rgba(255,255,255,.35)}
-.meter i{display:block;height:100%}.meter.thin{height:8px;margin-top:2px}.legend{text-align:right;font-size:10px;letter-spacing:2px;margin-top:3px;opacity:.85}.legend i{display:inline-block;width:14px;height:5px;margin:0 4px 1px 8px;vertical-align:middle}#cans,#sodas{float:left;letter-spacing:0;font-size:13px}#rivalFill{background:#d8362c;transition:width .2s}#armorFill{background:#4fa84f;transition:width .2s}#peopleFill{background:#e9a23a;transition:width .2s}#cansRow,#sodaRow{text-align:right;font-size:12px;letter-spacing:2px;margin-top:3px}#cans{color:#c2244f;letter-spacing:0}#sodas{color:#6fb6ff;letter-spacing:0}#grabFill{background:#f5c23a}
+.meter i{display:block;height:100%}.meter.thin{height:8px;margin-top:2px}.legend{text-align:right;font-size:10px;letter-spacing:2px;margin-top:3px;opacity:.85}.legend i{display:inline-block;width:14px;height:5px;margin:0 4px 1px 8px;vertical-align:middle}.ammo{display:flex;justify-content:flex-end;gap:4px;margin-top:5px;height:22px}.ammo svg{height:22px;width:auto;filter:drop-shadow(1px 1px 0 #000)}.ammo .gone{opacity:.22}#rivalFill{background:#d8362c;transition:width .2s}#armorFill{background:#4fa84f;transition:width .2s}#peopleFill{background:#e9a23a;transition:width .2s}#cansRow,#sodaRow{text-align:right;font-size:12px;letter-spacing:2px;margin-top:3px}#cans{color:#c2244f;letter-spacing:0}#sodas{color:#6fb6ff;letter-spacing:0}#grabFill{background:#f5c23a}
 #grabRow{display:none}#grabRow.warn{display:block;animation:pulse .5s infinite alternate}
 @keyframes pulse{to{filter:brightness(1.5)}}
 .flashbar{animation:fb .35s}@keyframes fb{0%{filter:brightness(3)}100%{filter:none}}
@@ -49,7 +49,7 @@ button.big:hover{background:#f5d27a;color:#111}
 #touch #camBtn,#touch #sodaBtn{top:auto;right:20px;width:56px;height:56px;font-size:13px}#touch #sodaBtn{bottom:104px}#touch #camBtn{bottom:170px}}
 @media (pointer:coarse) and (max-height:500px),(hover:none) and (max-height:500px){
 #minimap{width:86px;height:86px;top:10px;left:10px}
-#mission{top:8px;right:14px;width:210px}.row{margin-bottom:4px}.row label{font-size:11px;margin-bottom:1px}.meter{height:8px}.meter.thin{height:5px}.legend{font-size:9px;margin-top:1px}
+#mission{top:8px;right:14px;width:210px}.row{margin-bottom:4px}.row label{font-size:11px;margin-bottom:1px}.meter{height:8px}.meter.thin{height:5px}.legend{font-size:9px;margin-top:1px}.ammo{height:13px;margin-top:2px}.ammo svg{height:13px}
 #flash{top:12%}#touch button.t{width:60px;height:60px;bottom:14px}#touch button.t[data-touch=right]{left:88px}#touch button.t[data-touch=brake]{right:88px}
 #touch #camBtn,#touch #sodaBtn{width:48px;height:48px;font-size:11px}#touch #sodaBtn{bottom:84px;right:16px}#touch #camBtn{bottom:84px;right:72px}
 #objective{bottom:20px;padding:0 170px;font-size:14px}#speedo{left:18px;bottom:auto;top:104px;transform:none;text-align:left}#mph{font-size:28px}}
@@ -61,8 +61,8 @@ button.big:hover{background:#f5d27a;color:#111}
 <div id="hud" class="hidden">
  <canvas id="minimap" width="200" height="200"></canvas>
  <div id="mission">
-  <div class="row"><label><span id="cans"></span> HIS WAGON</label><div class="meter" id="rivalBar"><i id="rivalFill" style="width:100%"></i></div></div>
-  <div class="row"><label><span id="sodas"></span> YOU</label><div class="meter" id="armorBar"><i id="armorFill" style="width:100%"></i></div><div class="meter thin" id="peopleBar"><i id="peopleFill" style="width:100%"></i></div><div class="legend"><i style="background:#4fa84f"></i>GALAXIE <i style="background:#e9a23a"></i>YOU TWO</div></div>
+  <div class="row"><label>HIS WAGON</label><div class="meter" id="rivalBar"><i id="rivalFill" style="width:100%"></i></div><div class="ammo" id="cans"></div></div>
+  <div class="row"><label>YOU</label><div class="meter" id="armorBar"><i id="armorFill" style="width:100%"></i></div><div class="meter thin" id="peopleBar"><i id="peopleFill" style="width:100%"></i></div><div class="legend"><i style="background:#4fa84f"></i>GALAXIE <i style="background:#e9a23a"></i>YOU TWO</div><div class="ammo" id="sodas"></div></div>
   <div class="row" id="grabRow"><label>HE'S GRABBING THE TURKEY</label><div class="meter"><i id="grabFill" style="width:0"></i></div></div>
  </div>
  <div id="speedo"><div id="mph">00</div><small>MPH</small></div>
