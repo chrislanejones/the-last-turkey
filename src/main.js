@@ -460,7 +460,7 @@ const chrisHead = chris.getObjectByName('Head')
 // The cart driver from pga-golf-game, riding shotgun.
 const woman = womanGltf.scene; castAll(woman)
 // Becky's a blonde.
-woman.traverse((m) => { if (!m.isMesh) return; for (const mat of [].concat(m.material)) { if (mat.name === 'hair') mat.color.set('#e8c870'); if (mat.name === 'brows') mat.color.set('#a07a3a') } })
+woman.traverse((m) => { if (!m.isMesh) return; for (const mat of [].concat(m.material)) { if (mat.name === 'hair') mat.color.set('#9a7340'); if (mat.name === 'brows') mat.color.set('#5e4224') } })
 const womanMixer = new THREE.AnimationMixer(woman)
 const sitting = womanGltf.animations.find((a) => a.name === 'Sitting')
 womanMixer.clipAction(sitting).play()
