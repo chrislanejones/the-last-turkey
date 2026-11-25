@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A1A Cruise — the Galaxie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:Oswald,Impact,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
+#stage{position:fixed;inset:0}canvas{display:block}
+.gone{opacity:0;pointer-events:none}.hidden{display:none}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(#3a2316,#0c0806);transition:opacity .6s;z-index:5}
+#loading h1{font-size:clamp(40px,8vw,88px);margin:0;letter-spacing:2px;color:#f5d27a;text-shadow:4px 4px 0 #7a1a10}
+.track{width:min(360px,70vw);height:8px;background:#2b1d14;border:2px solid #f5d27a;margin:18px auto 0}#bar{height:100%;width:0;background:#f5d27a;transition:width .2s}
+#intro{position:fixed;left:0;right:0;bottom:9vh;text-align:center;transition:opacity .8s;z-index:4;pointer-events:none}
+#intro h1{margin:0;font-size:clamp(46px,9vw,110px);line-height:.9;color:#fff;text-shadow:5px 5px 0 #000,0 0 30px rgba(0,0,0,.5);letter-spacing:1px}
+#intro h1 span{color:#f5d27a}#intro p{margin:10px 0 18px;font-size:clamp(15px,2.2vw,22px);text-shadow:2px 2px 0 #000;letter-spacing:3px}
+#playBtn{pointer-events:auto;font:700 20px Oswald,sans-serif;letter-spacing:3px;padding:12px 34px;border:3px solid #fff;background:rgba(0,0,0,.55);color:#fff;cursor:pointer}
+#playBtn:hover{background:#f5d27a;color:#111}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3}
+#minimap{position:absolute;left:22px;bottom:34px;width:200px;height:200px}
+.bars{position:absolute;left:22px;bottom:18px;width:200px;display:flex;gap:4px}.bars i{height:7px;flex:1;background:#5fa85f;border:1px solid #000}.bars i+i{background:#4b8ad8}
+#placeBox{position:absolute;right:30px;bottom:30px;text-align:right;text-shadow:3px 3px 0 #000}
+#place{font-size:clamp(24px,3.4vw,40px);letter-spacing:1px}#place.pop{animation:pop .6s}
+#street{font-size:clamp(13px,1.5vw,17px);letter-spacing:3px;color:#f5d27a}
+@keyframes pop{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+#speedo{position:absolute;right:30px;top:24px;text-align:right;text-shadow:3px 3px 0 #000}#mph{font-size:58px;line-height:1}#speedo small{font-size:16px;letter-spacing:3px;color:#f5d27a}
+#help{position:absolute;left:22px;top:20px;font:500 13px Oswald,sans-serif;letter-spacing:1.5px;background:rgba(0,0,0,.45);padding:8px 12px;line-height:1.6}
+#help b{color:#f5d27a;font-weight:700}
+#flash{position:absolute;top:22%;width:100%;text-align:center;font-size:30px;letter-spacing:4px;text-shadow:3px 3px 0 #000;opacity:0;transition:opacity .3s}#flash.show{opacity:1}
+#touch{position:fixed;inset:auto 0 0 0;height:0;z-index:4}
+#touch button{position:fixed;bottom:22px;width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.85);background:rgba(0,0,0,.4);color:#fff;font:700 15px Oswald,sans-serif;pointer-events:auto;touch-action:none}
+#touch button.on{background:rgba(245,210,122,.8);color:#111}
+@media (hover:hover) and (pointer:fine){#touch .t{display:none}}
+@media (hover:none),(pointer:coarse){#help{display:none}#minimap{width:130px;height:130px;bottom:110px;left:14px}.bars{width:130px;bottom:96px;left:14px}#placeBox{bottom:110px;right:16px}}
+</style></head><body>
+<div id="stage"></div>
+<div id="loading"><div style="text-align:center"><h1>A1A CRUISE</h1><div class="track"><div id="bar"></div></div><p style="letter-spacing:3px;margin-top:14px">LOADING ST. AUGUSTINE BEACH…</p></div></div>
+<div id="intro" class="gone"><h1>THE <span>GALAXIE</span></h1><p>CHRIS LANE JONES · A1A BEACH BLVD · ST. AUGUSTINE BEACH</p><button id="playBtn">DRIVE</button></div>
+<div id="hud" class="hidden">
+ <canvas id="minimap" width="200" height="200"></canvas><div class="bars"><i></i><i></i></div>
+ <div id="placeBox"><div id="place">ENVOY SUITES</div><div id="street">A1A BEACH BLVD</div></div>
+ <div id="speedo"><div id="mph">00</div><small>MPH</small></div>
+ <div id="help"><b>W/S</b> gas · brake &nbsp; <b>A/D</b> steer &nbsp; <b>SPACE</b> handbrake<br><b>V</b> camera &nbsp; <b>H</b> horn &nbsp; <b>M</b> sound &nbsp; <b>DRAG</b> look around</div>
+ <div id="flash"></div>
+</div>
+<div id="touch">
+ <button class="t" data-touch="left" style="left:18px">◀</button><button class="t" data-touch="right" style="left:98px">▶</button>
+ <button class="t" data-touch="brake" style="right:98px">BRAKE</button><button class="t" data-touch="gas" style="right:18px">GAS</button>
+ <button class="t" id="hornBtn" style="right:58px;bottom:104px;width:54px;height:54px">HORN</button>
+ <button id="camBtn" style="right:30px;top:110px;bottom:auto;width:54px;height:54px;font-size:13px">CAM</button>
+</div>
+<script type="module" src="main.js"></script>
+</body></html>

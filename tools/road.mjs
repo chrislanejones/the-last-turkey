@@ -1,0 +1,18 @@
+import { chromium } from 'playwright-core'
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
+const p = await b.newPage({ viewport: { width: 1280, height: 720 } })
+p.on('pageerror', e => console.log('ERR', e.message))
+await p.goto('http://localhost:8765/?shot&play', { waitUntil: 'load' })
+await p.waitForFunction(() => window.__game, null, { timeout: 180000 })
+console.log(await p.evaluate(() => { const g = window.__game, U = 4.084, log = [], at = (t) => log.push(`${t}: x=${(g.P.pos.x / U).toFixed(1)} z=${(g.P.pos.y / U).toFixed(1)} v=${g.P.fwd.toFixed(1)} armor=${g.game.armor.toFixed(0)}`)
+  const steerTo = (x, z, secs, stopZ) => { for (let i = 0; i < secs * 60; i++) { const to = new g.P.pos.constructor(x * U - g.P.pos.x, z * U - g.P.pos.y), a = Math.atan2(to.x, to.y) - g.P.heading, d = Math.atan2(Math.sin(a), Math.cos(a)); g.keys.clear(); if (g.P.fwd < 9) g.keys.add('w'); if (d > 0.06) g.keys.add('a'); if (d < -0.06) g.keys.add('d'); g.sim(1 / 60); if (to.length() < 5) break } g.keys.clear() }
+  g.sim(5.5); at('start')
+  steerTo(-83.6, 391.3, 8); at('out the station exit')
+  steerTo(-82.3, 379.8, 10); steerTo(-76.1, 359, 14); at('up the road')
+  steerTo(-74.0, 352.1, 6); steerTo(-78.5, 352.1, 6); at('in the plaza entrance')
+  g.P.pos.set(-72 * U, 346 * U); g.P.heading = Math.atan2(6.2, -19.7); g.P.vel.set(0, 0); g.keys.add('w'); g.sim(6); g.keys.clear(); at('north block')
+  g.P.pos.set(-83.4 * U, 390 * U); g.P.heading = 0; g.P.vel.set(0, 0); g.keys.add('w'); g.sim(5); g.keys.clear(); at('south block')
+  g.P.pos.set(-80 * U, 372.1 * U); g.P.heading = Math.PI / 2; g.P.vel.set(0, 0); g.keys.add('w'); g.sim(4); g.keys.clear(); at('east (woods) wall')
+  g.P.pos.set(-80 * U, 372.1 * U); g.P.heading = -Math.PI / 2; g.P.vel.set(0, 0); g.keys.add('w'); g.sim(4); g.keys.clear(); at('west (lot) barrier')
+  return log.join('\n') }))
+await b.close()

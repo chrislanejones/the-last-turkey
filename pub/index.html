@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Last Turkey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:Oswald,Impact,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
+#stage{position:fixed;inset:0}canvas{display:block}
+.gone{opacity:0;pointer-events:none}.hidden{display:none}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(#4a2a14,#0c0806);transition:opacity .6s;z-index:6}
+#loading h1{font-size:clamp(40px,8vw,88px);margin:0;letter-spacing:2px;color:#f5d27a;text-shadow:4px 4px 0 #7a1a10}
+.track{width:min(360px,70vw);height:8px;background:#2b1d14;border:2px solid #f5d27a;margin:18px auto 0}#bar{height:100%;width:0;background:#f5d27a;transition:width .2s}
+#intro{position:fixed;left:0;right:0;bottom:8vh;text-align:center;transition:opacity .8s;z-index:5;pointer-events:none}
+#intro h1{margin:0;font-size:clamp(46px,9vw,110px);line-height:.9;text-shadow:5px 5px 0 #000;letter-spacing:1px}
+#intro h1 span{color:#f5d27a}#intro p{margin:10px 0 18px;font-size:clamp(14px,2vw,21px);text-shadow:2px 2px 0 #000;letter-spacing:3px}
+button.big{pointer-events:auto;font:700 20px Oswald,sans-serif;letter-spacing:3px;padding:12px 34px;border:3px solid #fff;background:rgba(0,0,0,.55);color:#fff;cursor:pointer}
+button.big:hover{background:#f5d27a;color:#111}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3}
+#minimap{position:absolute;left:22px;bottom:26px;width:200px;height:200px}
+#speedo{position:absolute;right:30px;bottom:26px;text-align:right;text-shadow:3px 3px 0 #000}#mph{font-size:58px;line-height:1}#speedo small{font-size:16px;letter-spacing:3px;color:#f5d27a}
+#mission{position:absolute;right:26px;top:20px;width:min(300px,44vw);text-shadow:2px 2px 0 #000}
+.row{margin-bottom:10px}.row label{display:block;font-size:14px;letter-spacing:2.5px;text-align:right;margin-bottom:3px}
+.meter{height:14px;background:rgba(0,0,0,.6);border:2px solid #000;outline:1px solid rgba(255,255,255,.35)}
+.meter i{display:block;height:100%}.meter.thin{height:8px;margin-top:2px}.legend{text-align:right;font-size:10px;letter-spacing:2px;margin-top:3px;opacity:.85}.legend i{display:inline-block;width:14px;height:5px;margin:0 4px 1px 8px;vertical-align:middle}#cans,#sodas{float:left;letter-spacing:0;font-size:13px}#rivalFill{background:#d8362c;transition:width .2s}#armorFill{background:#4fa84f;transition:width .2s}#peopleFill{background:#e9a23a;transition:width .2s}#cansRow,#sodaRow{text-align:right;font-size:12px;letter-spacing:2px;margin-top:3px}#cans{color:#c2244f;letter-spacing:0}#sodas{color:#6fb6ff;letter-spacing:0}#grabFill{background:#f5c23a}
+#grabRow{opacity:.45}#grabRow.warn{opacity:1;animation:pulse .5s infinite alternate}
+@keyframes pulse{to{filter:brightness(1.5)}}
+.flashbar{animation:fb .35s}@keyframes fb{0%{filter:brightness(3)}100%{filter:none}}
+#objective{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:clamp(16px,2.2vw,24px);letter-spacing:1px;text-shadow:2px 2px 0 #000;padding:0 240px}
+#objective b{color:#f5d27a}
+#help{position:absolute;left:22px;top:20px;font:500 13px Oswald,sans-serif;letter-spacing:1.5px;background:rgba(0,0,0,.45);padding:8px 12px;line-height:1.6}
+#help b{color:#f5d27a;font-weight:700}
+#flash{position:absolute;top:20%;width:100%;text-align:center;font-size:clamp(30px,5vw,54px);letter-spacing:4px;color:#f5d27a;text-shadow:4px 4px 0 #000;opacity:0;transition:opacity .3s}#flash.show{opacity:1}
+#bubble,#bubble2,#bubble3{position:fixed;z-index:4;transform:translate(-50%,-100%);background:#fff;color:#111;border:3px solid #111;border-radius:18px;padding:10px 16px;font-size:clamp(15px,2vw,22px);letter-spacing:.5px;max-width:300px;text-align:center;line-height:1.15;opacity:0;transition:opacity .2s;pointer-events:none}
+#bubble.show,#bubble2.show,#bubble3.show{opacity:1}#bubble3{transform:translate(-82%,-100%)}#bubble3:after{left:82%}#speedo small{text-shadow:1px 1px 0 #000}
+#bubble:after,#bubble2:after,#bubble3:after{content:"";position:absolute;left:50%;bottom:-17px;margin-left:-11px;border:11px solid transparent;border-top:15px solid #fff;border-bottom:0;filter:drop-shadow(0 3px 0 #111)}
+#banner{position:fixed;inset:0;z-index:5;display:none;place-items:center;text-align:center;background:rgba(0,0,0,.35)}
+#banner.show{display:grid}#banner h2{margin:0;font-size:clamp(42px,8vw,96px);letter-spacing:2px;text-shadow:5px 5px 0 #000}
+#banner.good h2{color:#f5d27a}#banner.bad h2{color:#e2483d}
+#banner p{font-size:clamp(16px,2.4vw,24px);letter-spacing:2px;text-shadow:2px 2px 0 #000;margin:8px 0 22px}
+#touch button{position:fixed;z-index:4;bottom:22px;width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.85);background:rgba(0,0,0,.4);color:#fff;font:700 15px Oswald,sans-serif;touch-action:none}
+#touch button.on{background:rgba(245,210,122,.8);color:#111}
+#touch #camBtn,#touch #sodaBtn{right:26px;bottom:auto;width:50px;height:50px;font-size:12px}#camBtn{top:340px}#sodaBtn{top:400px}
+@media (hover:hover) and (pointer:fine){#touch .t{display:none}}
+@media (hover:none),(pointer:coarse){#help{display:none}#minimap{width:120px;height:120px;bottom:auto;top:14px;left:14px}
+#speedo{right:auto;left:50%;bottom:26px;transform:translateX(-50%);text-align:center}#mph{font-size:36px}#speedo small{display:block;font-size:12px}
+#objective{bottom:104px;padding:0 84px;font-size:16px}#flash{top:31%}
+#touch #camBtn,#touch #sodaBtn{top:auto;right:20px;width:56px;height:56px;font-size:13px}#touch #sodaBtn{bottom:104px}#touch #camBtn{bottom:170px}}
+@media (pointer:coarse) and (max-height:500px),(hover:none) and (max-height:500px){
+#minimap{width:86px;height:86px;top:10px;left:10px}
+#mission{top:8px;right:14px;width:210px}.row{margin-bottom:4px}.row label{font-size:11px;margin-bottom:1px}.meter{height:8px}.meter.thin{height:5px}.legend{font-size:9px;margin-top:1px}
+#flash{top:12%}#touch button.t{width:60px;height:60px;bottom:14px}#touch button.t[data-touch=right]{left:88px}#touch button.t[data-touch=brake]{right:88px}
+#touch #camBtn,#touch #sodaBtn{width:48px;height:48px;font-size:11px}#touch #sodaBtn{bottom:84px;right:16px}#touch #camBtn{bottom:84px;right:72px}
+#objective{bottom:20px;padding:0 170px;font-size:14px}#speedo{left:18px;bottom:auto;top:104px;transform:none;text-align:left}#mph{font-size:28px}}
+</style></head><body>
+<div id="stage"></div>
+<div id="loading"><div style="text-align:center"><h1>THE LAST TURKEY</h1><div class="track"><div id="bar"></div></div><p style="letter-spacing:3px;margin-top:14px">LOADING THE NEIGHBORHOOD…</p></div></div>
+<div id="intro" class="gone"><h1>THE LAST <span>TURKEY</span></h1><p>CHRIS LANE JONES · FLORIDIAN AVE TO PUBLICK · ST. AUGUSTINE BEACH</p><button id="playBtn" class="big">DRIVE</button></div>
+<div id="hud" class="hidden">
+ <canvas id="minimap" width="200" height="200"></canvas>
+ <div id="mission">
+  <div class="row"><label><span id="cans"></span> HIS WAGON</label><div class="meter" id="rivalBar"><i id="rivalFill" style="width:100%"></i></div></div>
+  <div class="row"><label><span id="sodas"></span> YOU</label><div class="meter" id="armorBar"><i id="armorFill" style="width:100%"></i></div><div class="meter thin" id="peopleBar"><i id="peopleFill" style="width:100%"></i></div><div class="legend"><i style="background:#4fa84f"></i>GALAXIE <i style="background:#e9a23a"></i>YOU TWO</div></div>
+  <div class="row" id="grabRow"><label>HE'S GRABBING THE TURKEY</label><div class="meter"><i id="grabFill" style="width:0"></i></div></div>
+ </div>
+ <div id="speedo"><div id="mph">00</div><small>MPH</small></div>
+ <div id="objective"></div>
+ <div id="help"><b>W/S</b> gas · brake &nbsp; <b>A/D</b> steer &nbsp; <b>SPACE</b> handbrake<br><b>V</b> camera &nbsp; <b>H</b> horn &nbsp; <b>M</b> sound &nbsp; <b>R</b> restart<br>Dodge the <b>cranberry cans</b> — he has 10 &nbsp; <b>F</b> throw soda (she has 3)</div>
+ <div id="flash"></div>
+</div>
+<div id="bubble"><span id="bubbleText"></span></div>
+<div id="bubble2">WE HAVE TO GET THAT LAST TURKEY!</div>
+<div id="bubble3"></div>
+<div id="banner"><div><h2 id="bannerTitle"></h2><p id="bannerSub"></p><button id="retryBtn" class="big">PLAY AGAIN</button></div></div>
+<div id="touch">
+ <button class="t" data-touch="left" style="left:18px">◀</button><button class="t" data-touch="right" style="left:98px">▶</button>
+ <button class="t" data-touch="brake" style="right:98px">BRAKE</button><button class="t" data-touch="gas" style="right:18px">GAS</button>
+ <button id="sodaBtn">SODA</button>
+ <button id="camBtn">CAM</button>
+</div>
+<script type="module" src="main.js"></script>
+</body></html>

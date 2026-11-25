@@ -1,0 +1,19 @@
+{
+  "name": "the-last-turkey",
+  "version": "1.0.0",
+  "description": "Thanksgiving GTA-style driving game in three.js: ram the neighbor's wagon before he grabs the last turkey at publick.",
+  "scripts": {
+    "build": "./build.sh",
+    "serve": "tools/serve.sh"
+  },
+  "author": "Chris Lane Jones",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.65.1",
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1"
+  }
+}
