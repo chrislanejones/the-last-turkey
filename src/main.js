@@ -863,7 +863,7 @@ function ram(hit, dt) {
     game.health = Math.max(1, game.health - (hit.closing - 2) * 0.8) // his wagon crumples a bit too
     $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar')
     say('TAKE THAT!', 1.4); game.ai = 'seek'
-    $('bubble2').textContent = 'THIS CAR IS ROCK HARD, PHILLIP. WE WILL CRUSH YOU.'; $('bubble2').classList.add('show'); game.b2T = 3.2
+    $('bubble2').textContent = 'THIS CAR IS ROCK HARD, BRAD. WE WILL CRUSH YOU.'; $('bubble2').classList.add('show'); game.b2T = 3.2
     if (game.armor <= 0) { game.state = 'lost'; banner('GALAXIE TOTALED', 'It took a lot, but he finally bent it.', 'bad') }
     return
   }
@@ -1336,7 +1336,7 @@ function freeDrive() {
   game.state = 'free'; camMode = 0; R.vel.set(0, 0)
   for (const id of ['bubble', 'bubble2', 'bubble3', 'banner']) $(id).classList.remove('show')
   for (const c of cans) { c.live = false; c.mesh.visible = false }
-  $('mission').style.display = 'none'; $('sodaBtn').style.display = 'none'; flash('FREE DRIVE'); objective('<b>Free drive</b> — no turkey, no Phillip. <b>R</b> to play again.')
+  $('mission').style.display = 'none'; $('sodaBtn').style.display = 'none'; flash('FREE DRIVE'); objective('<b>Free drive</b> — no turkey, no Brad. <b>R</b> to play again.')
 }
 // Two pumpkin spice lattes after her three sodas: hot, sticky, and they hurt him more.
 const latteMat = [new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 }), new THREE.MeshStandardMaterial({ color: '#e7742a', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.6 })]

@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| ![Both cars on their driveways on Floridian Ave as Phillip announces the last turkey](docs/driveways.jpg) | ![The Galaxie at the Square K pumps, with Bumpkin' Donuts and the Call Christy Homes billboard](docs/square-k.jpg) |
+| ![Both cars on their driveways on Floridian Ave as Brad announces the last turkey](docs/driveways.jpg) | ![The Galaxie at the Square K pumps, with Bumpkin' Donuts and the Call Christy Homes billboard](docs/square-k.jpg) |
 | ![publick's storefront with the "Only 1 turkey left" banner](docs/publick.jpg) | ![The Turkey Day Parade blocking A1A](docs/parade.jpg) |
 
 A small GTA-style Thanksgiving driving game in three.js, set in the beach town of Saint Ponce, Florida (a parody of St. Augustine Beach), around Ponce Plaza.
 
-Chris and Becky are in a red '64 Ford Galaxie convertible. Phillip, the neighbor, is in his wood-sided wagon. Both of them back out of their driveways on Floridian Ave at the same moment, racing for the **last turkey at publick**. Ram his wagon before he grabs it. He throws cranberry-sauce cans; Becky throws soda cans back.
+Chris and Becky are in a red '64 Ford Galaxie convertible. Brad, the neighbor, is in his wood-sided wagon. Both of them back out of their driveways on Floridian Ave at the same moment, racing for the **last turkey at publick**. Ram his wagon before he grabs it. He throws cranberry-sauce cans; Becky throws soda cans back.
 
 **Play it:** https://claude.ai/artifact/Vfm8Ejmcw49qu9zt6PdG7i
 
@@ -25,7 +25,7 @@ Chris and Becky are in a red '64 Ford Galaxie convertible. Phillip, the neighbor
 
 ## Rules
 
-- Phillip won't ram you until you ram him first.
+- Brad won't ram you until you ram him first.
 - He has 10 cranberry cans. He always saves the last one for after his wagon is wrecked. Seven hits and you two are done.
 - Becky gets 3 soda cans after his first throw.
 - The Galaxie is tough, but it does take damage from walls and crashes.
@@ -33,7 +33,7 @@ Chris and Becky are in a red '64 Ford Galaxie convertible. Phillip, the neighbor
 
 ## Project layout
 
-- `src/main.js`: the game (driving physics, collisions, Phillip's AI, cans, HUD, cameras)
+- `src/main.js`: the game (driving physics, collisions, Brad's AI, cans, HUD, cameras)
 - `src/car.js`: the code-built Galaxie and wagon
 - `src/station.js`: Square K, Bumpkin' Donuts, Bank of the Gulf of America, Megabucks, The OOPS Store and the other dressing
 - `src/plaza-data.json`: walls, driveways, homes and other layout data exported with the world
