@@ -33,7 +33,7 @@ const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street to A1A S, south past the wall to the station's tip, north up the
 // west side of the station and round the back of the Square K, through the gap by the bank, up the lot.
-const PATH = [u2(-113.5, 389.3), u2(-105, 389.2), u2(-97.5, 389.6), u2(-94.4, 390.4), u2(-93.6, 392.8), u2(-91.3, 394.0), u2(-90.7, 391.2), u2(-91.2, 386.5), u2(-91.0, 384.3), u2(-90.4, 383.7), u2(-86.4, 383.7), u2(-85.3, 380.6), u2(-84.8, 377.4), u2(-84.7, 375), u2(-84.75, 370.5), u2(-84.8, 364)]
+const PATH = [u2(-113.5, 389.3), u2(-105, 389.2), u2(-97.5, 389.6), u2(-94.4, 390.4), u2(-93.6, 392.8), u2(-91.3, 394.0), u2(-90.7, 391.2), u2(-91.6, 386.5), u2(-91.5, 384.3), u2(-90.6, 383.5), u2(-86.4, 383.7), u2(-85.3, 380.6), u2(-84.8, 377.4), u2(-84.7, 375), u2(-84.75, 370.5), u2(-84.8, 364)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -349,6 +349,36 @@ function parade(px, pz, ry, half, line2, nFloats) {
 const wavers = []
 parade(-69.9 * U, 339.3 * U, Math.atan2(-0.3, 0.954), 5.2, 'ROAD CLOSED · DETOUR', 1)
 parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T FIGURED OUT WHY WE DO THIS', 2)
+// Melvin's Island: the loud beach-junk superstore across A1A Beach Blvd from the gas station. Outside the wall; look, don't shop.
+{
+  const L = 27, Dp = 9, Hh = 6.6, fx = -80.3 * U, cz = 390.8 * U, g = new THREE.Group(); g.position.set(fx, 0.05, cz); scene.add(g)
+  const c = document.createElement('canvas'); c.width = 2048; c.height = 512; const x = c.getContext('2d')
+  x.fillStyle = '#3aa7d6'; x.fillRect(0, 0, 2048, 150)                                  // blue parapet
+  for (let i = 0; i < 12; i++) { const px = 60 + i * 168; if (i % 2) { x.fillStyle = ['#e8641b', '#f1c62f', '#d8322a'][i % 3]; x.beginPath(); x.ellipse(px + 40, 80, 16, 52, 0, 0, 7); x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 4; x.beginPath(); x.moveTo(px + 40, 34); x.lineTo(px + 40, 126); x.stroke() }
+    else { x.fillStyle = '#3fae5a'; x.fillRect(px, 36, 84, 88); x.strokeStyle = '#2c8443'; x.lineWidth = 3; for (let k = 44; k < 124; k += 10) { x.beginPath(); x.moveTo(px + 4, k); x.lineTo(px + 80, k); x.stroke() } } }
+  x.fillStyle = '#e04a23'; x.fillRect(0, 150, 2048, 34)                                 // orange-red eave
+  x.fillStyle = '#f2cf2e'; x.fillRect(0, 184, 2048, 328)                                // yellow frame
+  const panels = [['MELVIN’S ISLAND', '#1c2340', '#fff'], ['Life is fine.', '#1c2340', '#fff'], ['SALE', '#1c2340', '#fff'], ['FAUX', '#1c2340', '#fff'], null, ['SALE', '#1c2340', '#fff'], ['JOKELEY', '#1c2340', '#fff'], ['Sk8-ish', '#1c2340', '#fff']]
+  const art = [(X) => { x.fillStyle = '#9fd8ee'; x.fillRect(X, 262, 228, 150); x.fillStyle = '#efdcae'; x.fillRect(X, 412, 228, 76); x.fillStyle = '#f3c64a'; x.beginPath(); x.arc(X + 60, 320, 34, 0, 7); x.fill(); x.strokeStyle = '#6b4a2a'; x.lineWidth = 8; x.beginPath(); x.moveTo(X + 160, 470); x.quadraticCurveTo(X + 150, 380, X + 172, 320); x.stroke(); x.strokeStyle = '#2f8a48'; x.lineWidth = 7; for (let k = 0; k < 6; k++) { x.beginPath(); x.moveTo(X + 172, 320); x.quadraticCurveTo(X + 172 + Math.cos(k) * 40, 290, X + 172 + Math.cos(k * 1.1) * 70, 330 + Math.sin(k) * 20); x.stroke() } },
+    (X) => { x.fillStyle = '#2c6fb0'; x.fillRect(X, 262, 228, 226); for (let k = 0; k < 5; k++) { x.fillStyle = ['#e8641b', '#f1c62f', '#fff', '#3fae5a', '#d8322a'][k]; x.fillRect(X + 16 + k * 42, 300 + (k % 2) * 20, 30, 150) } },
+    (X, t = '50%', u = 'OFF') => { x.fillStyle = '#e8401f'; x.fillRect(X, 262, 228, 226); x.strokeStyle = '#fff'; x.lineWidth = 8; x.beginPath(); x.arc(X + 114, 375, 92, 0, 7); x.stroke(); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = '900 86px Anton, Impact, sans-serif'; x.fillText(t, X + 114, 392, 150); x.font = '900 38px Anton, Impact, sans-serif'; x.fillText(u, X + 114, 436, 150) }]
+  panels.forEach((pn, i) => { const X = 14 + i * 254; if (!pn) { x.fillStyle = '#3aa7d6'; x.fillRect(X, 150, 240, 362); x.fillStyle = '#e04a23'; x.beginPath(); x.moveTo(X, 300); x.lineTo(X + 120, 240); x.lineTo(X + 240, 300); x.fill(); x.fillStyle = '#17242c'; x.fillRect(X + 60, 310, 120, 202); x.fillStyle = '#f2cf2e'; x.font = 'italic 900 30px Georgia, serif'; x.textAlign = 'center'; x.fillText('Melvin’s', X + 120, 222); return }
+    x.fillStyle = pn[1]; x.fillRect(X, 196, 228, 60); x.fillStyle = pn[2]; x.textAlign = 'center'; x.font = i === 1 || i === 7 ? 'italic 40px "Comic Sans MS", cursive' : '900 44px Anton, Impact, sans-serif'; x.fillText(pn[0], X + 114, 242, 212)
+    if (i === 5) art[2](X, 'BUY 1', 'GET 1 TURKEY'); else art[i % 3](X) })
+  x.fillStyle = '#e8785a'; x.fillRect(0, 488, 2048, 24)
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8
+  const blue = new THREE.MeshStandardMaterial({ color: '#3aa7d6', roughness: 0.85 }), red = new THREE.MeshStandardMaterial({ color: '#e04a23', roughness: 0.8 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(Dp, Hh, L), blue); body.position.set(Dp / 2, Hh / 2, 0); body.castShadow = body.receiveShadow = true; g.add(body)
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(L, Hh), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 })); face.rotation.y = -Math.PI / 2; face.position.set(-0.03, Hh / 2, 0); g.add(face)
+  const eave = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, L + 0.8), red); eave.position.set(-0.5, Hh * 0.675, 0); eave.rotation.z = -0.25; eave.castShadow = true; g.add(eave)
+  const lot = new THREE.Mesh(new THREE.PlaneGeometry(9, L + 8), new THREE.MeshStandardMaterial({ color: '#4d5356', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); lot.rotation.x = -Math.PI / 2; lot.position.set(-4.5, 0.03, 0); lot.receiveShadow = true; g.add(lot)
+  for (let i = 0; i < 9; i++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.12), new THREE.MeshBasicMaterial({ color: '#d8d4c4', polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); st.rotation.x = -Math.PI / 2; st.position.set(-2.4, 0.04, -11.2 + i * 2.8); g.add(st) }
+  // Its roadside sign.
+  const sc = document.createElement('canvas'); sc.width = 512; sc.height = 256; const y = sc.getContext('2d'); y.fillStyle = '#f2cf2e'; y.fillRect(0, 0, 512, 256); y.fillStyle = '#d8322a'; y.fillRect(0, 150, 512, 106); y.fillStyle = '#1c2340'; y.textAlign = 'center'; y.font = '900 78px Anton, Impact, sans-serif'; y.fillText('MELVIN’S ISLAND', 256, 100, 480); y.fillStyle = '#fff'; y.font = '900 60px Anton, Impact, sans-serif'; y.fillText('FLASH SALE · ALWAYS', 256, 226, 480)
+  const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace; const sm = new THREE.MeshStandardMaterial({ map: st, roughness: 0.7 })
+  for (const sgn of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.2), sm); p.position.set(-7.6, 3.6, -L / 2 - 2 + sgn * 0.06); p.rotation.y = sgn > 0 ? 0 : Math.PI; g.add(p) }
+  for (const dx of [-1.6, 1.6]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.6, 6), red); post.position.set(-7.6 + dx, 1.3, -L / 2 - 2); g.add(post) }
+}
 // The wooded east side of A1A Beach Blvd: a tree line behind the invisible wall.
 {
   // Live oaks, not hedges: a trunk, a spreading canopy of several clumps, and scrub underneath so nothing shows through.
@@ -364,6 +394,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       if (side > 0 && Math.abs(tz - GATE.z) < 1.25) px += 2.3 * U // set back behind the neighborhood's gate
+      if (side > 0 && tz > 387.0 && tz < 394.7) px += 3.6 * U // and behind the surf shop
       // Cleared around the sheriff's billboard so its pole and face stand clear of the bushes.
       if (side > 0 && Math.abs(tz - SHERIFF.z) < 1.9 && px / U > SHERIFF.x - 3.4 && px / U < SHERIFF.x + 1.2) continue
       if (side > 0 && Math.abs(tz - FORT.z) < 1.4 && Math.abs(px / U - FORT.x) < 1.6) continue
@@ -1443,6 +1474,35 @@ const lotIslands = []
     const red = new THREE.MeshStandardMaterial({ color: '#c8302b', roughness: 0.6 }), hy = new THREE.Group(); hy.position.set(4.2, 0.27, -0.9); g.add(hy)
     const hb = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.55, 8), red); hb.position.y = 0.28; hy.add(hb); const hc = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), red); hc.position.y = 0.56; hy.add(hc); const hn = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.42, 6), red); hn.rotation.z = Math.PI / 2; hn.position.y = 0.36; hy.add(hn)
     boxes.push({ c: new V2(mx, mz), a: new V2(dx, dz), hx: A, hz: H })
+  }
+
+  // --- The sabal palm grove at the south tip, behind the welcome sign.
+  { const D = new THREE.Object3D(), tr = [], fr = []; let sd = 11; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    for (let zi = 0; zi < 6; zi++) for (let xi = 0; xi < 7; xi++) { const z = (396.15 + zi * 0.62 + (rn() - 0.5) * 0.3) * U, half = (400.6 - z / U) / 4.6 * 2.9, x = -88.35 * U + ((xi - 3) / 3 * 2.6 + (rn() - 0.5) * 0.35) * U
+      if (Math.abs(x / U + 88.35) > half - 0.25) continue
+      const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone())
+      for (let k = 0; k < 14; k++) { const a = k * 0.449 + rn(), droop = k < 5 ? 0.5 : k < 10 ? 1.25 : 2.0, len = 1.5 + rn() * 0.5; D.position.set(x + Math.sin(a) * Math.sin(droop) * len * 0.5, y0 + h + 0.2 + Math.cos(droop) * len * 0.5, z + Math.cos(a) * Math.sin(droop) * len * 0.5); D.rotation.set(droop, a, 0, 'YXZ'); D.scale.set(1, len, 0.16); D.updateMatrix(); fr.push(D.matrix.clone()) } }
+    const tm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.2, 1, 7), new THREE.MeshStandardMaterial({ color: '#7d6c54', roughness: 1 }), tr.length); tr.forEach((m, n) => tm.setMatrixAt(n, m)); tm.castShadow = true; tm.frustumCulled = false; scene.add(tm)
+    const fm = new THREE.InstancedMesh(new THREE.ConeGeometry(0.55, 1, 5), new THREE.MeshStandardMaterial({ color: '#4d7a3c', roughness: 1, flatShading: true, side: THREE.DoubleSide }), fr.length); const col = new THREE.Color(); fr.forEach((m, n) => { fm.setMatrixAt(n, m); fm.setColorAt(n, col.set(['#4d7a3c', '#3f6a35', '#5c8744', '#6b6a3a'][n % 4])) }); fm.castShadow = true; fm.frustumCulled = false; scene.add(fm) }
+
+  // --- The back of Bumpkin' (the Square K's west end): a tan shed, a condenser, meters, rooftop units, an orange bollard, and a live oak on the verge.
+  { const wx = -371.0, tan = new THREE.MeshStandardMaterial({ color: '#cdbf9c', roughness: 0.9 }), roofM = new THREE.MeshStandardMaterial({ color: '#b8ab8a', roughness: 0.9 }), grey = new THREE.MeshStandardMaterial({ color: '#9a9ea1', roughness: 0.6, metalness: 0.3 }), white = new THREE.MeshStandardMaterial({ color: '#e8e8e4', roughness: 0.6 }), orange = new THREE.MeshStandardMaterial({ color: '#e8641b', roughness: 0.7 })
+    const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, GY + y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m }
+    add(new THREE.BoxGeometry(1.3, 1.9, 2.6), tan, wx - 0.67, 0.95, 1572.0)
+    { const r = add(new THREE.CylinderGeometry(0.9, 0.9, 2.7, 3, 1), roofM, wx - 0.67, 2.2, 1572.0); r.rotation.x = Math.PI / 2; r.scale.set(0.82, 1, 0.65) }
+    for (let i = 0; i < 5; i++) add(new THREE.BoxGeometry(0.02, 0.03, 2.6), roofM, wx - 1.33, 0.3 + i * 0.35, 1572.0)
+    boxes.push({ c: new V2(wx - 0.67, 1572.0), a: new V2(1, 0), hx: 0.7, hz: 1.35 })
+    add(new THREE.BoxGeometry(0.35, 0.6, 0.8), white, wx - 0.2, 0.45, 1574.4); add(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 12), grey, wx - 0.385, 0.45, 1574.4).rotation.z = Math.PI / 2
+    add(new THREE.BoxGeometry(0.14, 0.5, 0.36), grey, wx - 0.08, 1.5, 1569.8); add(new THREE.BoxGeometry(0.14, 0.34, 0.26), grey, wx - 0.08, 1.45, 1570.3); add(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 5), grey, wx - 0.05, 2.4, 1569.8)
+    add(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 8), orange, wx - 0.3, 0.55, 1568.9); add(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 8), orange, wx - 0.3, 0.55, 1579.3)
+    for (const [rx, rz, rs] of [[-368.5, 1571.5, 1], [-365.2, 1574.5, 1.2], [-362.2, 1571.8, 0.9]]) { add(new THREE.BoxGeometry(1.5 * rs, 0.9 * rs, 1.2 * rs), grey, rx, 3.75 + 0.45 * rs, rz); add(new THREE.CylinderGeometry(0.35 * rs, 0.35 * rs, 0.06, 10), new THREE.MeshStandardMaterial({ color: '#3a3d40' }), rx, 3.76 + 0.9 * rs, rz) }
+    // A spreading live oak on the grass by A1A S.
+    const ox = -380.3, oz = 1571.2, bark = new THREE.MeshStandardMaterial({ color: '#4f4336', roughness: 1 }), leafM = [new THREE.MeshStandardMaterial({ color: '#35602f', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#44743a', roughness: 1, flatShading: true })], oy = surfaceAt(ox, oz) - GY
+    add(new THREE.CylinderGeometry(0.32, 0.5, 2.6, 8), bark, ox, oy + 1.3, oz)
+    for (let i = 0; i < 5; i++) { const a = i * 1.257 + 0.4, l = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 3.2, 6), bark); l.position.set(ox + Math.sin(a) * 1.2, GY + oy + 3.3, oz + Math.cos(a) * 1.2); l.rotation.set(0.85, a, 0, 'YXZ'); l.castShadow = true; scene.add(l)
+      const c = add(blob, leafM[i % 2], ox + Math.sin(a) * 2.6, oy + 4.6 + (i % 2) * 0.5, oz + Math.cos(a) * 2.6); c.scale.set(2.3, 1.25, 2.3) }
+    add(blob, leafM[0], ox, oy + 5.6, oz).scale.set(2.8, 1.4, 2.8)
+    circles.push([ox, oz, 0.55])
   }
 
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
