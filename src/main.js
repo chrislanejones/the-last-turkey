@@ -857,6 +857,8 @@ function throwCan() {
   c.big = false; c.mesh.scale.setScalar(1)
   game.cans--; game.throwCool = 2 + Math.random() * 2.2
   if (game.cans === 0 && game.state === 'chase') say('I’M OUT OF SAUCE!', 2)
+  // His third can: she's had enough.
+  if (game.cans === 7) { $('bubble2').textContent = 'AND OF COURSE, EVERY CRANBERRY CAN IS THROWN AT ME!'; $('bubble2').classList.add('show'); game.b2T = 3.2 }
   if (game.cans === 9) { say('EAT CRANBERRY!', 1.5); game.sodaReady = true; $('bubble2').textContent = 'LET’S THROW SODA CANS AT HIM!'; $('bubble2').classList.add('show'); game.b2T = 3; objective(TOUCH ? '<b>Ram the wagon</b> — and tap <b>SODA</b> to throw soda cans at him.' : '<b>Ram the wagon</b> — and press <b>F</b> to throw soda cans at him.') }
 }
 
