@@ -1361,7 +1361,10 @@ function hud() {
   $('sodas').textContent = game.sodaReady ? '●'.repeat(game.soda) : ''
   $('cans').textContent = '●'.repeat(game.cans)
   $('grabFill').style.width = `${game.grab * 100}%`
-  $('grabRow').classList.toggle('warn', game.grab > 0.02 && game.state === 'chase')
+  // Only while he is actually at the door grabbing it.
+  const grabbing = game.grab > (game.lastGrab ?? 0) + 1e-6 && game.state === 'chase'; game.lastGrab = game.grab
+  game.grabShowT = grabbing ? 0.4 : (game.grabShowT ?? 0) - 1 / 60
+  $('grabRow').classList.toggle('warn', game.grabShowT > 0 && game.state === 'chase')
   // The speech bubble rides over the wagon.
   proj.set(R.pos.x + Math.sin(R.heading) * 0.9, GY + 2.9, R.pos.y + Math.cos(R.heading) * 0.9).project(camera)
   const b = $('bubble')

@@ -24,7 +24,7 @@ button.big:hover{background:#f5d27a;color:#111}
 .row{margin-bottom:10px}.row label{display:block;font-size:14px;letter-spacing:2.5px;text-align:right;margin-bottom:3px}
 .meter{height:14px;background:rgba(0,0,0,.6);border:2px solid #000;outline:1px solid rgba(255,255,255,.35)}
 .meter i{display:block;height:100%}.meter.thin{height:8px;margin-top:2px}.legend{text-align:right;font-size:10px;letter-spacing:2px;margin-top:3px;opacity:.85}.legend i{display:inline-block;width:14px;height:5px;margin:0 4px 1px 8px;vertical-align:middle}#cans,#sodas{float:left;letter-spacing:0;font-size:13px}#rivalFill{background:#d8362c;transition:width .2s}#armorFill{background:#4fa84f;transition:width .2s}#peopleFill{background:#e9a23a;transition:width .2s}#cansRow,#sodaRow{text-align:right;font-size:12px;letter-spacing:2px;margin-top:3px}#cans{color:#c2244f;letter-spacing:0}#sodas{color:#6fb6ff;letter-spacing:0}#grabFill{background:#f5c23a}
-#grabRow{opacity:.45}#grabRow.warn{opacity:1;animation:pulse .5s infinite alternate}
+#grabRow{display:none}#grabRow.warn{display:block;animation:pulse .5s infinite alternate}
 @keyframes pulse{to{filter:brightness(1.5)}}
 .flashbar{animation:fb .35s}@keyframes fb{0%{filter:brightness(3)}100%{filter:none}}
 #objective{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:clamp(16px,2.2vw,24px);letter-spacing:1px;text-shadow:2px 2px 0 #000;padding:0 240px}
