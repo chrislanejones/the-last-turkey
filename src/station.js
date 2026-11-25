@@ -398,8 +398,8 @@ export function dressStation(scene, U, apronY) {
       c.font = 'bold 150px Oswald, Impact, sans-serif'; c.fillText('PONCE', 256, 200); c.font = 'bold 150px Oswald, Impact, sans-serif'; c.fillText('PLAZA', 256, 370) } })
     const body = label('', { w: 256, h: 840, draw: (c) => {
       c.fillStyle = '#dcbf86'; c.fillRect(0, 0, 256, 840); c.textAlign = 'center'
-      c.fillStyle = '#fffdf5'; c.fillRect(14, 262, 228, 150); c.fillStyle = '#4fae2c'; c.font = 'italic bold 66px Georgia, serif'; c.fillText('publick', 128, 360)
-      c.fillStyle = '#1d2a4a'; c.fillRect(14, 432, 228, 150); c.fillStyle = '#fff'; c.font = 'italic bold 44px Georgia, serif'; c.fillText("Joisey", 128, 492); c.fillText("Mick's", 128, 540); c.font = 'bold 20px Oswald, sans-serif'; c.fillText('S U B S', 128, 568)
+      c.fillStyle = '#fffdf5'; c.fillRect(14, 262, 228, 150); c.fillStyle = '#4fae2c'; let px = 66; do { c.font = `italic bold ${px}px Georgia, serif`; px -= 2 } while (c.measureText('publick').width > 196); c.fillText('publick', 128, 352)
+      c.fillStyle = '#1d2a4a'; c.fillRect(14, 432, 228, 150); c.fillStyle = '#fff'; let jp = 44; do { c.font = `italic bold ${jp}px Georgia, serif`; jp -= 2 } while (c.measureText("Mick's").width > 196); c.fillText("Joisey", 128, 492); c.fillText("Mick's", 128, 540); c.font = 'bold 20px Oswald, sans-serif'; c.fillText('S U B S', 128, 568)
       c.fillStyle = '#fffdf5'; c.fillRect(14, 602, 228, 150); c.fillStyle = '#3a8a3a'; c.font = 'bold 54px Oswald, Impact, sans-serif'; c.fillText('DOLLAR', 128, 667); c.fillText('PALM', 128, 727)
     } })
     for (const sd of [-1, 1]) {
