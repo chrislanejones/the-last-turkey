@@ -53,6 +53,28 @@ button.big:hover{background:#f5d27a;color:#111}
 #flash{top:12%}#touch button.t{width:60px;height:60px;bottom:14px}#touch button.t[data-touch=right]{left:88px}#touch button.t[data-touch=brake]{right:88px}
 #touch #camBtn,#touch #sodaBtn{width:48px;height:48px;font-size:11px}#touch #sodaBtn{bottom:84px;right:16px}#touch #camBtn{bottom:84px;right:72px}
 #objective{bottom:20px;padding:0 170px;font-size:14px}#speedo{left:18px;bottom:auto;top:104px;transform:none;text-align:left}#mph{font-size:28px}}
+
+/* --- phones: give every HUD piece its own space --- */
+#intro:not(.gone) ~ #touch{visibility:hidden}
+@media (hover:none),(pointer:coarse){
+ #intro{bottom:auto;top:50%;transform:translateY(-50%)}
+ #mission{width:min(250px,calc(100vw - 165px))}
+ .row label{font-size:10px;letter-spacing:1.5px;white-space:nowrap}
+ .ammo{gap:2px;height:12px}.ammo svg{height:12px}
+ .legend{font-size:8px;letter-spacing:1px;white-space:nowrap}
+ #grabRow label{font-size:9px}
+ #bubble,#bubble2,#bubble3{font-size:13px;width:max-content;max-width:min(240px,62vw);padding:7px 11px;border-width:2px;border-radius:14px}
+ #objective{font-size:13px;line-height:1.25}
+ #flash{font-size:30px}
+}
+@media (orientation:portrait) and ((hover:none),(pointer:coarse)){
+ #objective{bottom:100px;padding:0 84px 0 14px;text-align:left}
+}
+@media (orientation:landscape) and (max-height:500px){
+ #objective{bottom:10px;padding:0 172px;font-size:12px}
+ #mission{width:min(250px,40vw)}
+ #flash{top:30%}
+}
 </style></head><body>
 <div id="stage"></div>
 <script>window.__loadStart = performance.now()</script>

@@ -8,6 +8,7 @@ import { buildGalaxie, buildSUV, CAR, SUV } from './car.js'
 import { dressStation, PED_BED } from './station.js'
 import BILLBOARD from './billboard-img.js'
 import SHERIFF_IMG from './sheriff-img.js'
+import FORT_IMG from './fort-img.js'
 
 import DATA from './plaza-data.json'
 
@@ -110,6 +111,7 @@ const dressing = dressStation(scene, U, APRON.y)
 
 const BB_POLES = [], BB_VIEW = {}
 const SHERIFF = { x: -77.6, z: 377.2 }
+const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, hanging out over A1A Beach Blvd
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
 {
   const bb = new THREE.Group(); bb.position.set(-92.42 * U, 0, 377.5 * U); bb.rotation.y = Math.atan2(-0.962, 0.273) + Math.PI / 2; scene.add(bb)
@@ -153,6 +155,24 @@ const SHERIFF = { x: -77.6, z: 377.2 }
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.05); bb.add(lamp)
   }
   BB_POLES.push([SHERIFF.x * U, SHERIFF.z * U])
+}
+
+// "Have You Seen Saint Ponce Fort?" — a single-post billboard whose face hangs out over the road.
+{
+  const bb = new THREE.Group(); bb.position.set(FORT.x * U, 0, FORT.z * U); bb.rotation.y = Math.atan2(-6.2, 19.7); scene.add(bb)
+  const W = 11, H = W * 388 / 832, base = 7.2, off = -5.4
+  const tex = new THREE.TextureLoader().load(FORT_IMG); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4
+  const dark = new THREE.MeshStandardMaterial({ color: '#2a2d31', roughness: 0.65, metalness: 0.35 })
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 }))
+  face.position.set(off, base + H / 2, 0.21); bb.add(face)
+  const back = face.clone(); back.position.z = -0.21; back.rotation.y = Math.PI; bb.add(back)
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.36), dark); frame.position.set(off, base + H / 2, 0); frame.castShadow = true; bb.add(frame)
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, base, 12), dark); pole.position.set(0, base / 2, 0); pole.castShadow = true; bb.add(pole)
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(W * 0.8, 0.35, 0.35), dark); beam.position.set(off, base - 0.18, 0); bb.add(beam)
+  for (let i = 0; i < 4; i++) { const x = off - W / 2 + W * (i + 0.5) / 4
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.1), dark); arm.position.set(x, base + H + 0.35, 0.5); bb.add(arm)
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.05); bb.add(lamp) }
+  BB_POLES.push([FORT.x * U, FORT.z * U])
 }
 
 // --- the big sign, the turkey, the marker -----------------------------------------------
@@ -300,6 +320,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       // Cleared around the sheriff's billboard so its pole and face stand clear of the bushes.
       if (side > 0 && Math.abs(tz - SHERIFF.z) < 1.9 && px / U > SHERIFF.x - 3.4 && px / U < SHERIFF.x + 1.2) continue
+      if (side > 0 && Math.abs(tz - FORT.z) < 1.4 && Math.abs(px / U - FORT.x) < 1.6) continue
       if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.3 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.3 })) continue // not through a neighbor's roof
       const m = new THREE.Mesh(geo, leaf[(k + row) % 3]); m.scale.set(sc, sc * (0.8 + r(3) * 0.5), sc)
       m.position.set(px, sc * 0.75 + row * 1.2, pz); m.castShadow = row === 0; scene.add(m)
@@ -1177,7 +1198,7 @@ function updateCans(dt) {
 // --- her weapon: three soda cans, thrown back at the wagon once he has started it -------------
 const sodaMat = [new THREE.MeshStandardMaterial({ color: '#1f6fd0', roughness: 0.35, metalness: 0.4 }), new THREE.MeshStandardMaterial({ color: '#c9cdd0', metalness: 0.9, roughness: 0.3 }), new THREE.MeshStandardMaterial({ color: '#c9cdd0', metalness: 0.9, roughness: 0.3 })]
 const sodas = Array.from({ length: 3 }, () => { const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.26, 12), sodaMat); mesh.visible = false; mesh.castShadow = true; scene.add(mesh); return { mesh, vel: new V3(), live: false } })
-function chrisSays(text, t) { $('bubble3').textContent = text; $('bubble3').classList.add('show'); game.b3T = t }
+function chrisSays(text, t) { if (game.b2T > 0.2) { game.chrisNext = [text, t]; return } $('bubble3').textContent = text; $('bubble3').classList.add('show'); game.b3T = t } // he waits for Becky to finish
 function freeDrive() {
   if (game.state === 'cutscene') { R.pos.copy(R_START.pos); R.heading = R_START.heading; R.vel.set(0, 0) }
   game.state = 'free'; camMode = 0; R.vel.set(0, 0)
@@ -1203,6 +1224,7 @@ function throwSoda() {
 function updateSodas(dt) {
   if (game.b3T > 0) { game.b3T -= dt; if (game.b3T <= 0) $('bubble3').classList.remove('show') }
   if (game.b2T > 0) { game.b2T -= dt; if (game.b2T <= 0 && game.state !== 'cutscene') $('bubble2').classList.remove('show') }
+  if (game.chrisNext && game.b2T <= 0.2) { const [tx, tt] = game.chrisNext; game.chrisNext = null; chrisSays(tx, tt) }
   for (const c of [...sodas, ...lattes]) {
     if (!c.live) continue
     c.vel.y -= CAN_G * dt; c.mesh.position.addScaledVector(c.vel, dt); c.mesh.rotation.x += dt * 10; c.mesh.rotation.z += dt * 6
@@ -1601,6 +1623,9 @@ function hud() {
   // Over Chris, in the driver's seat on the left.
   { const h = P.heading, sx = -0.4, sz = 0.22; proj.set(P.pos.x + sx * Math.cos(h) + sz * Math.sin(h), GY + 2.25, P.pos.y - sx * Math.sin(h) + sz * Math.cos(h)).project(camera) }
   const b3 = $('bubble3'); b3.style.left = `${(proj.x * 0.5 + 0.5) * innerWidth}px`; b3.style.top = `${(-proj.y * 0.5 + 0.5) * innerHeight - ($('bubble2').classList.contains('show') ? 64 : 0)}px`
+  for (const id of ['bubble', 'bubble2', 'bubble3']) { const e = $(id); if (!e.classList.contains('show')) continue
+    const w = e.offsetWidth, x = parseFloat(e.style.left) || 0, m = 8
+    e.style.left = `${THREE.MathUtils.clamp(x, w / 2 + m, innerWidth - w / 2 - m)}px` } // never off the edge of a phone screen
   drawMinimap()
 }
 
