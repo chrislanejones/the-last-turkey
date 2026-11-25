@@ -368,16 +368,18 @@ export function dressStation(scene, U, apronY) {
     const sign = label('', { w: 512, h: 192, draw: (x) => {
       x.fillStyle = '#1d2a4a'; x.beginPath(); x.roundRect(6, 10, 500, 172, 40); x.fill(); x.strokeStyle = '#c8302b'; x.lineWidth = 8; x.stroke()
       x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.font = 'bold 26px Oswald, sans-serif'; x.fillText('SINCE 1957', 256, 48)
-      x.font = 'italic bold 84px Georgia, serif'; x.fillText("Joisey Mick's", 256, 128)
+      let px = 84; do { x.font = `italic bold ${px}px Georgia, serif`; px -= 2 } while (x.measureText("Joisey Mick's").width > 440); x.fillText("Joisey Mick's", 256, 126)
       x.font = 'bold 30px Oswald, sans-serif'; x.fillText('S U B S', 256, 168)
     } })
     { const [x, z] = at(bay, front + 0.035); plane(sign, x, (1.45 - 0.2) * U, z, 3.6, 1.35, t, { emissive: '#ffffff', emissiveMap: sign, emissiveIntensity: 0.18 }) }
-    const banner = label('', { w: 512, h: 200, draw: (x) => {
-      x.fillStyle = '#fffdf3'; x.fillRect(0, 0, 512, 200); x.strokeStyle = '#c8302b'; x.lineWidth = 12; x.strokeRect(6, 6, 500, 188)
-      x.textAlign = 'center'; const fit = (t, px, y, c) => { x.fillStyle = c; do { x.font = `bold ${px}px Oswald, Impact, sans-serif`; px -= 2 } while (x.measureText(t).width > 470); x.fillText(t, 256, y) }; fit('BEST SUBS AROUND', 64, 92, '#1d2a4a')
-      fit("DON'T GO TO THAT OTHER PLACE", 36, 152, '#c8302b')
+    // A vinyl banner stretched across the pilasters, between the awning and the umbrellas.
+    const banner = label('', { w: 1024, h: 232, draw: (x) => {
+      x.fillStyle = '#fffdf3'; x.fillRect(0, 0, 1024, 232); x.strokeStyle = '#c8302b'; x.lineWidth = 16; x.strokeRect(8, 8, 1008, 216)
+      x.textAlign = 'center'; const fit = (t, px, y, c) => { x.fillStyle = c; do { x.font = `bold ${px}px Oswald, Impact, sans-serif`; px -= 2 } while (x.measureText(t).width > 940); x.fillText(t, 512, y) }
+      fit('BEST SUBS AROUND', 108, 120, '#1d2a4a'); fit("DON'T GO TO THAT OTHER PLACE", 62, 192, '#c8302b')
     } })
-    { const [x, z] = at(bay, front - 0.75 + 0.035); plane(banner, x, 0.8 * U, z, 2.6, 1.02, t) }
+    { const W = (14.9 - 0.2) / 12 * U + 0.5, [x, z] = at(bay, front + 0.045); plane(banner, x, 0.82 * U, z, W, W * 232 / 1024, t)
+      const rope = M('#d8d2c0'); for (const e of [-1, 1]) { const [rx, rz] = at(bay + e * (W / U / 2 + 0.03), front + 0.04); cyl(rope, rx, 0.82 * U, rz, 0.02, W * 232 / 1024, 4) } }
     // Patio: two blue umbrellas over little tables with red stools.
     const pole = M('#3b3f44', { metalness: 0.5 }), cloth = M('#22305c', { side: THREE.DoubleSide }), top = M('#2a4f9e'), red = M('#c8302b')
     for (const e of [-0.42, 0.42]) {
