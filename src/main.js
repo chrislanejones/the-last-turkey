@@ -906,6 +906,21 @@ const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18), domeGeo = new T
     crates.push({ m, half: new V3(0.34, 0.475, 0.34), r: 0.36, home: { pos: new V3(x, GY + 0.475, z), yaw: lz }, vel: new V3(), spin: new V3(), awake: false, can: true })
   }
 }
+// Orange traffic barrels along every barrier: two white reflective bands, a black rubber base. All knockable.
+{
+  const orange = new THREE.MeshStandardMaterial({ color: '#ee6a1a', roughness: 0.55 }), white = new THREE.MeshStandardMaterial({ color: '#f4f1e8', roughness: 0.35, emissive: '#ffffff', emissiveIntensity: 0.08 }), rubber = new THREE.MeshStandardMaterial({ color: '#1d1d1d', roughness: 0.9 })
+  const Hh = 1.0, rTop = 0.36, rBot = 0.44, rAt = (y) => rBot + (rTop - rBot) * (y + Hh / 2) / Hh
+  const body = new THREE.CylinderGeometry(rTop, rBot, Hh - 0.04, 18); body.translate(0, 0.02, 0) // its bottom tucked inside the rubber base
+  const bands = [-0.05, 0.25].map((y) => { const g = new THREE.CylinderGeometry(rAt(y + 0.07) + 0.012, rAt(y - 0.07) + 0.012, 0.14, 18, 1, true); g.translate(0, y, 0); return g })
+  const base = new THREE.CylinderGeometry(0.55, 0.57, 0.08, 18); base.translate(0, -Hh / 2 + 0.04, 0)
+  for (const [x, z] of DATA.barrels || []) {
+    const m = new THREE.Group(), b = new THREE.Mesh(body, orange); b.castShadow = true; m.add(b)
+    for (const g of bands) m.add(new THREE.Mesh(g, white))
+    const bs = new THREE.Mesh(base, rubber); bs.castShadow = true; m.add(bs)
+    scene.add(m)
+    crates.push({ m, half: new V3(0.44, Hh / 2, 0.44), r: 0.48, home: { pos: new V3(x, GY + Hh / 2, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, barrel: true })
+  }
+}
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -962,11 +977,16 @@ function updateCrates(dt) {
       const vn = c.vel.x * nx + c.vel.z * nz; if (vn < 0) { c.vel.x -= 1.4 * vn * nx; c.vel.z -= 1.4 * vn * nz }
     }
     // The ground: bounce a little, slide to a stop, and settle back flat on a face.
-    const floor = GY + c.half.y
+    // Round things (barrels, cans) can end up on their sides: rest on whichever way they fell.
+    const up = _v.set(0, 1, 0).applyQuaternion(c.m.quaternion), uy = Math.abs(up.y)
+    const lying = (c.barrel || c.can) && uy < 0.6
+    const floor = GY + (c.barrel || c.can ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
       const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
-      _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')); c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
+      if (lying) { const hz = new V3(up.x, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
+      else { _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')) }
+      c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
       if (c.vel.lengthSq() < 0.01 && c.spin.lengthSq() < 0.02) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.m.quaternion.copy(_q); c.awake = false }
     }
   }
@@ -1074,6 +1094,11 @@ function update(dt) {
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
   rideBeds(dt, live)
+  // Driving around or under the Call Christy Homes billboard, Becky notices the necklace.
+  if (BB_VIEW.look) { const d = Math.hypot(P.pos.x - BB_VIEW.look.x, P.pos.y - BB_VIEW.look.z)
+    if (d < 13 && (game.necklaceT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'THAT’S MY HOUSE NECKLACE. CHRISTY STILL OWES IT TO ME.'; $('bubble2').classList.add('show'); game.b2T = 3.4; game.necklaceT = 25; game.necklace2 = 3.6 }
+    if (game.necklace2 > 0 && (game.necklace2 -= dt) <= 0) { $('bubble2').textContent = 'I DON’T KNOW IF SHE’S SELLING HERSELF OR SELLING HOMES ON THAT BILLBOARD.'; $('bubble2').classList.add('show'); game.b2T = 4 }
+    game.necklaceT = (game.necklaceT ?? 0) - dt }
   if (bumped > 3) { S.hit = Math.min(1, bumped / 15); audio.crash(Math.min(1, bumped / 16)) }
   // Hitting things hurts the Galaxie too: walls, buildings, pumps, parked cars, poles.
   game.wallCool = (game.wallCool ?? 0) - dt

@@ -129,7 +129,7 @@ const inAHome = (x: number, z: number) => wb && (inFarmers(x, z) || x < -97 && x
 const bush = (...a: Parameters<typeof plants.bush>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.bush(...a)) }
 const tree = (...a: Parameters<typeof plants.tree>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.tree(...a)) }
 const rand = (seed: number) => { const v = Math.sin(seed * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v) }
-const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][], beds: [] as number[][] }
+const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][], beds: [] as number[][], barrels: [] as number[][] }
 let thin = false
 const car = (x: number, z: number, seed: number, turn = 0, _driving = false, family?: number) => {
   if (wb && inHood(x, z)) return // keep the neighbors' driveways clear
@@ -205,8 +205,7 @@ const wallRun = (ax: number, az: number, bx: number, bz: number) => {
   box('architecture', '#ee6a1a', cx, .255, cz, .1, .03, len + .1, turn)
   for (let d = .8; d < len; d += 3.1) {
     const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len
-    add('architecture', new CylinderGeometry(.09, .11, .26, 10), '#ee6a1a', x + Math.cos(turn) * out * 2.6, .17, z - Math.sin(turn) * out * 2.6)
-    add('architecture', new CylinderGeometry(.097, .1, .05, 10), '#f4f1e8', x + Math.cos(turn) * out * 2.6, .2, z - Math.sin(turn) * out * 2.6)
+    DATA.barrels.push([(x - Math.cos(turn) * out * 1.7) * UNIT, (z + Math.sin(turn) * out * 1.7) * UNIT]) // the game builds these, inside the wall, so cars can knock them over
   }
 }
 /** +1 or -1: which side of a wall run is inside the arena (barrels go there). */
