@@ -407,5 +407,76 @@ export function dressStation(scene, U, apronY) {
       plane(body, x + sd * 0.175 * U, 0.9 * U, z, 0.55 * U, 1.8 * U, sd * Math.PI / 2)
     }
   }
+
+  // Farmers Defending Farmers: the Tuscan-style insurance office on the corner of A1A S and Floridian Ave.
+  // Tan stucco, terracotta hip roofs, a corner clock tower with blue arched windows, red feather flags,
+  // and two farmers guarding the door with pitchforks.
+  {
+    const F = new THREE.Group(); F.position.set(-100.2 * U, 0.045 * U, 384.9 * U); F.rotation.y = 0.19; g.add(F)
+    const W = 3.9 * U - 0.8, D = 2.7 * U - 0.8, H = 4.3
+    const stucco = M('#e2bb7d', { roughness: 0.95 }), trim = M('#c99a5a'), tile = M('#b5532e', { roughness: 0.8 }), dk = M('#4a2a1c'), glass = M('#2f5f8f', { roughness: 0.2, metalness: 0.3 })
+    const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; F.add(m); return m }
+    const hip = (w, d, h, x, y, z) => { const r = add(new THREE.ConeGeometry(Math.SQRT1_2, 1, 4), tile, x, y + h / 2, z, Math.PI / 4); r.scale.set(w + 0.9, h, d + 0.9); r.rotation.y = 0; r.geometry = r.geometry.clone().rotateY(Math.PI / 4); return r }
+    // Two wings stepped like the real one, each under its own hip roof.
+    add(new THREE.BoxGeometry(W, H, D * 0.62), stucco, 0, H / 2, -D * 0.19); hip(W, D * 0.62, 2.4, 0, H, -D * 0.19)
+    add(new THREE.BoxGeometry(W * 0.62, H, D * 0.5), stucco, -W * 0.12, H / 2, D * 0.22); hip(W * 0.62, D * 0.5, 2.0, -W * 0.12, H, D * 0.22)
+    add(new THREE.BoxGeometry(W + 0.2, 0.35, D * 0.62 + 0.2), dk, 0, H - 0.2, -D * 0.19)
+    // Brackets under the eaves along the two street sides.
+    for (let x = -W / 2 + 0.6; x < W / 2; x += 1.1) add(new THREE.BoxGeometry(0.18, 0.35, 0.35), dk, x, H - 0.55, D * 0.12 + 0.17)
+    for (let z = -D * 0.5 + 0.6; z < D * 0.1; z += 1.1) add(new THREE.BoxGeometry(0.35, 0.35, 0.18), dk, W / 2 + 0.17, H - 0.55, z)
+    // Storefront glass toward A1A and toward Floridian.
+    for (const z of [-D * 0.38, -D * 0.05]) add(new THREE.BoxGeometry(0.06, 2.2, 2.6), glass, W / 2 + 0.03, 1.6, z)
+    for (const x of [-W * 0.32, W * 0.02]) add(new THREE.BoxGeometry(2.6, 2.2, 0.06), glass, x, 1.6, D * 0.47 + 0.03)
+    add(new THREE.BoxGeometry(0.08, 2.6, 1.6), dk, W / 2 + 0.04, 1.3, D * 0.02) // front door
+    // The corner clock tower.
+    const tx = W / 2 - 1.6, tz = D * 0.47 - 1.6, TH = 9.5
+    add(new THREE.BoxGeometry(3.4, TH, 3.4), stucco, tx, TH / 2, tz)
+    add(new THREE.BoxGeometry(3.7, 0.4, 3.7), dk, tx, TH - 0.1, tz); add(new THREE.BoxGeometry(3.6, 0.3, 3.6), trim, tx, TH - 2.8, tz)
+    const tr = add(new THREE.ConeGeometry(2.75, 1.9, 4), tile, tx, TH + 0.95, tz, Math.PI / 4)
+    for (const [nx, nz, ry] of [[1, 0, Math.PI / 2], [0, 1, 0], [-1, 0, -Math.PI / 2], [0, -1, Math.PI]]) {
+      for (const k of [-0.75, 0, 0.75]) {
+        const ax = tx + nx * 1.72 + (nz ? k : 0) * Math.abs(nz), az = tz + nz * 1.72 + (nx ? -k : 0) * Math.abs(nx)
+        const win = add(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 12, 1, false, 0, Math.PI), glass, ax, TH - 1.1, az); win.rotation.set(Math.PI / 2, 0, 0); win.rotation.order = 'YXZ'; win.rotation.y = ry
+        add(new THREE.BoxGeometry(nx ? 0.06 : 0.56, 1.1, nz ? 0.06 : 0.56), glass, ax, TH - 1.7, az)
+      }
+    }
+    const clock = label('', { w: 256, h: 256, draw: (c) => { c.clearRect(0, 0, 256, 256); c.fillStyle = '#f6efdc'; c.beginPath(); c.arc(128, 128, 120, 0, 7); c.fill(); c.strokeStyle = '#3a2a1c'; c.lineWidth = 10; c.stroke()
+      for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillStyle = '#3a2a1c'; c.fillRect(128 + Math.cos(a) * 96 - 5, 128 + Math.sin(a) * 96 - 5, 10, 10) }
+      c.lineWidth = 9; c.beginPath(); c.moveTo(128, 128); c.lineTo(128, 52); c.moveTo(128, 128); c.lineTo(180, 150); c.stroke() } })
+    // Pitchfork logo: three red forks in a ring, the parody of the three ovals.
+    const logo = (c, cx, cy, r) => { c.strokeStyle = '#d62b1f'; c.lineWidth = r * 0.12; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke()
+      for (const a of [0, 2.094, 4.189]) { c.save(); c.translate(cx, cy); c.rotate(a); c.fillStyle = '#d62b1f'; c.fillRect(-r * 0.05, -r * 0.1, r * 0.1, r * 0.8); c.fillRect(-r * 0.28, -r * 0.22, r * 0.56, r * 0.08); for (const t of [-0.28, 0, 0.2]) c.fillRect(r * t, -r * 0.62, r * 0.08, r * 0.42); c.restore() } }
+    const towerSign = label('', { w: 512, h: 512, draw: (c) => { c.fillStyle = '#e2bb7d'; c.fillRect(0, 0, 512, 512); logo(c, 256, 170, 120)
+      c.textAlign = 'center'; c.fillStyle = '#d62b1f'; c.font = 'bold 62px Georgia, serif'; c.fillText('FARMERS', 256, 380); c.font = 'bold 34px Georgia, serif'; c.fillText('DEFENDING FARMERS', 256, 430) } })
+    for (const [nx, nz, ry] of [[1, 0, Math.PI / 2], [0, 1, 0]]) {
+      const p1 = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.8), new THREE.MeshStandardMaterial({ map: clock, transparent: true, alphaTest: 0.5 })); p1.position.set(tx + nx * 1.72, TH - 4.0, tz + nz * 1.72); p1.rotation.y = ry; F.add(p1)
+      const p2 = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshStandardMaterial({ map: towerSign })); p2.position.set(tx + nx * 1.72, 4.0, tz + nz * 1.72); p2.rotation.y = ry; F.add(p2)
+    }
+    // Monument sign on the corner lawn and two red feather flags.
+    const mono = label('', { w: 512, h: 192, draw: (c) => { c.fillStyle = '#fbf4e4'; c.fillRect(0, 0, 512, 192); logo(c, 90, 96, 62); c.fillStyle = '#d62b1f'; c.font = 'bold 54px Georgia, serif'; c.fillText('FARMERS', 175, 92); c.font = 'bold 30px Georgia, serif'; c.fillText('DEFENDING FARMERS', 175, 140) } })
+    const ms = add(new THREE.BoxGeometry(0.5, 1.2, 3.0), trim, W / 2 + 2.6, 0.6, D * 0.3)
+    for (const e of [-1, 1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.09), new THREE.MeshStandardMaterial({ map: mono })); f.position.set(W / 2 + 2.6 + e * 0.26, 0.62, D * 0.3); f.rotation.y = e * Math.PI / 2; F.add(f) }
+    const flagTex = label('', { w: 128, h: 512, draw: (c) => { c.fillStyle = '#c8241a'; c.fillRect(0, 0, 128, 512); c.save(); c.translate(64, 256); c.rotate(-Math.PI / 2); c.fillStyle = '#fff'; c.font = 'italic bold 64px Georgia, serif'; c.textAlign = 'center'; c.fillText('Farmers', 0, 22); c.restore() } })
+    const fm = new THREE.MeshStandardMaterial({ map: flagTex, side: THREE.DoubleSide })
+    for (const z of [-D * 0.45, D * 0.15]) {
+      add(new THREE.CylinderGeometry(0.04, 0.04, 3.6, 6), M('#555'), W / 2 + 3.6, 1.8, z)
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 2.6), fm); fl.position.set(W / 2 + 3.6, 2.2, z + 0.4); fl.rotation.y = Math.PI / 2; fl.rotation.z = 0.05; F.add(fl)
+    }
+    // Two farmers guarding the door, pitchforks up.
+    const skin = M('#c98a6a'), denim = M('#3b5b8a'), plaid = M('#b23a2a'), straw = M('#d8b15a'), wood = M('#8a5a2b'), tine = M('#8d9396', { metalness: 0.7 })
+    for (const e of [-1, 1]) {
+      const fx = W / 2 + 1.1, fz = D * 0.02 + e * 1.5, m = new THREE.Group(); m.position.set(fx, 0, fz); m.rotation.y = Math.PI / 2; F.add(m)
+      const part = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; m.add(o); return o }
+      for (const l of [-0.13, 0.13]) part(new THREE.CylinderGeometry(0.09, 0.08, 0.85, 8), denim, l, 0.43, 0)
+      part(new THREE.CylinderGeometry(0.24, 0.22, 0.7, 10), plaid, 0, 1.2, 0); part(new THREE.BoxGeometry(0.42, 0.5, 0.05), denim, 0, 1.12, 0.21)
+      part(new THREE.SphereGeometry(0.16, 12, 10), skin, 0, 1.7, 0)
+      part(new THREE.CylinderGeometry(0.34, 0.34, 0.03, 16), straw, 0, 1.84, 0); part(new THREE.CylinderGeometry(0.15, 0.17, 0.14, 12), straw, 0, 1.92, 0)
+      const arm = part(new THREE.CylinderGeometry(0.06, 0.06, 0.55, 6), plaid, e * 0.3, 1.3, 0.12); arm.rotation.x = -0.9
+      const fork = new THREE.Group(); fork.position.set(e * 0.34, 0.05, 0.3); m.add(fork)
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 6), wood); shaft.position.y = 1.1; fork.add(shaft)
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.04, 0.04), tine); bar.position.y = 2.2; fork.add(bar)
+      for (const t of [-0.15, 0, 0.15]) { const tn = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.4, 5), tine); tn.position.set(t, 2.42, 0); fork.add(tn) }
+    }
+  }
   return g
 }

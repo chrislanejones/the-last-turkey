@@ -38,6 +38,9 @@ let wb = false, loving = false
 const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb', '#dcc7b1', '#8fb5a6', '#e7c9d1']
 /** The neighborhood west of A1A S that comes straight from the map's own west-blocks builder. */
 const inHood = (x: number, z: number) => (x < -98.5 || (x < -96 && z > 391)) && x > -131 && z > 377 && z < 397
+// The corner office at A1A S and Floridian (Farmers Defending Farmers), drawn by the game instead.
+const FARMERS = { x: -100.2, z: 384.9, hw: 1.95, hd: 1.35, t: 0.19 }
+const inFarmers = (x: number, z: number) => { const dx = x - FARMERS.x, dz = z - FARMERS.z, lx = dx * Math.cos(FARMERS.t) - dz * Math.sin(FARMERS.t), lz = dx * Math.sin(FARMERS.t) + dz * Math.cos(FARMERS.t); return Math.abs(lx) < FARMERS.hw + .3 && Math.abs(lz) < FARMERS.hd + .3 }
 // Which neighborhood home's footprint (padded) holds a point, or -1.
 const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([hx, hz, w, d, deg]) => {
   const t = deg * Math.PI / 180, dx = x - hx, dz = z - hz, lx = dx * Math.cos(t) + dz * Math.sin(t), lz = -dx * Math.sin(t) + dz * Math.cos(t)
@@ -45,6 +48,7 @@ const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([h
 })
 const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: number, z: number, rotation = 0, _glow?: string | null) => {
   if ((input as any).parameters?.height === 2.5 && layer === 'wood') DATA.poles.push([x * UNIT, z * UNIT])
+  if (wb && !loving && inFarmers(x, z)) { input.dispose(); return } // the corner office is built by the game
   let g = input.index ? input.toNonIndexed() : input.clone()
   input.dispose()
   for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k)
@@ -68,6 +72,8 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
   if (fascia) { loving = true; add('architecture', new BoxGeometry(fascia[3] + .04, .07, fascia[4] + .04), '#f7f5ee', fascia[0], fascia[1] - .02, fascia[2]); loving = false }
 }
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
+  // Collide with the homes that were actually drawn (the map drops some lots), not the raw outlines.
+  if (wb && !loving && layer === 'architecture' && h > .6 && w > .5 && d > .5 && inHood(x, z) && !inFarmers(x, z)) DATA.homes.push([x * UNIT, z * UNIT, w * UNIT, d * UNIT, turn])
   if (wb && !loving && layer === 'architecture' && h > .6 && w > 1.2 && d > 1.2 && inHood(x, z)) {
     // A home's body: beach-house siding colour, a foundation band, white corner boards.
     // Colour each wing by the house it actually belongs to, so one home isn't two-tone.
@@ -264,7 +270,7 @@ wb = true
 buildWestBlocks(kit)
 wb = false
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
-for (const [x, z, w, d, deg] of PONCE_HOUSES) if (inHood(x, z)) DATA.homes.push([x * UNIT, z * UNIT, w * UNIT, d * UNIT, -deg * Math.PI / 180])
+DATA.homes.push([FARMERS.x * UNIT, FARMERS.z * UNIT, FARMERS.hw * 2 * UNIT, FARMERS.hd * 2 * UNIT, FARMERS.t])
 
 // Shoppers on the walk along the grocery front and under the north arcade.
 const crowd: BeachPerson[] = []
