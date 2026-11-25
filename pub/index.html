@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Last Turkey</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:Oswald,Impact,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
 #stage{position:fixed;inset:0}canvas{display:block}
 .gone{opacity:0;pointer-events:none}.hidden{display:none}
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(#4a2a14,#0c0806);transition:opacity .6s;z-index:6}
-#loading h1{font-size:clamp(40px,8vw,88px);margin:0;letter-spacing:2px;color:#f5d27a;text-shadow:4px 4px 0 #7a1a10}
+#loading h1{margin:0;font-family:Anton,Impact,'Arial Black',sans-serif;font-weight:400;text-transform:lowercase;line-height:.95;color:#fff;letter-spacing:-1px;
+ -webkit-text-stroke:clamp(8px,1.4vw,14px) #000;paint-order:stroke fill;margin-bottom:22px}
+#loading h1 .l{display:block}#loading h1 .l1{font-size:clamp(64px,13vw,150px)}#loading h1 .l2{font-size:clamp(56px,11.5vw,132px);margin-left:.5em}#loading h1 .l3{font-size:clamp(40px,8vw,92px);margin-top:.12em;color:#f5d27a}
+
 .track{width:min(360px,70vw);height:8px;background:#2b1d14;border:2px solid #f5d27a;margin:18px auto 0}#bar{height:100%;width:0;background:#f5d27a;transition:width .2s}
 #intro{position:fixed;left:0;right:0;bottom:8vh;text-align:center;transition:opacity .8s;z-index:5;pointer-events:none}
 #intro h1{margin:0;font-size:clamp(46px,9vw,110px);line-height:.9;text-shadow:5px 5px 0 #000;letter-spacing:1px}
@@ -52,7 +55,7 @@ button.big:hover{background:#f5d27a;color:#111}
 #objective{bottom:20px;padding:0 170px;font-size:14px}#speedo{left:18px;bottom:auto;top:104px;transform:none;text-align:left}#mph{font-size:28px}}
 </style></head><body>
 <div id="stage"></div>
-<div id="loading"><div style="text-align:center"><h1>THE LAST TURKEY</h1><div class="track"><div id="bar"></div></div><p style="letter-spacing:3px;margin-top:14px">LOADING THE NEIGHBORHOOD…</p></div></div>
+<div id="loading"><div style="text-align:center"><h1><span class="l l1">the last</span><span class="l l2">turkey</span><span class="l l3">saint ponce</span></h1><div class="track"><div id="bar"></div></div><p style="letter-spacing:3px;margin-top:14px">LOADING THE NEIGHBORHOOD…</p></div></div>
 <div id="intro" class="gone"><h1>THE LAST <span>TURKEY</span></h1><p>CHRIS LANE JONES · FLORIDIAN AVE TO PUBLICK · SAINT PONCE</p><button id="playBtn" class="big">DRIVE</button></div>
 <div id="hud" class="hidden">
  <canvas id="minimap" width="200" height="200"></canvas>
