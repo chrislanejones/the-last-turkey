@@ -7,6 +7,7 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 import { buildGalaxie, buildSUV, CAR, SUV } from './car.js'
 import { dressStation } from './station.js'
 import BILLBOARD from './billboard-img.js'
+import SHERIFF_IMG from './sheriff-img.js'
 
 import DATA from './plaza-data.json'
 
@@ -108,6 +109,7 @@ scene.add(world.scene)
 const dressing = dressStation(scene, U, APRON.y)
 
 const BB_POLES = [], BB_VIEW = {}
+const SHERIFF = { x: -81.3, z: 378.4 }
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
 {
   const bb = new THREE.Group(); bb.position.set(-92.42 * U, 0, 377.5 * U); bb.rotation.y = Math.atan2(-0.962, 0.273) + Math.PI / 2; scene.add(bb)
@@ -128,6 +130,27 @@ const BB_POLES = [], BB_VIEW = {}
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.1), dark); arm.position.set(x, base + H + 0.35, 0.45); bb.add(arm)
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.0); bb.add(lamp)
   }
+}
+
+// Saint Ponce Sheriff's Office billboard: one pole on the east verge of A1A Beach Blvd, just past the bank's
+// sign, with the face hanging out over the road for northbound drivers.
+{
+  const bb = new THREE.Group(); bb.position.set(SHERIFF.x * U, 0, SHERIFF.z * U); scene.add(bb)
+  const W = 11, H = W * 547 / 1024, base = 5.8, off = -4.2
+  const tex = new THREE.TextureLoader().load(SHERIFF_IMG); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4
+  const dark = new THREE.MeshStandardMaterial({ color: '#2a2d31', roughness: 0.65, metalness: 0.35 })
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 }))
+  face.position.set(off, base + H / 2, 0.21); bb.add(face)
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.36), dark); frame.position.set(off, base + H / 2, 0); frame.castShadow = true; bb.add(frame)
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, base + H * 0.75, 12), dark); pole.position.set(0, (base + H * 0.75) / 2, -0.5); pole.castShadow = true; bb.add(pole)
+  for (const y of [base + H * 0.2, base + H * 0.7]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.6), dark); arm.position.set(0, y, -0.25); bb.add(arm) }
+  const catwalk = new THREE.Mesh(new THREE.BoxGeometry(W + 0.6, 0.08, 0.9), dark); catwalk.position.set(off, base - 0.25, 0.55); bb.add(catwalk)
+  for (let i = 0; i < 4; i++) {
+    const x = off - W / 2 + W * (i + 0.5) / 4
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.1), dark); arm.position.set(x, base + H + 0.35, 0.5); bb.add(arm)
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.05); bb.add(lamp)
+  }
+  BB_POLES.push([SHERIFF.x * U, SHERIFF.z * U - 0.5])
 }
 
 // --- the big sign, the turkey, the marker -----------------------------------------------
@@ -272,10 +295,12 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
       const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
-      const px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U, pz = tz * U
+      let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
+      // Pushed back east around the sheriff's billboard so its pole and face stand clear.
+      if (side > 0 && Math.abs(tz - SHERIFF.z) < 4.2) px += (2.4 - Math.abs(tz - SHERIFF.z) * 0.35) * U
       if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.3 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.3 })) continue // not through a neighbor's roof
       const m = new THREE.Mesh(geo, leaf[(k + row) % 3]); m.scale.set(sc, sc * (0.8 + r(3) * 0.5), sc)
-      m.position.set((ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U, sc * 0.75 + row * 1.2, (az + (bz - az) * t) * U); m.castShadow = row === 0; scene.add(m)
+      m.position.set(px, sc * 0.75 + row * 1.2, pz); m.castShadow = row === 0; scene.add(m)
     }
   }
 }
