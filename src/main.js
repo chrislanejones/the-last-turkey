@@ -661,6 +661,11 @@ addEventListener('keydown', (e) => {
   if ((k === 'enter' || k === ' ') && game.state === 'cutscene' && game.t > 0.6) game.t = Math.max(game.t, 4.3)
   if (game.state === 'intro' && (k === 'enter' || k === ' ' || k === 'w' || k === 'arrowup')) start()
 })
+// The controls card: shown while Ctrl is held, or pinned with the KEYS button under CAM.
+addEventListener('keydown', (e) => { if (e.key === 'Control') $('help').classList.add('show') })
+addEventListener('keyup', (e) => { if (e.key === 'Control') $('help').classList.remove('show') })
+addEventListener('blur', () => $('help').classList.remove('show'))
+$('keysBtn').addEventListener('click', (e) => { e.currentTarget.blur(); $('keysBtn').classList.toggle('on', $('help').classList.toggle('pin')) })
 addEventListener('keyup', (e) => { keys.delete(e.key.toLowerCase()); if (e.key.toLowerCase() === 'h') audio.horn(false) })
 const touch = { gas: 0, brake: 0, left: 0, right: 0 }
 for (const b of document.querySelectorAll('[data-touch]')) {
