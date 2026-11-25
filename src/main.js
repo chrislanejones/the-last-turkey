@@ -1399,8 +1399,7 @@ function update(dt) {
     game.dogT = (game.dogT ?? 0) - dt }
   // Driving around or under the Call Christy Homes billboard, Becky notices the necklace.
   if (BB_VIEW.look) { const d = Math.hypot(P.pos.x - BB_VIEW.look.x, P.pos.y - BB_VIEW.look.z)
-    if (d < 13 && (game.necklaceT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'THAT’S MY HOUSE NECKLACE. CHRISTY STILL OWES IT TO ME.'; $('bubble2').classList.add('show'); game.b2T = 3.4; game.necklaceT = 25; game.necklace2 = 3.6 }
-    if (game.necklace2 > 0 && (game.necklace2 -= dt) <= 0) { $('bubble2').textContent = 'I DON’T KNOW IF SHE’S SELLING HERSELF OR SELLING HOMES ON THAT BILLBOARD.'; $('bubble2').classList.add('show'); game.b2T = 4 }
+    if (d < 13 && (game.necklaceT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'I DON’T KNOW IF SHE’S SELLING HERSELF OR SELLING HOMES ON THAT BILLBOARD.'; $('bubble2').classList.add('show'); game.b2T = 4; game.necklaceT = 25 }
     game.necklaceT = (game.necklaceT ?? 0) - dt }
   if (bumped > 3) { S.hit = Math.min(1, bumped / 15); audio.crash(Math.min(1, bumped / 16)) }
   // Hitting things hurts the Galaxie too: walls, buildings, pumps, parked cars, poles.
