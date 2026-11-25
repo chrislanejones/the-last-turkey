@@ -517,9 +517,9 @@ const boxes = [
 boxes.push(wingBox(-88.76, 385.71, 0.035, 3.46, 2.6), wingBox(-88.6, 389.65, 0, 2.6, 0.2), wingBox(-88.6, 390.55, 0, 2.6, 0.2)) // (the price pylon is a knock-over prop now)
 for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([(-88.6 + e * 1.15) * U, (390.1 + v * 0.45) * U, 0.3])
 // Bank of the Gulf of America (with its front hedge) and the four posts of its drive-thru canopy.
-boxes.push({ c: new V2(-88.5 * U + 0.5, 380.0 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 2.3 * U + 0.6 })
-for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.0 - 2.3) * U - 3.25 + v * 2.6, 0.45])
-circles.push([-88.5 * U, (380.0 - 2.3) * U - 3.25, 0.6])
+boxes.push({ c: new V2(-88.5 * U + 0.5, 380.5 * U + 0.4), a: new V2(1, 0), hx: 1.3 * U + 0.7, hz: 1.8 * U + 0.6 })
+for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 4.7, (380.5 - 1.8) * U - 3.25 + v * 2.6, 0.45])
+circles.push([-88.5 * U, (380.5 - 1.8) * U - 3.25, 0.6])
 // (the crossing-sign planter is a curb you hop, and its sign gets knocked down: see rideBeds and the crates)
 boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 2.5), a: new V2(1, 0), hx: 1.5, hz: 2.95 }) // the utility enclosure on the north strip's east end
 // (the stop-sign planter off the west strip's end is a curb you hop now, not a wall)
@@ -941,7 +941,7 @@ const boxMat = new THREE.MeshStandardMaterial({ map: boxTex, roughness: 0.9 })
 const crates = []
 {
   const sizes = [[0.6, 0.45, 0.5], [0.8, 0.5, 0.55], [0.5, 0.6, 0.5], [1.1, 0.45, 0.6], [0.45, 0.4, 0.45], [0.7, 0.7, 0.6]]
-  const piles = [[-89.85, 376.15], [-88.75, 375.7], [-87.6, 376.25], [-86.5, 375.75]] // four stacks of six, all the same box
+  const piles = [[-89.9, 375.2], [-88.75, 375.75], [-87.55, 375.15], [-86.4, 375.7], [-88.1, 376.55], [-89.3, 376.6]] // four stacks of six, all the same box
   let n = 0
   for (const [px, pz] of piles) {
     let y = GY
@@ -1140,8 +1140,29 @@ for (const [key, h, lie] of [['stopSign', 2.5, 0.4], ['menuBoard', 2.7, 0.55]]) 
   T.position.set(-79.95 * U, GY, 353.6 * U); scene.add(T)
   boxes.push({ c: new V2(T.position.x, T.position.z), a: new V2(1, 0), hx: L / 2 + 0.1, hz: W / 2 + 0.1 })
 }
-// Two inflatable beer-bottle balloons outside Santa Mar.
+// Two inflatable balloons outside Santa Mar: a beer bottle and a taco. Hit one and it pops.
 const balloons = []
+function buildTaco(b) {
+  const shell = new THREE.MeshStandardMaterial({ color: '#e8b54a', roughness: 0.55, side: THREE.DoubleSide }), spot = new THREE.MeshStandardMaterial({ color: '#c88a2e', roughness: 0.6 })
+  const lettuce = new THREE.MeshStandardMaterial({ color: '#5fae3a', roughness: 0.7 }), meat = new THREE.MeshStandardMaterial({ color: '#6b3a1e', roughness: 0.8 })
+  const tomato = new THREE.MeshStandardMaterial({ color: '#d8322a', roughness: 0.5 }), cheese = new THREE.MeshStandardMaterial({ color: '#f6c63a', roughness: 0.6 })
+  const T = new THREE.Group(); T.position.y = 1.75; T.rotation.y = 0.35; T.scale.setScalar(1.15); b.add(T)
+  // A hard-shell taco seen side on: two half-moon shells, the fold underneath, the filling heaped along the top.
+  const half = (r, h, m, z) => { const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 26, 1, false, -Math.PI / 2, Math.PI), m); d.rotation.x = Math.PI / 2; d.position.z = z; d.castShadow = true; T.add(d); return d }
+  half(1.15, 0.08, shell, 0.3); half(1.15, 0.08, shell, -0.3); half(1.02, 0.52, meat, 0)
+  const fold = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.68, 26, 1, true, -Math.PI / 2, Math.PI), shell); fold.rotation.x = Math.PI / 2; T.add(fold)
+  for (let i = 0; i < 9; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), spot); d.scale.z = 0.3; const a = i * 2.4; d.position.set(Math.sin(a) * 0.8, -0.2 - (i % 4) * 0.2, (i % 2 ? 1 : -1) * 0.345); T.add(d) }
+  for (let i = 0; i < 8; i++) { const x = -0.92 + i * 0.263
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 6), lettuce); l.scale.set(1, 0.6, 1.25); l.position.set(x, 0.1 + (i % 2) * 0.05, 0); T.add(l)
+    if (i % 2) { const t = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), tomato); t.position.set(x + 0.1, 0.27, (i % 4 === 1 ? 0.12 : -0.12)); T.add(t) }
+    const c = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.04), cheese); c.position.set(x - 0.08, 0.25, (i % 3 - 1) * 0.16); c.rotation.set(0, i, 0.5); T.add(c) }
+}
+function popBalloon(k) {
+  k.popped = true; k.b.visible = false; k.tether.visible = false
+  const p = k.b.position; for (let i = 0; i < 4; i++) burst(new V2(p.x + (Math.random() - 0.5) * 2, p.z + (Math.random() - 0.5) * 2), 4, true, false, k.taco ? '#e8b54a' : '#7a4a12')
+  audio.pop(); S.hit = Math.max(S.hit, 0.3); flash('POP!')
+  if (k.taco && game.b2T <= 0) { $('bubble2').textContent = 'NOOO, NOT THE TACO!'; $('bubble2').classList.add('show'); game.b2T = 2.4 }
+}
 {
   const amber = new THREE.MeshStandardMaterial({ color: '#7a4a12', roughness: 0.3, transparent: true, opacity: 0.95 }), gold = new THREE.MeshStandardMaterial({ color: '#d9b44a', roughness: 0.5 })
   const lab = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d')
@@ -1151,16 +1172,20 @@ const balloons = []
   const labM = new THREE.MeshStandardMaterial({ map: lab, roughness: 0.6 })
   for (const dx of [-0.75, 0.55]) {
     const b = new THREE.Group()
+    if (dx > 0) { buildTaco(b) } else {
     const pts = [[0, 0], [0.55, 0.05], [0.62, 0.3], [0.62, 1.55], [0.55, 1.85], [0.24, 2.3], [0.2, 2.75], [0.24, 2.8], [0, 2.82]].map(([r, h]) => new THREE.Vector2(r, h))
     const bottle = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), amber); bottle.castShadow = true; b.add(bottle)
     const label = new THREE.Mesh(new THREE.CylinderGeometry(0.635, 0.635, 0.9, 20, 1, true), labM); label.position.y = 0.95; b.add(label)
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.1, 14), gold); cap.position.y = 2.82; b.add(cap)
+    }
     const x = (-77.1 + dx) * U, z = 342.25 * U
     const tether = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6, 4), new THREE.MeshBasicMaterial({ color: '#f4f4f4' })); scene.add(tether)
-    b.position.set(x, GY + 1.6, z); scene.add(b); balloons.push({ b, tether, x, z, ph: dx * 3 })
+    b.position.set(x, GY + 1.6, z); scene.add(b); balloons.push({ b, tether, x, z, ph: dx * 3, taco: dx > 0 })
   }
 }
-function updateBalloons(t) { for (const k of balloons) { const sx = Math.sin(t * 0.9 + k.ph) * 0.12, sz = Math.cos(t * 0.7 + k.ph) * 0.1
+function updateBalloons(t) { for (const k of balloons) { if (k.popped) continue
+  for (const car of [P, R]) if (Math.hypot(car.pos.x - k.b.position.x, car.pos.y - k.b.position.z) < 2.3) { popBalloon(k); break } if (k.popped) continue
+  const sx = Math.sin(t * 0.9 + k.ph) * 0.12, sz = Math.cos(t * 0.7 + k.ph) * 0.1
   k.b.rotation.set(sz, 0, -sx); k.b.position.set(k.x + sx * 1.6, GY + 1.6 + Math.sin(t * 1.3 + k.ph) * 0.05, k.z + sz * 1.6)
   k.tether.position.set(k.x + sx * 0.8, GY + 0.8, k.z + sz * 0.8); k.tether.rotation.set(sz, 0, -sx) } }
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
@@ -1180,9 +1205,218 @@ function spillDonuts(c) {
 // Rest everything on whatever is actually under it (lawn, walk or asphalt), not one fixed height.
 const groundRay = new THREE.Raycaster(), groundMeshes = []
 world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
+// Realistic paving, drawn in the shader from world position so it costs no download: aggregate grain, sun-bleached
+// blotches, utility-cut patches, tar-sealed cracks, oil stains in the stalls, worn paint, mottled grass and mulch.
+const paveShader = (sh) => {
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWPos;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;')
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vWPos;
+float h21(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
+float fbm(vec2 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vn(p); p = p * 2.03 + 11.7; a *= 0.5; } return s; }`).replace('#include <color_fragment>', `#include <color_fragment>
+{ vec2 p = vWPos.xz - vec2(-340.0, 1450.0); vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sat = mx - mn, lum = dot(c, vec3(.299, .587, .114));
+  float dist = length(vWPos - cameraPosition), nearK = 1.0 - smoothstep(10.0, 45.0, dist), midK = 1.0 - smoothstep(60.0, 160.0, dist);
+  float asphalt = (1.0 - smoothstep(0.05, 0.09, sat)) * (1.0 - smoothstep(0.3, 0.42, lum));
+  float paint = smoothstep(0.6, 0.75, lum);
+  float grass = smoothstep(0.02, 0.08, c.g - max(c.r, c.b));
+  float grain = (vn(p * 9.0) - 0.5) * midK, speck = (h21(floor(p * 34.0)) - 0.5) * nearK;
+  float blot = fbm(p * 0.07) - 0.5, blot2 = fbm(p * 0.6 + 40.0) - 0.5;
+  // Rectangular utility-cut repairs: newer, darker asphalt with a sealed edge.
+  vec2 pc = p / vec2(9.0, 5.5), pi = floor(pc), pf = fract(pc); float pr = h21(pi + 3.1);
+  vec2 lo = vec2(0.12 + 0.3 * h21(pi + 7.0), 0.15 + 0.25 * h21(pi + 9.0)), hi = lo + vec2(0.25 + 0.3 * h21(pi + 1.0), 0.3 + 0.3 * h21(pi + 2.0));
+  float inR = step(lo.x, pf.x) * step(pf.x, hi.x) * step(lo.y, pf.y) * step(pf.y, hi.y) * step(0.93, pr);
+  vec2 eR = min(pf - lo, hi - pf) * vec2(9.0, 5.5); float edgeR = inR * (1.0 - smoothstep(0.03, 0.12, min(eR.x, eR.y)));
+  // Meandering cracks, tar-sealed.
+  float cr = abs(fbm(p * 0.045 + 9.0) - 0.5), crack = (1.0 - smoothstep(0.0006, 0.0022, cr)) * smoothstep(0.5, 0.62, vn(p * 0.03 + 5.0)) * midK;
+  float cr2 = abs(fbm(p.yx * 0.5 + 31.0) - 0.5), hair = (1.0 - smoothstep(0.002, 0.008, cr2)) * smoothstep(0.55, 0.75, vn(p * 0.09 + 2.0)) * nearK;
+  // Oil drips: one soft blob per stall-sized cell, heavier where cars actually park.
+  vec2 oc = (p + vec2(0.0, 0.6)) / 3.1855, oi = floor(oc), of = fract(oc) - 0.5 - (vec2(h21(oi), h21(oi + 5.0)) - 0.5) * 0.5;
+  float sx = min(abs(p.x + 14.2), min(abs(p.x - 1.0), abs(p.x - 16.2)));
+  float stall = step(1.0, sx) * step(sx, 4.4) * step(-19.0, p.y) * step(p.y, 37.0);
+  float oilR = 0.1 + 0.22 * h21(oi + 2.0), oilP = step(mix(0.93, 0.45, stall), h21(oi + 8.0));
+  float oil = oilP * (1.0 - smoothstep(oilR * 0.3, oilR, length(of * vec2(1.0, 0.7)) + (blot2 * 0.12))) * mix(0.3, 0.55, stall);
+  vec3 a = c * vec3(0.66, 0.64, 0.62) * (1.0 + grain * 0.14 + speck * 0.22 + blot * 0.42 + blot2 * 0.1);
+  a = mix(a, a * 0.74, inR * 0.8); a *= 1.0 - edgeR * 0.45; a *= 1.0 - crack * 0.6 - hair * 0.3; a *= 1.0 - oil;
+  // Paint that has seen ten Florida summers.
+  float wear = smoothstep(0.42, 0.75, fbm(p * 2.2)) * 0.6 + smoothstep(0.5, 0.8, fbm(p * 0.3 + 70.0)) * 0.3;
+  vec3 pv = mix(c * (0.92 + speck * 0.1), vec3(0.2, 0.22, 0.22), wear * midK * 0.85);
+  vec3 gv = c * (1.0 + (fbm(p * 0.3) - 0.5) * 0.5 + grain * 0.25 + speck * 0.2);
+  vec3 ov = c * (1.0 + grain * 0.1 + speck * 0.12 + blot2 * 0.16) * (1.0 - hair * 0.25);
+  diffuseColor.rgb = mix(mix(mix(ov, a, asphalt), pv, paint), gv, grass); }`)
+}
+if (!location.search.includes('nolot')) for (const gm of groundMeshes) for (const mat of [].concat(gm.material)) { mat.onBeforeCompile = paveShader; mat.needsUpdate = true }
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
+
+const lotIslands = []
+// --- Road paint: double yellow down A1A, white edge lines, dashed yellow on the side streets. Built from the road
+// centre lines the world was laid out from, stopped short of junctions.
+{
+  const R = DATA.roads || [], chains = []
+  for (const r of R) { const c = chains[chains.length - 1]; if (c && c.w === r[4] && Math.hypot(c.p[c.p.length - 1][0] - r[0], c.p[c.p.length - 1][1] - r[1]) < 0.05) c.p.push([r[2], r[3]]); else chains.push({ w: r[4], p: [[r[0], r[1]], [r[2], r[3]]] }) }
+  const segD = (px, pz, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (pz - a[1]) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t) }
+  const pos = [], col = [], YEL = [0.78, 0.55, 0.06], WHT = [0.8, 0.78, 0.7], manholes = []
+  chains.forEach((ch, ci) => {
+    const half = ch.w * 0.75, stripes = ch.w >= 4.9 ? [[-0.11, 0.1, YEL, 0], [0.11, 0.1, YEL, 0], [half - 0.45, 0.12, WHT, 0], [-half + 0.45, 0.12, WHT, 0]] : ch.w >= 4.0 ? [[0, 0.1, YEL, 1], [half - 0.4, 0.1, WHT, 0], [-half + 0.4, 0.1, WHT, 0]] : []
+    let run = 0
+    for (let i = 0; i + 1 < ch.p.length; i++) {
+      const a = ch.p[i], b = ch.p[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue
+      const tx = (b[0] - a[0]) / len, tz = (b[1] - a[1]) / len, nx = tz, nz = -tx, n = Math.max(1, Math.round(len / 1.5))
+      for (let k = 0; k < n; k++) {
+        const s0 = k / n * len, s1 = (k + 1) / n * len, mxp = a[0] + tx * (s0 + s1) / 2, mzp = a[1] + tz * (s0 + s1) / 2; run += len / n
+        // Near a crossing road: no paint through the junction.
+        let junction = false
+        chains.forEach((o, oi) => { if (oi === ci || junction) return; for (let j = 0; j + 1 < o.p.length; j++) { const u = o.p[j], v = o.p[j + 1], l = Math.hypot(v[0] - u[0], v[1] - u[1]) || 1; if (Math.abs(((v[0] - u[0]) * tx + (v[1] - u[1]) * tz) / l) > 0.9) continue; if (segD(mxp, mzp, u, v) < o.w * 0.75 + half * 0.6) { junction = true; break } } })
+        if (junction) continue
+        const y = surfaceAt(mxp, mzp) + 0.012
+        if (ch.w >= 4.9 && Math.floor(run / 95) !== Math.floor((run - len / n) / 95)) manholes.push([mxp + nx * 1.6, mzp + nz * 1.6, y])
+        for (const [o, w, c, dash] of stripes) {
+          if (dash && Math.floor(run / 3) % 3 !== 0) continue
+          const q = [[s0, o - w / 2], [s1, o - w / 2], [s1, o + w / 2], [s0, o + w / 2]].map(([s, d]) => [a[0] + tx * s + nx * d, y, a[1] + tz * s + nz * d])
+          for (const t of [0, 2, 1, 0, 3, 2]) { pos.push(...q[t]); col.push(...c) }
+        }
+      }
+    }
+  })
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.computeVertexNormals()
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, side: THREE.DoubleSide })
+  m.onBeforeCompile = paveShader
+  const lines = new THREE.Mesh(g, m); lines.receiveShadow = true; scene.add(lines)
+
+  // Painted and cast-iron things lying on the asphalt.
+  const decalTex = (w, h, draw, wear = 0.3) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); draw(x, w, h)
+    x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < w * h * wear / 40; i++) { x.globalAlpha = 0.25 + Math.random() * 0.6; const r = 1 + Math.random() * 3; x.fillRect(Math.random() * w, Math.random() * h, r * (1 + Math.random() * 3), r) }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t }
+  const decal = (tex, x, z, w, d, rot = 0, lift = 0.02) => { const mm = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }))
+    mm.rotation.set(-Math.PI / 2, 0, rot); mm.position.set(x, surfaceAt(x, z) + lift, z); mm.receiveShadow = true; scene.add(mm); return mm }
+  const CREAM = '#e6e0cc'
+  const arrow = decalTex(128, 384, (x, w, h) => { x.fillStyle = CREAM; x.beginPath(); x.moveTo(w / 2, 6); x.lineTo(w - 8, 150); x.lineTo(w / 2 + 20, 150); x.lineTo(w / 2 + 20, h - 6); x.lineTo(w / 2 - 20, h - 6); x.lineTo(w / 2 - 20, 150); x.lineTo(8, 150); x.closePath(); x.fill() }, 0.5)
+  const stop = decalTex(512, 384, (x, w, h) => { x.fillStyle = CREAM; x.fillRect(0, 0, w, 44); x.font = '900 300px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'top'; x.save(); x.translate(w / 2, 84); x.scale(0.62, 1.05); x.fillText('STOP', 0, 0); x.restore() }, 0.45)
+  const hc = decalTex(256, 256, (x, w, h) => { x.fillStyle = '#2458a8'; x.fillRect(8, 8, w - 16, h - 16); x.strokeStyle = x.fillStyle = '#eef0ea'; x.lineWidth = 16; x.lineCap = x.lineJoin = 'round'
+    x.beginPath(); x.arc(118, 58, 17, 0, 7); x.fill(); x.beginPath(); x.moveTo(118, 86); x.lineTo(122, 146); x.lineTo(170, 146); x.lineTo(192, 200); x.stroke(); x.beginPath(); x.moveTo(121, 112); x.lineTo(162, 112); x.stroke()
+    x.beginPath(); x.arc(118, 164, 48, 0.35, Math.PI * 1.55); x.stroke() }, 0.35)
+  const hatch = decalTex(128, 256, (x, w, h) => { x.strokeStyle = '#2f62b0'; x.lineWidth = 12; x.strokeRect(6, 6, w - 12, h - 12); for (let i = -h; i < w + h; i += 44) { x.beginPath(); x.moveTo(i, h); x.lineTo(i + h, 0); x.stroke() } }, 0.4)
+  const iron = decalTex(128, 128, (x, w) => { x.fillStyle = '#2a2b2c'; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill(); x.fillStyle = '#4a4c4d'; x.beginPath(); x.arc(64, 64, 54, 0, 7); x.fill(); x.strokeStyle = '#303233'; x.lineWidth = 3
+    for (let i = 14; i < 128; i += 12) { x.beginPath(); x.moveTo(i, 10); x.lineTo(i, 118); x.stroke(); x.beginPath(); x.moveTo(10, i); x.lineTo(118, i); x.stroke() } x.globalCompositeOperation = 'destination-in'; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill() }, 0)
+  const grate = decalTex(128, 96, (x, w, h) => { x.fillStyle = '#b9b5a6'; x.fillRect(0, 0, w, h); x.fillStyle = '#3a3c3d'; x.fillRect(10, 10, w - 20, h - 20); x.fillStyle = '#0c0d0d'; for (let i = 18; i < w - 18; i += 14) x.fillRect(i, 16, 7, h - 32) }, 0)
+  // Aisle arrows: one-way aisles, like every lot nobody obeys.
+  for (const [ax, dir] of [[-346.6, 0], [-331.4, Math.PI]]) for (const az of [1440, 1459, 1478]) decal(arrow, ax, az, 0.9, 2.7, dir)
+  // Accessible stalls by the store end of the first two rows, with the hatched aisle between.
+  for (const sx of [-351.6, -336.4]) { decal(hc, sx, 1433.6, 1.5, 1.5, -Math.PI / 2); decal(hc, sx, 1440.0, 1.5, 1.5, -Math.PI / 2); decal(hatch, sx, 1436.8, 4.6, 3.0, Math.PI / 2) }
+  // Stop bar where the lot lets out onto A1A Beach Blvd.
+  decal(stop, -309.0, 1438.0, 3.6, 2.7, Math.PI / 2)
+  for (const [x, z, y] of manholes) { const d = decal(iron, x, z, 0.95, 0.95, Math.random() * 3); d.position.y = y + 0.006 }
+  for (const [x, z] of [[-361.0, 1446], [-316.5, 1470], [-346.6, 1489]]) decal(grate, x, z, 1.0, 0.75, 0)
+  // Zebra crossing over the entrance, and the hatched walk in front of publick's doors.
+  const zebra = decalTex(512, 128, (x, w, h) => { x.fillStyle = CREAM; x.fillRect(0, 0, w, 10); x.fillRect(0, h - 10, w, 10); for (let i = 8; i < w; i += 48) x.fillRect(i, 0, 26, h) }, 0.45)
+  decal(zebra, -303.9, 1438.0, 10, 2.6, 1.266)
+  const walk = decalTex(512, 192, (x, w, h) => { x.strokeStyle = CREAM; x.lineWidth = 9; x.strokeRect(5, 5, w - 10, h - 10); for (let i = -h; i < w; i += 40) { x.beginPath(); x.moveTo(i, h); x.lineTo(i + h, 0); x.stroke() } }, 0.5)
+  decal(walk, -359.3, 1429.4, 10, 3.8, 0.927)
+
+  // --- Landscape islands, like the real plaza: a concrete curb round bark mulch, a patch of grass, clipped hedges.
+  const curbM = new THREE.MeshStandardMaterial({ color: '#b3afa2', roughness: 0.95 })
+  const mulchT = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#5b3a2a'; x.fillRect(0, 0, 64, 64)
+    for (let i = 0; i < 700; i++) { x.fillStyle = ['#6e4632', '#4a2d20', '#7b513a', '#3b241a', '#65402c'][i % 5]; x.save(); x.translate(Math.random() * 64, Math.random() * 64); x.rotate(Math.random() * 3); x.fillRect(-2, -0.7, 4 + Math.random() * 2, 1.4); x.restore() }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(0.9, 0.9); return t })()
+  const mulchM = new THREE.MeshStandardMaterial({ map: mulchT, roughness: 1 }), turfM = new THREE.MeshStandardMaterial({ color: '#5d8a3a', roughness: 1 }); turfM.onBeforeCompile = paveShader
+  const hedgeM = [new THREE.MeshStandardMaterial({ color: '#3b6b30', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#4c7d38', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#7d9a4c', roughness: 1, flatShading: true })]
+  const blob = new THREE.IcosahedronGeometry(1, 1), tuft = new THREE.ConeGeometry(0.1, 0.95, 5)
+  const pad = (a, h, r, r2) => { const sh = new THREE.Shape(); sh.moveTo(-a + r2, -h); sh.lineTo(a - r2, -h); sh.quadraticCurveTo(a, -h, a, -h + r2); sh.lineTo(a, h - r); sh.quadraticCurveTo(a, h, a - r, h); sh.lineTo(-a + r, h); sh.quadraticCurveTo(-a, h, -a, h - r); sh.lineTo(-a, -h + r2); sh.quadraticCurveTo(-a, -h, -a + r2, -h); return sh }
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  const island = (x, z, a, h, r, r2, dir, plants, keepClear = 0) => {
+    const g = new THREE.Group(); g.position.set(x, GY, z); g.rotation.y = dir > 0 ? Math.PI : 0; scene.add(g)
+    const curb = new THREE.Mesh(new THREE.ExtrudeGeometry(pad(a, h, r, r2), { depth: 0.24, bevelEnabled: false, curveSegments: 6 }).rotateX(-Math.PI / 2), curbM); curb.castShadow = curb.receiveShadow = true; g.add(curb)
+    const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(a - 0.17, h - 0.17, Math.max(0.1, r - 0.1), Math.max(0.05, r2 - 0.1)), 6).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.248; bark.receiveShadow = true; g.add(bark)
+    if (a > 2 && rnd() > 0.35) { const tw = a * (0.3 + rnd() * 0.2), t = new THREE.Mesh(new THREE.ShapeGeometry(pad(tw, h - 0.5, 0.6, 0.6), 5).rotateX(-Math.PI / 2), turfM); t.position.set((rnd() > 0.5 ? 1 : -1) * (a - tw - 0.45), 0.256, 0); t.receiveShadow = true; g.add(t) }
+    for (let i = 0; i < plants; i++) { const px = (plants === 1 ? 0 : -a + 0.9 + (2 * a - 1.8) * i / (plants - 1)) + (rnd() - 0.5) * 0.4, pz = (rnd() - 0.5) * (h - 0.6); if (Math.abs(px) < keepClear) continue
+      const k = rnd(); if (k > 0.3) { const b = new THREE.Mesh(blob, hedgeM[i % 2]); const sc = 0.42 + rnd() * 0.25; b.scale.set(sc * 1.25, sc * 0.9, sc * 1.1); b.position.set(px, 0.25 + sc * 0.6, pz); b.rotation.y = rnd() * 3; b.castShadow = true; g.add(b) }
+      else for (let j = 0; j < 9; j++) { const t = new THREE.Mesh(tuft, hedgeM[2]); const ta = j * 0.7, tr = j ? 0.5 : 0; t.rotation.set(Math.cos(ta) * tr, 0, -Math.sin(ta) * tr); t.position.set(px + Math.sin(ta) * tr * 0.45, 0.68, pz + Math.cos(ta) * tr * 0.45); t.castShadow = true; g.add(t) } }
+    lotIslands.push({ x, z, hw: a + 0.05, hd: h + 0.05, c: 1, s: 0, h: 0.24 })
+  }
+  // End caps close every row; the ones marked 2 sit over the old square planters (their palms stay).
+  for (const [x, z, dir, old] of [[-353.7, 1430.5, -1, 2], [-353.7, 1485.5, 1], [-353.7, 1494.8, -1], [-339, 1402.4, -1], [-339, 1421.7, 1], [-339, 1431.1, -1], [-339, 1485.5, 1], [-339, 1494.8, -1], [-339, 1524.3, 1, 2],
+    [-324.3, 1421.7, 1], [-324.3, 1431.1, -1], [-324.3, 1473.3, 1, 2], [-309.6, 1425.5, 1, 2]]) island(x, z, 4.75, 1.8, 1.5, 0.3, dir, old ? 4 : 5, old ? 2.4 : 0.9)
+  // Slim islands round the light poles down the middle of each row.
+  for (const [x, z] of [[-353.7, 1447.2], [-353.7, 1475.8], [-339, 1459.9], [-339, 1498.1 + 6.4], [-324.3, 1456.7]]) island(x, z, 0.7, 1.55, 0.6, 0.6, 1, 2, 0)
+  // A mulch-and-hedge border along A1A Beach Blvd, broken at the entrance.
+  { const E = [[-346.4, 1561], [-312, 1447.9], [-292.4, 1385.4]]
+    for (let e = 0; e < 2; e++) { const [ax, az] = E[e], [bx, bz] = E[e + 1], len = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len, tz = (bz - az) / len, nx = -tz, nz = tx, rot = Math.atan2(-tz, tx)
+      for (let d = 6; d < len - 4; d += 11) { const cx = ax + tx * (d + 4.5) + nx * 1.7, cz = az + tz * (d + 4.5) + nz * 1.7; if (Math.hypot(cx - -306, cz - 1438) < 13) continue
+        const g = new THREE.Group(); g.position.set(cx, surfaceAt(cx, cz), cz); g.rotation.y = rot; scene.add(g)
+        const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(4.6, 1.0, 0.9, 0.9), 5).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.03; bark.material.polygonOffset = true; bark.material.polygonOffsetFactor = -2; bark.material.polygonOffsetUnits = -2; bark.receiveShadow = true; g.add(bark)
+        for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(blob, hedgeM[(i + e) % 2]); b.scale.set(0.8, 0.55, 0.62); b.position.set(-3.6 + i * 1.44, 0.4, 0); b.castShadow = true; g.add(b) } } } }
+
+  // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
+  { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
+    const W = (sA, d0) => { const d = d0 - 0.0175 * sA; return [-394.6 + tx * sA + nx * d, 1432.5 + tz * sA + nz * d] } // the wall isn't quite square to the lot
+    const plain = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t }
+    const onWall = (tex, sA, y, w, h, off = 0.04) => { const [x, z] = W(sA, off), m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.9 })); m.position.set(x, GY + y, z); m.rotation.y = wallYaw; scene.add(m); return m }
+    const dock = plain(256, 256, (x, w, h) => { x.fillStyle = '#3c4043'; x.fillRect(0, 0, w, h); x.fillStyle = '#8f9496'; x.fillRect(12, 12, w - 24, h - 12); for (let i = 14; i < h; i += 12) { x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(12, i, w - 24, 3); x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(12, i + 3, w - 24, 2) }
+      for (let i = 0; i < 14; i++) { x.fillStyle = `rgba(70,45,25,${0.1 + Math.random() * 0.2})`; x.fillRect(12 + Math.random() * 220, 20 + Math.random() * 60, 3 + Math.random() * 5, 60 + Math.random() * 150) }
+      for (let i = 0; i < w; i += 32) { x.fillStyle = i / 32 % 2 ? '#1c1c1c' : '#e0b21c'; x.fillRect(i, h - 18, 32, 18) } })
+    onWall(dock, -4, 1.95, 3.6, 3.6); onWall(dock, 1, 1.95, 3.6, 3.6)
+    const stencil = plain(1024, 128, (x, w, h) => { x.fillStyle = '#2b2b2b'; x.font = '900 64px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('RECEIVING · NO TURKEYS LEFT', w / 2, h / 2, w - 20) })
+    onWall(stencil, -1.5, 4.5, 7.5, 1.4)
+    const door = plain(128, 256, (x, w, h) => { x.fillStyle = '#5b5346'; x.fillRect(0, 0, w, h); x.fillStyle = '#b79f6c'; x.fillRect(8, 8, w - 16, h - 8); x.fillStyle = '#2a2a2a'; x.fillRect(w - 34, 130, 14, 8); x.fillStyle = '#c22'; x.fillRect(26, 50, 76, 40); x.fillStyle = '#fff'; x.font = '700 15px sans-serif'; x.textAlign = 'center'; x.fillText('EMPLOYEES', 64, 67); x.fillText('ONLY', 64, 84)
+      for (let i = 0; i < 30; i++) { x.fillStyle = 'rgba(40,30,20,.25)'; x.fillRect(8 + Math.random() * 110, 200 + Math.random() * 50, 10, 3) } })
+    onWall(door, 7.5, 1.05, 1.05, 2.1)
+    const drips = plain(256, 256, (x, w, h) => { for (let i = 0; i < 14; i++) { const dx = Math.random() * w, l = 60 + Math.random() * 190, g = x.createLinearGradient(0, 0, 0, l); const k = Math.random() > 0.5 ? '60,48,30' : '40,52,38'; g.addColorStop(0, `rgba(${k},.26)`); g.addColorStop(1, `rgba(${k},0)`); x.fillStyle = g; x.fillRect(dx, 0, 3 + Math.random() * 9, l) } })
+    for (const sA of [-13, -8, 4.5, 11, 15]) onWall(drips, sA, 3.4, 5, 6.6, 0.03)
+    const tag = plain(512, 128, (x, w, h) => { x.font = 'italic 900 70px "Comic Sans MS", "Marker Felt", cursive'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.strokeStyle = '#1d1030'; x.lineWidth = 12; x.strokeText('BRAD WUZ HERE', w / 2, h / 2); x.fillStyle = '#b05cf0'; x.fillText('BRAD WUZ HERE', w / 2, h / 2) })
+    onWall(tag, 13.5, 1.45, 4.2, 1.05, 2.7).rotation.z = 0.06
+    // Wall furniture: a flood light, an electrical cabinet with conduit, a rusty condenser.
+    const steel = new THREE.MeshStandardMaterial({ color: '#8b9094', roughness: 0.6, metalness: 0.4 }), dark = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.7 }), rust = new THREE.MeshStandardMaterial({ color: '#7d6a58', roughness: 0.95 })
+    const put = (m, sA, d, y, yaw = alongYaw) => { const [x, z] = W(sA, d); m.position.set(x, GY + y, z); m.rotation.y = yaw; m.castShadow = true; scene.add(m); return m }
+    put(new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 0.3), steel), 10, 0.18, 1.5); put(new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 4.5, 6), steel), 10.2, 0.08, 4.3); put(new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 4.5, 6), steel), 9.85, 0.08, 4.3)
+    put(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.3), dark), -1.5, 0.2, 5.6); put(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.3), dark), 12, 0.2, 5.2)
+    put(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 1.0), rust), -11, 0.7, 0.5); put(new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.06, 14), dark), -11, 0.7, 1.02)
+    boxes.push({ c: new V2(...W(-11, 0.7)), a: new V2(tx, tz), hx: 0.6, hz: 0.55, low: true })
+    // Dock bumpers and yellow bollards guarding the doors.
+    const yel = new THREE.MeshStandardMaterial({ color: '#d9b21f', roughness: 0.7 })
+    for (const sA of [-6.2, -1.5, 3.2]) { put(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 1.1, 10), yel), sA, 1.0, 0.55); circles.push([...W(sA, 1.0), 0.2]) }
+    for (const sA of [-5.3, -2.7, -0.3, 2.3]) put(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.14), dark), sA, 0.09, 0.9)
+    // Dumpsters: one shut, one overflowing.
+    const green = new THREE.MeshStandardMaterial({ color: '#2f5a3c', roughness: 0.8 }), lidM = new THREE.MeshStandardMaterial({ color: '#1d1f20', roughness: 0.6 }), bagM = new THREE.MeshStandardMaterial({ color: '#17181a', roughness: 0.45 }), bagW = new THREE.MeshStandardMaterial({ color: '#d9d9d2', roughness: 0.5 })
+    const label = plain(256, 96, (x, w, h) => { x.fillStyle = '#e9e6d6'; x.fillRect(0, 0, w, h); x.fillStyle = '#2f5a3c'; x.font = '900 34px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.fillText('TRASH PANDA', w / 2, 40); x.font = '700 20px sans-serif'; x.fillText('DISPOSAL · SAINT PONCE', w / 2, 72) })
+    const dumpster = (sA, d, open) => { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.25, 1.35), green); body.position.y = 0.72; body.castShadow = true; g.add(body)
+      for (const sx of [-1.1, 1.1]) { const pk = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.9), green); pk.position.set(sx, 0.85, 0); g.add(pk) }
+      const lb = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.45), new THREE.MeshStandardMaterial({ map: label, roughness: 0.9 })); lb.position.set(0, 0.8, 0.68); g.add(lb)
+      for (const sx of [-0.53, 0.53]) { const lid = new THREE.Mesh(new THREE.BoxGeometry(1.03, 0.05, 1.4), lidM); lid.position.set(sx, 1.37, 0); if (open && sx > 0) { lid.rotation.x = -1.9; lid.position.set(sx, 1.95, -0.75) } lid.castShadow = true; g.add(lid) }
+      if (open) for (let i = 0; i < 5; i++) { const b = new THREE.Mesh(blob, i % 3 ? bagM : bagW); b.scale.set(0.34, 0.28, 0.32); b.position.set(0.15 + (i % 3) * 0.3, 1.38 + (i > 2 ? 0.25 : 0), -0.3 + (i % 2) * 0.45); g.add(b) }
+      for (const [wx, wz] of [[-0.9, -0.55], [0.9, -0.55], [-0.9, 0.55], [0.9, 0.55]]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.06, 8), dark); wh.rotation.z = Math.PI / 2; wh.position.set(wx, 0.09, wz); g.add(wh) }
+      put(g, sA, d, 0, wallYaw + (open ? 0.12 : -0.05)); boxes.push({ c: new V2(...W(sA, d)), a: new V2(tx, tz), hx: 1.15, hz: 0.78, low: true }) }
+    dumpster(-9, 1.1, false); dumpster(-14.2, 1.3, true)
+    // Loose junk you can plough through: pallets, bags, flattened cartons, milk crates and a cart missing a wheel.
+    const wood = new THREE.MeshStandardMaterial({ color: '#a98a5c', roughness: 0.95 }), card = new THREE.MeshStandardMaterial({ color: '#b08a56', roughness: 1 }), milk = [new THREE.MeshStandardMaterial({ color: '#2a5fb0', roughness: 0.7 }), new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.7 })]
+    const junk = (m, sA, d, y, half, yaw = 0) => { const [x, z] = W(sA, d); m.traverse((o) => { if (o.isMesh) o.castShadow = true }); scene.add(m); crates.push({ m, half, r: Math.max(half.x, half.z), home: { pos: new V3(x, GY + y, z), yaw: alongYaw + yaw }, vel: new V3(), spin: new V3(), awake: false }) }
+    const pallet = () => { const g = new THREE.Group(); for (const dz of [-0.45, -0.15, 0.15, 0.45]) { const t = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.025, 0.2), wood); t.position.set(0, 0.06, dz); g.add(t) } for (const dx of [-0.55, 0, 0.55]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.1, 1.0), wood); r.position.x = dx; g.add(r) } return g }
+    for (let i = 0; i < 6; i++) junk(pallet(), 5.3 + (i > 3 ? 1.5 : 0), 1.0, 0.075 + (i > 3 ? i - 4 : i) * 0.15, new V3(0.6, 0.075, 0.5), Math.sin(i * 2.1) * 0.12)
+    { const lean = pallet(); lean.rotation.x = 1.25; put(lean, 8.6, 0.35, 0.5) }
+    for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(blob, i % 4 === 3 ? bagW : bagM); b.scale.set(0.36, 0.3, 0.34); junk(b, -16.2 - (i % 3) * 0.7, 0.6 + Math.floor(i / 3) * 0.7, 0.3, new V3(0.34, 0.28, 0.34), i) }
+    for (let i = 0; i < 5; i++) junk(new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 0.8), card), -12, 2.6, 0.03 + i * 0.06, new V3(0.5, 0.03, 0.4), i * 0.3)
+    for (let i = 0; i < 6; i++) junk(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.3, 0.34), milk[i % 2]), 3.6 + (i % 2) * 0.38, 0.4, 0.15 + Math.floor(i / 2) * 0.3, new V3(0.17, 0.15, 0.17), 0)
+    const cart = () => { const g = new THREE.Group(), wire = new THREE.MeshStandardMaterial({ color: '#b9bec2', roughness: 0.4, metalness: 0.6, transparent: true, opacity: 0.55, side: THREE.DoubleSide }); const bk = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.42, 0.9, 3, 3, 4), new THREE.MeshStandardMaterial({ color: '#c9ced2', wireframe: true })); bk.position.y = 0.2; g.add(bk)
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.02, 0.9), wire); g.add(fl); const hd = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.58, 6), new THREE.MeshStandardMaterial({ color: '#3f8f3a' })); hd.rotation.z = Math.PI / 2; hd.position.set(0, 0.48, -0.5); g.add(hd)
+      for (const [wx, wz] of [[-0.24, -0.4], [0.24, -0.4], [-0.24, 0.4]]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 8), dark); wh.rotation.z = Math.PI / 2; wh.position.set(wx, -0.44, wz); g.add(wh); const lg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 4), steel); lg.position.set(wx, -0.22, wz); g.add(lg) } return g }
+    junk(cart(), -6.5, 3.4, 0.5, new V3(0.3, 0.5, 0.48), 0.7); junk(cart(), 9.5, 3.6, 0.5, new V3(0.3, 0.5, 0.48), -0.4)
+    // The NE-wing clutter: a storage container against the wall, tagged, and bread trays stacked taller than they should be.
+    { const tan = new THREE.MeshStandardMaterial({ color: '#cfc6a4', roughness: 0.85 }), g = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(6.1, 2.6, 2.44), tan); body.position.y = 1.3; g.add(body)
+      for (let i = -14; i <= 14; i++) { const rib = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 2.5), tan); rib.position.set(i * 0.21, 1.3, 0); g.add(rib) }
+      g.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true }); put(g, 13.5, 1.4, 0); boxes.push({ c: new V2(...W(13.5, 1.4)), a: new V2(tx, tz), hx: 3.1, hz: 1.3 }) }
+    const tray = new THREE.MeshStandardMaterial({ color: '#a8342a', roughness: 0.8 })
+    for (let i = 0; i < 10; i++) junk(new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.16, 0.56), tray), -3.2 + (i > 4 ? 0.75 : 0), 2.3, 0.08 + (i % 5) * 0.16, new V3(0.33, 0.08, 0.28), Math.sin(i) * 0.06)
+    // What leaked out of the dumpsters.
+    const spill = decalTex(128, 128, (x, w, h) => { for (let i = 0; i < 9; i++) { const g = x.createRadialGradient(40 + Math.random() * 50, 40 + Math.random() * 50, 2, 64, 64, 30 + Math.random() * 30); g.addColorStop(0, 'rgba(20,18,14,.55)'); g.addColorStop(1, 'rgba(20,18,14,0)'); x.fillStyle = g; x.fillRect(0, 0, w, h) } }, 0)
+    for (const [sA, d, sz] of [[-9, 2.6, 4], [-14.5, 2.8, 5], [-1.5, 3, 6], [6, 2.2, 3.5]]) decal(spill, ...W(sA, d), sz, sz * 0.7, alongYaw)
+  }
+
+  // Light poles stand on concrete footings painted safety yellow, scuffed by a thousand bumpers.
+  const foot = new THREE.MeshStandardMaterial({ color: '#d6c79c', roughness: 0.9 }), cap = new THREE.MeshStandardMaterial({ color: '#a9a595', roughness: 0.9 })
+  for (const [x, z] of DATA.poles) { const y = surfaceAt(x, z), f = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.33, 0.8, 14), foot); f.position.set(x, y + 0.4, z); f.castShadow = f.receiveShadow = true; scene.add(f)
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 0.08, 14), cap); c.position.set(x, y + 0.84, z); scene.add(c) }
+}
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
-function resetCrates() { for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
+function resetCrates() { for (const k of balloons) { k.popped = false; k.b.visible = true; k.tether.visible = true }
+ for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
   for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 const nxGuess = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l } }
@@ -1453,6 +1687,7 @@ function update(dt) {
 // Mulch beds in the lot: the Galaxie hops up onto the concrete curb, rides over, and takes a scrape.
 const BEDS = (DATA.beds || []).map(([x, z, w, d, t, top]) => ({ x, z, hw: w / 2 + 0.05, hd: d / 2 + 0.05, c: Math.cos(t), s: Math.sin(t), h: top - GY }))
 const onBed = (x, z) => { for (const b of BEDS) { const dx = x - b.x, dz = z - b.z, lx = dx * b.c - dz * b.s, lz = dx * b.s + dz * b.c; if (Math.abs(lx) < b.hw && Math.abs(lz) < b.hd) return b.h } return 0 }
+BEDS.unshift(...lotIslands)
 BEDS.push({ x: PED_BED[0] * U, z: PED_BED[1] * U, hw: 1.3, hd: 1.3, c: 1, s: 0, h: 0.36 }) // the round crossing-sign planter: a taller curb than the palm islands
 { const t = Math.atan2(0.968, -0.249), lx = 8.2, lz = 1.0 // the round stop-sign planter off the north end of the west strip
   BEDS.push({ x: (-93.25 + lx * Math.cos(t) + lz * Math.sin(t)) * U, z: (364.09 - lx * Math.sin(t) + lz * Math.cos(t)) * U, hw: 1.5, hd: 1.5, c: 1, s: 0, h: 0.36 }) }
@@ -1668,6 +1903,12 @@ const audio = (() => {
       const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.value = 62; og.gain.value = 0.5 * s
       og.gain.setTargetAtTime(0, ctx.currentTime, 0.09); o.connect(og); og.connect(master); o.start(); o.stop(ctx.currentTime + 0.5)
     },
+    // A balloon popping: a sharp, short crack.
+    pop() {
+      if (!ctx || muted) return
+      const src = ctx.createBufferSource(); src.buffer = noise; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900
+      const g = ctx.createGain(); g.gain.value = 0.9; g.gain.setTargetAtTime(0, ctx.currentTime + 0.01, 0.025); src.connect(hp); hp.connect(g); g.connect(master); src.start(); src.stop(ctx.currentTime + 0.2)
+    },
     // A dull cardboard thump for the boxes.
     thud(s) {
       if (!ctx || muted) return
@@ -1811,4 +2052,4 @@ if (params.has('play')) start()
 requestAnimationFrame(frame)
 
 // Test hooks.
-window.__game = { THREE, world: world.scene, crates, throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }
+window.__game = { balloons, THREE, world: world.scene, crates, throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }

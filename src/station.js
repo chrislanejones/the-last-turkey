@@ -126,7 +126,7 @@ export function dressStation(scene, U, apronY) {
   // Bank of the Gulf of America, between the gas station and the plaza: a white stucco box with a
   // flat roof and a drive-thru ATM canopy on its north side.
   {
-    const bx = -88.5 * U, bz = 380.0 * U, W = 2.6 * U, D = 4.6 * U, H = 3.7
+    const bx = -88.5 * U, bz = 380.5 * U, W = 2.6 * U, D = 3.6 * U, H = 3.7 // shortened at the north end: room for the OOPS Store's boxes
     const stucco = M('#f1eee6'), trim = M('#dcd6c6'), glass = M('#31424a', { roughness: 0.15, metalness: 0.5 }), navy = '#14306b'
     const lot = 0.045 * U
     box(stucco, bx, lot + H / 2, bz, W, H, D)
@@ -149,12 +149,12 @@ export function dressStation(scene, U, apronY) {
     // East front: glass entry, windows, a red ATM surround, hedges and bollards.
     box(glass, east + 0.02, lot + 1.25, bz + 2.2, 0.06, 2.3, 2.6, false)
     box(trim, east + 0.25, lot + 2.55, bz + 2.2, 0.6, 0.18, 3.2)
-    for (const dz of [-6.5, -3.4]) box(glass, east + 0.02, lot + 1.4, bz + dz, 0.06, 1.3, 2.2, false)
+    for (const dz of [-5.6, -2.9]) box(glass, east + 0.02, lot + 1.4, bz + dz, 0.06, 1.3, 2.2, false)
     box(M('#c8302b'), east + 0.12, lot + 1.15, bz + 5.6, 0.3, 2.3, 1.5)
     plane(label('Mo-Fee-ATM', { w: 384, h: 96, bg: '#c8302b', fg: '#ffffff', font: 'bold 54px Oswald, Impact, sans-serif' }), east + 0.28, lot + 2.05, bz + 5.6, 1.45, 0.36, Math.PI / 2)
     box(dark, east + 0.28, lot + 1.2, bz + 5.6, 0.02, 0.5, 0.6, false)
     const hedge = M('#3f6b3a', { roughness: 1 })
-    for (const [dz, len] of [[-5, 6.2], [7.9, 2.2]]) box(hedge, east + 0.7, lot + 0.4, bz + dz, 0.9, 0.8, len)
+    for (const [dz, len] of [[-4.2, 5.6], [6.75, 1.0]]) box(hedge, east + 0.7, lot + 0.4, bz + dz, 0.9, 0.8, len)
     box(hedge, bx, lot + 0.4, south + 0.7, W - 1.5, 0.8, 0.9)
     for (const dz of [0.6, 1.5, 2.9, 3.8]) cyl(yellow, east + 1.5, lot + 0.45, bz + dz, 0.09, 0.9)
     // Drive-thru canopy to the north.

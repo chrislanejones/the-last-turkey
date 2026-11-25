@@ -285,6 +285,7 @@ for (let x = X0 + 3; x < X1; x += 6.2) for (let z = Zs + 3; z < Zn; z += 6.6) {
   rand(s + 3) > .7 ? palm(px, pz, s, false) : tree(px, pz, s, .9 + rand(s + 4) * .5)
   planted++
 }
+;(DATA as any).roads = roads.map((r) => r.map((v) => +(v * UNIT).toFixed(2)))
 console.log('roads', roads.length, 'houses', houses.length, 'plants', planted, 'parked', DATA.cars.length, 'palms', DATA.palms.length, 'poles', DATA.poles.length)
 
 // The real neighborhood west of A1A S, from the map's own builder: homes with windows and doors,
