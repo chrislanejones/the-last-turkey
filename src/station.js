@@ -446,14 +446,24 @@ export function dressStation(scene, U, apronY) {
     // Pitchfork logo: three red forks in a ring, the parody of the three ovals.
     const logo = (c, cx, cy, r) => { c.strokeStyle = '#d62b1f'; c.lineWidth = r * 0.12; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke()
       for (const a of [0, 2.094, 4.189]) { c.save(); c.translate(cx, cy); c.rotate(a); c.fillStyle = '#d62b1f'; c.fillRect(-r * 0.05, -r * 0.1, r * 0.1, r * 0.8); c.fillRect(-r * 0.28, -r * 0.22, r * 0.56, r * 0.08); for (const t of [-0.28, 0, 0.2]) c.fillRect(r * t, -r * 0.62, r * 0.08, r * 0.42); c.restore() } }
-    const towerSign = label('', { w: 512, h: 512, draw: (c) => { c.fillStyle = '#e2bb7d'; c.fillRect(0, 0, 512, 512); logo(c, 256, 170, 120)
-      c.textAlign = 'center'; c.fillStyle = '#d62b1f'; c.font = 'bold 62px Georgia, serif'; c.fillText('FARMERS', 256, 380); c.font = 'bold 34px Georgia, serif'; c.fillText('DEFENDING FARMERS', 256, 430) } })
+    // The tower carries the name all the way down: logo, then each word stacked big.
+    const towerSign = label('', { w: 512, h: 1126, draw: (c) => { c.fillStyle = '#e2bb7d'; c.fillRect(0, 0, 512, 1126); logo(c, 256, 150, 118)
+      c.textAlign = 'center'; c.fillStyle = '#c8241a'
+      const words = [['FARMERS', 150], ['WITH', 96], ['PITCHFORKS', 150], ['DEFENDING', 150], ['FARMERS', 150]]
+      const sizes = words.map(([t, cap]) => { let px = cap; do { c.font = `bold ${px}px Georgia, serif`; px -= 2 } while (c.measureText(t).width > 476); return px + 2 })
+      const gap = (1126 - 300 - 30 - sizes.reduce((a, b) => a + b * 0.78, 0)) / (words.length + 1)
+      let y = 300 + gap
+      words.forEach(([t], k) => { c.font = `bold ${sizes[k]}px Georgia, serif`; y += sizes[k] * 0.78; c.fillText(t, 256, y); y += gap })
+    } })
     for (const [nx, nz, ry] of [[1, 0, Math.PI / 2], [0, 1, 0]]) {
-      const p1 = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.8), new THREE.MeshStandardMaterial({ map: clock, transparent: true, alphaTest: 0.5 })); p1.position.set(tx + nx * 1.72, TH - 4.0, tz + nz * 1.72); p1.rotation.y = ry; F.add(p1)
-      const p2 = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshStandardMaterial({ map: towerSign })); p2.position.set(tx + nx * 1.72, 4.0, tz + nz * 1.72); p2.rotation.y = ry; F.add(p2)
+      const p2 = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 6.6), new THREE.MeshStandardMaterial({ map: towerSign, emissive: '#ffffff', emissiveMap: towerSign, emissiveIntensity: 0.12 })); p2.position.set(tx + nx * 1.72, 3.95, tz + nz * 1.72); p2.rotation.y = ry; F.add(p2)
     }
+    // ...and along the main building's fascia, facing A1A.
+    const fascia = label('', { w: 2048, h: 160, draw: (c) => { c.fillStyle = '#f6ead0'; c.fillRect(0, 0, 2048, 160); c.fillStyle = '#c8241a'; c.textAlign = 'center'; let px = 120; do { c.font = `bold ${px}px Georgia, serif`; px -= 4 } while (c.measureText('FARMERS WITH PITCHFORKS DEFENDING FARMERS').width > 1960); c.fillText('FARMERS WITH PITCHFORKS DEFENDING FARMERS', 1024, 112) } })
+    { const fl = D * 0.62 - 0.4, f = new THREE.Mesh(new THREE.PlaneGeometry(fl, fl * 160 / 2048), new THREE.MeshStandardMaterial({ map: fascia })); f.position.set(W / 2 + 0.06, H - 1.15, -D * 0.19); f.rotation.y = Math.PI / 2; F.add(f) }
+    { const fl = W * 0.62 - 0.4, f = new THREE.Mesh(new THREE.PlaneGeometry(fl, fl * 160 / 2048), new THREE.MeshStandardMaterial({ map: fascia })); f.position.set(-W * 0.12, H - 1.15, D * 0.47 + 0.06); F.add(f) }
     // Monument sign on the corner lawn and two red feather flags.
-    const mono = label('', { w: 512, h: 192, draw: (c) => { c.fillStyle = '#fbf4e4'; c.fillRect(0, 0, 512, 192); logo(c, 90, 96, 62); c.fillStyle = '#d62b1f'; c.font = 'bold 54px Georgia, serif'; c.fillText('FARMERS', 175, 92); c.font = 'bold 30px Georgia, serif'; c.fillText('DEFENDING FARMERS', 175, 140) } })
+    const mono = label('', { w: 512, h: 192, draw: (c) => { c.fillStyle = '#fbf4e4'; c.fillRect(0, 0, 512, 192); logo(c, 90, 96, 62); c.fillStyle = '#d62b1f'; c.font = 'bold 40px Georgia, serif'; c.fillText('FARMERS WITH', 172, 70); c.fillText('PITCHFORKS', 172, 116); c.font = 'bold 27px Georgia, serif'; c.fillText('DEFENDING FARMERS', 172, 158) } })
     const ms = add(new THREE.BoxGeometry(0.5, 1.2, 3.0), trim, W / 2 + 2.6, 0.6, D * 0.3)
     for (const e of [-1, 1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.09), new THREE.MeshStandardMaterial({ map: mono })); f.position.set(W / 2 + 2.6 + e * 0.26, 0.62, D * 0.3); f.rotation.y = e * Math.PI / 2; F.add(f) }
     const flagTex = label('', { w: 128, h: 512, draw: (c) => { c.fillStyle = '#c8241a'; c.fillRect(0, 0, 128, 512); c.save(); c.translate(64, 256); c.rotate(-Math.PI / 2); c.fillStyle = '#fff'; c.font = 'italic bold 64px Georgia, serif'; c.textAlign = 'center'; c.fillText('Farmers', 0, 22); c.restore() } })
