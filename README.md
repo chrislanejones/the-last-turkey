@@ -7,7 +7,7 @@
 
 A small GTA-style Thanksgiving driving game in three.js, set in the beach town of Saint Ponce, Florida (a parody of St. Augustine Beach), around Ponce Plaza.
 
-Chris and his wife are in a red '64 Ford Galaxie convertible. Phillip, the neighbor, is in his wood-sided wagon. Both of them back out of their driveways on Floridian Ave at the same moment, racing for the **last turkey at publick**. Ram his wagon before he grabs it. He throws cranberry-sauce cans; she throws soda cans back.
+Chris and Becky are in a red '64 Ford Galaxie convertible. Phillip, the neighbor, is in his wood-sided wagon. Both of them back out of their driveways on Floridian Ave at the same moment, racing for the **last turkey at publick**. Ram his wagon before he grabs it. He throws cranberry-sauce cans; Becky throws soda cans back.
 
 **Play it:** https://claude.ai/artifact/Vfm8Ejmcw49qu9zt6PdG7i
 
@@ -27,7 +27,7 @@ Chris and his wife are in a red '64 Ford Galaxie convertible. Phillip, the neigh
 
 - Phillip won't ram you until you ram him first.
 - He has 10 cranberry cans. He always saves the last one for after his wagon is wrecked. Seven hits and you two are done.
-- She gets 3 soda cans after his first throw.
+- Becky gets 3 soda cans after his first throw.
 - The Galaxie is tough, but it does take damage from walls and crashes.
 - You have to go around the gas station to reach the store.
 
