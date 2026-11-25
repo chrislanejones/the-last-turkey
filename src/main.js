@@ -109,19 +109,20 @@ scene.add(world.scene)
 const dressing = dressStation(scene, U, APRON.y)
 
 const BB_POLES = [], BB_VIEW = {}
-const SHERIFF = { x: -81.3, z: 378.4 }
+const SHERIFF = { x: -80.5, z: 378.4 }
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
 {
   const bb = new THREE.Group(); bb.position.set(-92.42 * U, 0, 377.5 * U); bb.rotation.y = Math.atan2(-0.962, 0.273) + Math.PI / 2; scene.add(bb)
-  const W = 12, H = W * 476 / 1024, base = 4.2
+  const W = 12, H = W * 416 / 896, base = 4.2
   const tex = new THREE.TextureLoader().load(BILLBOARD); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4
   const dark = new THREE.MeshStandardMaterial({ color: '#23262b', roughness: 0.7, metalness: 0.3 })
   const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 }))
   face.position.set(0, base + H / 2, 0.16); bb.add(face)
+  const back = face.clone(); back.position.z = -0.16; back.rotation.y = Math.PI; bb.add(back) // same picture on both sides
   const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.3), dark); frame.position.set(0, base + H / 2, 0); frame.castShadow = true; bb.add(frame)
   const catwalk = new THREE.Mesh(new THREE.BoxGeometry(W + 0.6, 0.08, 0.9), dark); catwalk.position.set(0, base - 0.25, 0.5); bb.add(catwalk)
   for (const x of [-W / 2 + 0.3, W / 2 - 0.3]) { // poles at the ends so cars drive under
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, base + H / 2, 10), dark); pole.position.set(x, (base + H / 2) / 2, -0.25); pole.castShadow = true; bb.add(pole)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, base, 10), dark); pole.position.set(x, base / 2, 0); pole.castShadow = true; bb.add(pole)
     bb.updateMatrixWorld(true); const wp = pole.getWorldPosition(new THREE.Vector3()); BB_POLES.push([wp.x, wp.z])
   }
   bb.updateMatrixWorld(true); BB_VIEW.look = bb.localToWorld(new THREE.Vector3(0, base + H / 2, 0)); BB_VIEW.pos = bb.localToWorld(new THREE.Vector3(0, base + H / 2 - 1.2, 14))
@@ -136,21 +137,22 @@ const SHERIFF = { x: -81.3, z: 378.4 }
 // sign, with the face hanging out over the road for northbound drivers.
 {
   const bb = new THREE.Group(); bb.position.set(SHERIFF.x * U, 0, SHERIFF.z * U); scene.add(bb)
-  const W = 11, H = W * 547 / 1024, base = 5.8, off = -4.2
+  const W = 11, H = W * 445 / 832, base = 5.8, off = -5.2
   const tex = new THREE.TextureLoader().load(SHERIFF_IMG); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4
   const dark = new THREE.MeshStandardMaterial({ color: '#2a2d31', roughness: 0.65, metalness: 0.35 })
   const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 }))
   face.position.set(off, base + H / 2, 0.21); bb.add(face)
+  const back = face.clone(); back.position.z = -0.21; back.rotation.y = Math.PI; bb.add(back) // both directions of traffic see it
   const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.36), dark); frame.position.set(off, base + H / 2, 0); frame.castShadow = true; bb.add(frame)
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, base + H * 0.75, 12), dark); pole.position.set(0, (base + H * 0.75) / 2, -0.5); pole.castShadow = true; bb.add(pole)
-  for (const y of [base + H * 0.2, base + H * 0.7]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.6), dark); arm.position.set(0, y, -0.25); bb.add(arm) }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, base, 12), dark); pole.position.set(0, base / 2, 0); pole.castShadow = true; bb.add(pole)
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(W * 0.8, 0.35, 0.35), dark); beam.position.set(off, base - 0.18, 0); bb.add(beam)
   const catwalk = new THREE.Mesh(new THREE.BoxGeometry(W + 0.6, 0.08, 0.9), dark); catwalk.position.set(off, base - 0.25, 0.55); bb.add(catwalk)
   for (let i = 0; i < 4; i++) {
     const x = off - W / 2 + W * (i + 0.5) / 4
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.1), dark); arm.position.set(x, base + H + 0.35, 0.5); bb.add(arm)
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.35), dark); lamp.position.set(x, base + H + 0.35, 1.05); bb.add(lamp)
   }
-  BB_POLES.push([SHERIFF.x * U, SHERIFF.z * U - 0.5])
+  BB_POLES.push([SHERIFF.x * U, SHERIFF.z * U])
 }
 
 // --- the big sign, the turkey, the marker -----------------------------------------------
@@ -197,7 +199,7 @@ const signTex = (() => {
   const rope = new THREE.MeshStandardMaterial({ color: '#d8d2c0' })
   for (const e of [-1, 1]) for (const v of [-1, 1]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9, 5), rope); r.position.set(e * (W / 2 + 0.3), v * (H / 2 - 0.05) + v * 0.2, -0.1); r.rotation.z = -e * v * 0.9; sign.add(r) }
   const at = gAt(-0.6, 4.8 + 0.38 + 0.07) // on the name bay, right under "publick"
-  sign.position.set(at.x, 2.0, at.y); sign.rotation.y = Math.atan2(0.8, 0.6) // on the blank wall below FOOD & PHARMACY
+  sign.position.set(at.x, 4.0, at.y); sign.rotation.y = Math.atan2(0.8, 0.6) // hung right over FOOD & PHARMACY
   scene.add(sign)
 }
 function makeTurkey() {
@@ -297,7 +299,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       // Pushed back east around the sheriff's billboard so its pole and face stand clear.
-      if (side > 0 && Math.abs(tz - SHERIFF.z) < 4.2) px += (2.4 - Math.abs(tz - SHERIFF.z) * 0.35) * U
+      if (side > 0 && Math.abs(tz - SHERIFF.z) < 7) px += (3.6 - Math.abs(tz - SHERIFF.z) * 0.4) * U
       if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.3 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.3 })) continue // not through a neighbor's roof
       const m = new THREE.Mesh(geo, leaf[(k + row) % 3]); m.scale.set(sc, sc * (0.8 + r(3) * 0.5), sc)
       m.position.set(px, sc * 0.75 + row * 1.2, pz); m.castShadow = row === 0; scene.add(m)
@@ -627,6 +629,7 @@ function reset(toCutscene) {
   $('mission').style.display = ''; $('sodaBtn').style.display = ''
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
+  resetCrates()
   Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
   for (const c of sodas) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
@@ -799,6 +802,97 @@ function throwCan() {
   if (game.cans === 0 && game.state === 'chase') say('I’M OUT OF SAUCE!', 2)
   if (game.cans === 9) { say('EAT CRANBERRY!', 1.5); game.sodaReady = true; $('bubble2').textContent = 'LET’S THROW SODA CANS AT HIM!'; $('bubble2').classList.add('show'); game.b2T = 3; objective(TOUCH ? '<b>Ram the wagon</b> — and tap <b>SODA</b> to throw soda cans at him.' : '<b>Ram the wagon</b> — and press <b>F</b> to throw soda cans at him.') }
 }
+
+// --- cardboard boxes piled in front of The OOPS Store: a tiny rigid-body sim, no physics library ---
+const boxTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d')
+  x.fillStyle = '#c69a62'; x.fillRect(0, 0, 128, 128); x.fillStyle = 'rgba(90,60,25,.12)'; for (let i = 0; i < 128; i += 6) x.fillRect(0, i, 128, 2)
+  x.fillStyle = 'rgba(205,170,120,.85)'; x.fillRect(54, 0, 20, 128); x.strokeStyle = 'rgba(80,50,20,.5)'; x.lineWidth = 3; x.strokeRect(1, 1, 126, 126)
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+const boxMat = new THREE.MeshStandardMaterial({ map: boxTex, roughness: 0.9 })
+const crates = []
+{
+  const sizes = [[0.6, 0.45, 0.5], [0.8, 0.5, 0.55], [0.5, 0.6, 0.5], [1.1, 0.45, 0.6], [0.45, 0.4, 0.45], [0.7, 0.7, 0.6]]
+  const piles = [[-88.75, 375.7], [-87.6, 376.25], [-86.5, 375.75]]
+  let n = 0
+  for (const [px, pz] of piles) {
+    let y = GY
+    for (let layer = 0; layer < 3; layer++) {
+      const per = 3 - layer
+      let top = 0
+      for (let i = 0; i < per; i++, n++) {
+        const [w, h, d] = sizes[(n * 7 + layer) % sizes.length].map((v) => v * 1.35)
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), boxMat); m.castShadow = true; m.receiveShadow = true; scene.add(m)
+        const ox = (i - (per - 1) / 2) * 1.25 + Math.sin(n * 3.1) * 0.08, oz = Math.cos(n * 2.3) * 0.12
+        const home = { pos: new V3(px * U + ox, y + h / 2, pz * U + oz), yaw: Math.sin(n * 1.7) * 0.35 }
+        crates.push({ m, half: new V3(w / 2, h / 2, d / 2), r: Math.max(w, d) * 0.5, home, vel: new V3(), spin: new V3(), awake: false })
+        top = Math.max(top, h)
+      }
+      y += top
+    }
+  }
+}
+const _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new V3()
+function resetCrates() { for (const c of crates) { c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+resetCrates()
+function pushCrates(car) {
+  const fx = Math.cos(car.heading), fz = -Math.sin(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
+  for (const c of crates) {
+    const p = c.m.position, dx = p.x - car.pos.x, dz = p.z - car.pos.y
+    if (dx * dx + dz * dz > 16 || p.y > GY + 1.5) continue
+    const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
+    const pa = 2.75 + c.r * 0.8 - Math.abs(along), pc = 1.05 + c.r * 0.8 - Math.abs(across)
+    if (pa <= 0 || pc <= 0) continue
+    // Knock it clear of the car, carrying the car's speed plus a hop and a tumble.
+    let nx, nz
+    if (pa < pc) { nx = Math.sign(along) * fx; nz = Math.sign(along) * fz; p.x += nx * pa; p.z += nz * pa }
+    else { nx = -Math.sign(across) * fz; nz = Math.sign(across) * fx; p.x += nx * pc; p.z += nz * pc }
+    const kick = 1.5 + speed * 0.35
+    c.vel.set(car.vel.x * 0.85 + nx * kick, Math.min(5.5, 1.2 + speed * 0.28) * (0.7 + Math.random() * 0.5), car.vel.y * 0.85 + nz * kick)
+    c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
+    if (!c.awake && speed > 3) audio.crash(0.12)
+    c.awake = true
+    car.vel.multiplyScalar(0.985)
+  }
+}
+function updateCrates(dt) {
+  pushCrates(P); pushCrates(R)
+  for (const c of crates) {
+    if (!c.awake) continue
+    const p = c.m.position
+    c.vel.y -= 9.8 * dt; p.addScaledVector(c.vel, dt)
+    const w = c.spin.length(); if (w > 1e-4) { _q.setFromAxisAngle(_v.copy(c.spin).divideScalar(w), w * dt); c.m.quaternion.premultiply(_q) }
+    // Buildings and walls stop them (the same footprints the cars use).
+    for (const o of boxes) {
+      const dx = p.x - o.c.x, dz = p.z - o.c.y; if (Math.abs(dx) > o.hx + o.hz + 2 || Math.abs(dz) > o.hx + o.hz + 2) continue
+      const u = dx * o.a.x + dz * o.a.y, v = -dx * o.a.y + dz * o.a.x, pu = o.hx + c.r * 0.7 - Math.abs(u), pv = o.hz + c.r * 0.7 - Math.abs(v)
+      if (pu <= 0 || pv <= 0) continue
+      let nx, nz, pen
+      if (pu < pv) { nx = Math.sign(u) * o.a.x; nz = Math.sign(u) * o.a.y; pen = pu } else { nx = -Math.sign(v) * o.a.y; nz = Math.sign(v) * o.a.x; pen = pv }
+      p.x += nx * pen; p.z += nz * pen
+      const vn = c.vel.x * nx + c.vel.z * nz; if (vn < 0) { c.vel.x -= 1.4 * vn * nx; c.vel.z -= 1.4 * vn * nz }
+    }
+    // The ground: bounce a little, slide to a stop, and settle back flat on a face.
+    const floor = GY + c.half.y
+    if (p.y < floor) {
+      p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
+      const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
+      _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')); c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
+      if (c.vel.lengthSq() < 0.01 && c.spin.lengthSq() < 0.02) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.m.quaternion.copy(_q); c.awake = false }
+    }
+  }
+  // Boxes shove each other apart (as rounded blocks) and wake their neighbors.
+  for (let i = 0; i < crates.length; i++) for (let j = i + 1; j < crates.length; j++) {
+    const a = crates[i], b = crates[j]; if (!a.awake && !b.awake) continue
+    const pa = a.m.position, pb = b.m.position, d = _v.subVectors(pb, pa), dist = d.length(), min = (a.r + b.r) * 0.85
+    if (dist >= min || dist < 1e-5) continue
+    d.divideScalar(dist); const push = (min - dist) / 2
+    pa.addScaledVector(d, -push); pb.addScaledVector(d, push)
+    const rel = (b.vel.x - a.vel.x) * d.x + (b.vel.y - a.vel.y) * d.y + (b.vel.z - a.vel.z) * d.z
+    if (rel < 0) { a.vel.addScaledVector(d, rel * 0.6); b.vel.addScaledVector(d, -rel * 0.6) }
+    a.awake = b.awake = true
+  }
+}
+
 function updateCans(dt) {
   const s = game.state
   if (s === 'chase' && game.health > 0) {
@@ -901,7 +995,7 @@ function update(dt) {
     if (game.armor <= 0 && (s === 'chase' || s === 'claim')) { game.state = 'lost'; banner('GALAXIE TOTALED', 'Even a Galaxie has limits. Mind the walls.', 'bad') }
   }
   R.step(dt, s === 'chase' ? rivalInput(dt) : s === 'lost' ? { throttle: 0, steer: 0, handbrake: true } : NONE)
-  updateCans(dt); updateSodas(dt)
+  updateCans(dt); updateSodas(dt); updateCrates(dt)
   const hit = collideCars(P, R)
   if (hit) ram(hit, dt)
   if (s === 'chase') {
@@ -1192,4 +1286,4 @@ if (params.has('play')) start()
 requestAnimationFrame(frame)
 
 // Test hooks.
-window.__game = { throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }
+window.__game = { crates, throwSoda, dbg: { circles, boxes, regions, DATA }, PATH, rival, twin, sim: (secs) => { for (let i = 0; i < secs * 60; i++) update(1 / 60) }, game, P, R, camera, scene, setCam: (m) => { camMode = m }, keys, start, reset, DOOR, V3, GY, wheels }
