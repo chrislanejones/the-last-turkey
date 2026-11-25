@@ -1248,6 +1248,39 @@ if (!location.search.includes('nolot')) for (const gm of groundMeshes) for (cons
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 
 const lotIslands = []
+// --- "Welcome to Saint Ponce Beach": the carved sign on the grass at the town's south tip, among boulders and dune grass.
+{
+  const cx = -88.4 * U, cz = 400.75 * U, gy = surfaceAt(cx, cz), G = new THREE.Group(); G.position.set(cx, gy, cz); G.scale.setScalar(1.25); scene.add(G) // the very tip, the palm grove behind it
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 400; const x = c.getContext('2d')
+  // A driftwood plank with a ragged outline, a wave curling off its right end.
+  x.beginPath(); x.moveTo(30, 210); x.lineTo(60, 170); x.lineTo(40, 140); x.lineTo(120, 120); x.lineTo(300, 128)
+  x.bezierCurveTo(520, 150, 660, 120, 760, 96); x.bezierCurveTo(800, 70, 850, 60, 880, 84); x.bezierCurveTo(860, 92, 862, 112, 890, 122); x.lineTo(990, 150); x.lineTo(968, 190); x.lineTo(1000, 232)
+  x.lineTo(960, 300); x.lineTo(700, 312); x.lineTo(400, 300); x.lineTo(120, 316); x.lineTo(50, 290); x.lineTo(66, 250); x.closePath()
+  const wg = x.createLinearGradient(0, 80, 0, 320); wg.addColorStop(0, '#3f8f95'); wg.addColorStop(1, '#236a72'); x.fillStyle = wg; x.fill(); x.save(); x.clip()
+  for (let i = 0; i < 60; i++) { x.strokeStyle = `rgba(${i % 2 ? '255,255,255' : '0,40,50'},${0.05 + Math.random() * 0.08})`; x.lineWidth = 1 + Math.random() * 2; const y = 70 + Math.random() * 260; x.beginPath(); x.moveTo(0, y); x.bezierCurveTo(300, y + 14, 700, y - 14, 1024, y + 6); x.stroke() }
+  x.restore(); x.lineWidth = 7; x.strokeStyle = '#e8dfc4'; x.stroke()
+  x.textAlign = 'center'; x.fillStyle = '#e9e2cb'; x.font = 'italic 62px Georgia, "Times New Roman", serif'; x.fillText('welcome to', 600, 190)
+  x.font = '74px Georgia, "Times New Roman", serif'; x.fillStyle = '#12393f'; x.fillText('SAINT PONCE BEACH', 524, 276, 880); x.fillStyle = '#f0e4b8'; x.fillText('SAINT PONCE BEACH', 520, 272, 880)
+  // The town seal, top left: sun over the surf.
+  x.beginPath(); x.arc(170, 110, 100, 0, 7); x.fillStyle = '#d9d2bb'; x.fill(); x.lineWidth = 6; x.strokeStyle = '#5d7f86'; x.stroke()
+  x.save(); x.beginPath(); x.arc(170, 110, 78, 0, 7); x.clip(); x.fillStyle = '#9fd0e2'; x.fillRect(70, 10, 200, 110); x.fillStyle = '#f3c64a'; x.beginPath(); x.arc(170, 112, 34, 0, 7); x.fill()
+  x.fillStyle = '#2f7f9a'; x.fillRect(70, 112, 200, 40); x.fillStyle = '#e6d6a6'; x.fillRect(70, 150, 200, 60); x.strokeStyle = '#fff'; x.lineWidth = 4; for (const y of [124, 138]) { x.beginPath(); x.moveTo(70, y); x.bezierCurveTo(120, y - 10, 200, y + 10, 270, y - 4); x.stroke() } x.restore()
+  x.beginPath(); x.arc(170, 110, 78, 0, 7); x.strokeStyle = '#5d7f86'; x.lineWidth = 4; x.stroke()
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8
+  const face = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, roughness: 0.8 }), Wd = 6.4, Hd = 2.5
+  for (const sgn of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Hd), face); f.position.set(0, 1.75, sgn * 0.07); if (sgn < 0) f.rotation.y = Math.PI; f.castShadow = true; G.add(f) }
+  const postM = new THREE.MeshStandardMaterial({ color: '#4d8a84', roughness: 0.9 }), rockM = new THREE.MeshStandardMaterial({ color: '#6f6f6b', roughness: 1, flatShading: true })
+  for (const px of [-1.5, 1.6]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.7, 0.12), postM); p.position.set(px, 0.85, 0); p.castShadow = true; G.add(p) }
+  const rock = new THREE.DodecahedronGeometry(1, 0)
+  for (const [rx, rz, sx, sy, sz, ry] of [[-2.0, 0.5, 1.5, 0.75, 1.0, 0.4], [-0.9, 0.7, 0.8, 0.45, 0.7, 1.9], [2.1, 0.4, 1.2, 0.8, 0.9, 2.7], [2.9, 0.9, 0.6, 0.35, 0.5, 0.9], [-2.4, -0.6, 0.9, 0.5, 0.8, 1.2], [1.8, -0.7, 1.0, 0.55, 0.7, 2.2]]) { const r = new THREE.Mesh(rock, rockM); r.scale.set(sx, sy, sz); r.position.set(rx, sy * 0.45, rz); r.rotation.y = ry; r.castShadow = r.receiveShadow = true; G.add(r) }
+  // Dune grass and yellow-green crotons round it, and three little spotlights out front.
+  const blade = new THREE.ConeGeometry(0.07, 1.1, 4), grassM = [new THREE.MeshStandardMaterial({ color: '#8a9a5a', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#b7b06a', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#c6c94a', roughness: 1 })]
+  let sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+  for (let i = 0; i < 26; i++) { const a = rnd() * 6.28, d = 2.2 + rnd() * 5.5, tx = Math.cos(a) * d * 1.1, tz = -Math.abs(Math.sin(a)) * d * 1.6 + 0.8, k = i % 5 === 0 ? 2 : i % 2, sc = k === 2 ? 0.7 : 0.8 + rnd() * 0.7
+    for (let j = 0; j < 8; j++) { const b = new THREE.Mesh(blade, grassM[k]), ta = j * 0.8, tr = j ? 0.35 + rnd() * 0.3 : 0; b.scale.setScalar(sc); b.rotation.set(Math.cos(ta) * tr, 0, -Math.sin(ta) * tr); b.position.set(tx + Math.sin(ta) * tr * 0.4, 0.5 * sc, tz + Math.cos(ta) * tr * 0.4); G.add(b) } }
+  const lampM = new THREE.MeshStandardMaterial({ color: '#222', roughness: 0.6 }), glow = new THREE.MeshBasicMaterial({ color: '#fff3c4' })
+  for (const lx of [-1.6, 0.2, 1.9]) for (const sgn of [1, -1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), lampM); st.position.set(lx, 0.25, sgn * 1.7); G.add(st); const hd = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.16, 0.14), lampM); hd.position.set(lx, 0.55, sgn * 1.7); hd.rotation.x = sgn * 0.6; G.add(hd); const l = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.1), glow); l.position.set(lx, 0.57, sgn * 1.62); l.rotation.x = sgn * 0.6; if (sgn > 0) l.rotation.y = Math.PI; G.add(l) }
+}
 // --- Road paint: double yellow down A1A, white edge lines, dashed yellow on the side streets. Built from the road
 // centre lines the world was laid out from, stopped short of junctions.
 {
