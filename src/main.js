@@ -507,11 +507,11 @@ circles.push(...tableSpots)
   const dark = new THREE.MeshStandardMaterial({ color: '#3a3d40', roughness: 0.9 }), inside = new THREE.MeshStandardMaterial({ color: '#a9aeb0', roughness: 0.85, side: THREE.DoubleSide })
   const tyre = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.9 })
   const part = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; T.add(m); return m }
-  const side = (() => { const c = document.createElement('canvas'); c.width = 1024; c.height = 192; const x = c.getContext('2d')
-    x.fillStyle = '#f1f1ec'; x.fillRect(0, 0, 1024, 192); x.fillStyle = '#b3261e'; x.fillRect(0, 128, 1024, 26)
-    for (let i = 0; i < 12; i++) { x.beginPath(); x.moveTo(560 + i * 34, 128); x.lineTo(584 + i * 34, 141); x.lineTo(560 + i * 34, 154); x.fill() }
-    x.fillStyle = '#7a3b16'; x.font = 'bold 92px Oswald, Impact, sans-serif'; x.fillText('TURKEY TRUCK', 40, 104)
-    x.font = 'bold 22px Oswald, sans-serif'; x.fillStyle = '#555'; x.fillText('FRESH BIRDS · SAINT PONCE · SINCE NEVER', 44, 182)
+  const side = (() => { const c = document.createElement('canvas'); c.width = 2048; c.height = 372; const x = c.getContext('2d')
+    x.fillStyle = '#f1f1ec'; x.fillRect(0, 0, 2048, 372); x.fillStyle = 'rgba(0,0,0,.05)'; for (let i = 0; i < 2048; i += 46) x.fillRect(i, 0, 3, 372) // panel seams
+    x.fillStyle = '#b3261e'; x.fillRect(0, 262, 2048, 34); for (let i = 0; i < 16; i++) { x.beginPath(); x.moveTo(1180 + i * 44, 262); x.lineTo(1212 + i * 44, 279); x.lineTo(1180 + i * 44, 296); x.fill() }
+    x.fillStyle = '#7a3b16'; x.textBaseline = 'alphabetic'; let px = 230; do { x.font = `bold ${px}px Oswald, Impact, sans-serif`; px -= 4 } while (x.measureText('TURKEY TRUCK').width > 1500); x.fillText('TURKEY TRUCK', 90, 228)
+    x.font = 'bold 40px Oswald, sans-serif'; x.fillStyle = '#555'; x.fillText('FRESH BIRDS · SAINT PONCE · SINCE NEVER', 96, 350)
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t })()
   // The box: floor, roof, front wall and two sides, open at the back.
   part(new THREE.BoxGeometry(L, 0.12, Wd), dark, 0, deck, 0)
@@ -520,15 +520,18 @@ circles.push(...tableSpots)
   part(new THREE.BoxGeometry(0.4, 1.2, 1.9), steel, L / 2 + 0.25, deck + Hb - 0.8, 0) // reefer unit on the nose
   for (const e of [-1, 1]) {
     part(new THREE.BoxGeometry(L, Hb, 0.06), white, 0, deck + Hb / 2, e * Wd / 2)
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.98, L * 0.98 * 192 / 1024 * 1.25), new THREE.MeshStandardMaterial({ map: side, roughness: 0.6 }))
-    sign.position.set(0, deck + Hb * 0.55, e * (Wd / 2 + 0.035)); sign.rotation.y = e > 0 ? 0 : Math.PI; T.add(sign)
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(L - 0.1, Hb - 0.1), new THREE.MeshStandardMaterial({ map: side, roughness: 0.6 }))
+    sign.position.set(0, deck + Hb / 2, e * (Wd / 2 + 0.035)); sign.rotation.y = e > 0 ? 0 : Math.PI; T.add(sign)
     // Inside face, plain and empty.
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(L, Hb), inside); wall.position.set(0, deck + Hb / 2, e * (Wd / 2 - 0.035)); T.add(wall)
     // Rear door, swung all the way round flat against the side, hinged at the back corner.
-    const door = new THREE.Group(); door.position.set(-L / 2, deck + Hb / 2, e * (Wd / 2 + 0.05)); door.rotation.y = e * -0.5; T.add(door) // swung wide, ~150° open
+    const door = new THREE.Group(); door.position.set(-L / 2, deck + Hb / 2, e * (Wd / 2 + 0.05)); door.rotation.y = e * -Math.PI / 2; T.add(door) // swung straight out to the side
     const leaf = new THREE.Mesh(new THREE.BoxGeometry(Wd / 2, Hb - 0.1, 0.05), white); leaf.position.x = -Wd / 4 * e * -1; leaf.position.x = Wd / 4; leaf.castShadow = true; door.add(leaf)
     for (const y of [-0.9, 0, 0.9]) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, Hb - 0.3, 6), steel); bar.position.set(Wd / 4 + (y * 0.2), 0, 0.05); door.add(bar) ; break }
   }
+  for (const ex of [-1, 1]) for (const ez of [-1, 1]) part(new THREE.BoxGeometry(0.12, Hb + 0.1, 0.12), steel, ex * (L / 2 - 0.02), deck + Hb / 2, ez * (Wd / 2 + 0.02))
+  for (const ez of [-1, 1]) for (const y of [deck + 0.02, deck + Hb]) part(new THREE.BoxGeometry(L, 0.1, 0.1), steel, 0, y, ez * (Wd / 2 + 0.03))
+  for (const ex of [-1, 1]) part(new THREE.BoxGeometry(0.1, 0.1, Wd), steel, ex * (L / 2 - 0.02), deck + Hb, 0)
   const inFloor = new THREE.Mesh(new THREE.PlaneGeometry(L, Wd), inside); inFloor.rotation.x = -Math.PI / 2; inFloor.position.set(0, deck + 0.065, 0); T.add(inFloor)
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(L, Wd), inside); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, deck + Hb - 0.05, 0); T.add(ceil)
   part(new THREE.BoxGeometry(0.15, 0.25, Wd), steel, -L / 2 + 0.05, deck - 0.1, 0) // rear sill
