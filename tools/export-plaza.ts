@@ -77,7 +77,24 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
   parts[layer].push(g)
   if (fascia) { loving = true; add('architecture', new BoxGeometry(fascia[3] + .04, .07, fascia[4] + .04), '#f7f5ee', fascia[0], fascia[1] - .02, fascia[2]); loving = false }
 }
+const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.0, clear: .8 }
+let cutting = false
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
+  // Megabucks' drive-thru: a lane cut clean through the strip's north end, roofed over above car height.
+  if (!cutting && layer !== 'ground' && Math.abs(turn - DT.t) < 1e-3) {
+    const c = Math.cos(DT.t), sn = Math.sin(DT.t), dx = x - DT.cx, dz = z - DT.cz, lx = dx * c - dz * sn, lz = dx * sn + dz * c
+    if (Math.abs(lz) < 2.2 && lx - w / 2 < DT.x1 && lx + w / 2 > DT.x0 && y - h / 2 < DT.clear) {
+      const at = (px: number) => [DT.cx + px * c + lz * sn, DT.cz - px * sn + lz * c]
+      cutting = true
+      const l0 = lx - w / 2, l1 = lx + w / 2
+      if (DT.x0 - l0 > .005) { const [px, pz] = at((l0 + DT.x0) / 2); box(layer, color, px, y, pz, DT.x0 - l0, h, d, turn, glow) }
+      if (l1 - DT.x1 > .005) { const [px, pz] = at((DT.x1 + l1) / 2); box(layer, color, px, y, pz, l1 - DT.x1, h, d, turn, glow) }
+      const top = y + h / 2
+      if (top - DT.clear > .005) { const lo = Math.max(DT.x0, l0), hi = Math.min(DT.x1, l1), [px, pz] = at((lo + hi) / 2); box(layer, color, px, (DT.clear + top) / 2, pz, hi - lo, top - DT.clear, d, turn, glow) }
+      cutting = false
+      return
+    }
+  }
   // Collide with the homes that were actually drawn (the map drops some lots), not the raw outlines.
   if (wb && !loving && layer === 'architecture' && h > .6 && w > .5 && d > .5 && inHood(x, z) && !inFarmers(x, z)) DATA.homes.push([x * UNIT, z * UNIT, w * UNIT, d * UNIT, turn])
   if (wb && !loving && layer === 'architecture' && h > .6 && w > 1.2 && d > 1.2 && inHood(x, z)) {

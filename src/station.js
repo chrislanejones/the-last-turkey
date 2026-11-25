@@ -184,7 +184,7 @@ export function dressStation(scene, U, apronY) {
     // And on the back, toward A1A S, where the drive comes in between the strip and publick.
     const [wx, wz] = at(6.0, -1.65 - 0.03); plane(band, wx, 1.6 * U, wz, 2.6 * U, 0.325 * U, t + Math.PI)
     // A couple of cafe tables under green umbrellas on the walk by the end.
-    for (const lx of [5.6, 6.6]) {
+    for (const lx of [4.7, 5.5]) {
       const [tx, tz] = at(lx, 1.65 - 0.38)
       cyl(dark, tx, 0.07 * U + 0.37, tz, 0.04, 0.74, 6); cyl(M('#c9c2b0'), tx, 0.07 * U + 0.75, tz, 0.4, 0.04, 12)
       const um = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.4, 8), M(green)); um.position.set(tx, 0.07 * U + 2.3, tz); um.castShadow = true; g.add(um)
@@ -310,7 +310,7 @@ export function dressStation(scene, U, apronY) {
       for (let i = -256; i < 512; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 256, 256); x.moveTo(i + 256, 0); x.lineTo(i, 256); x.stroke() }
       for (let i = 16; i < 256; i += 64) for (let j = 16; j < 256; j += 64) { x.beginPath(); x.arc(i + 16, j + 16, 14, 0, 7); x.stroke() }
     } })
-    for (const k of [10, 11]) { const [x, z] = strip.at(-7.35 + (k + 0.5) * bay, 1.65 - 0.75 + 0.06); plane(lattice, x, lot + 0.42 * U, z, bay * U - 1.7, 0.6 * U, strip.t) }
+    for (const k of [10]) { const [x, z] = strip.at(-7.35 + (k + 0.5) * bay, 1.65 - 0.75 + 0.06); plane(lattice, x, lot + 0.42 * U, z, bay * U - 1.7, 0.6 * U, strip.t) }
     // The planted corner off the strip's north end: mulch, shrubs, a stop sign.
     { const [bx, bz] = strip.at(7.45 + 0.75, 1.0)
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.22, 16), M('#d9d5c8')); bed.position.set(bx, lot + 0.11, bz); g.add(bed)
@@ -433,19 +433,26 @@ export function dressStation(scene, U, apronY) {
     add(new THREE.BoxGeometry(3.4, TH, 3.4), stucco, tx, TH / 2, tz)
     add(new THREE.BoxGeometry(3.7, 0.4, 3.7), dk, tx, TH - 0.1, tz); add(new THREE.BoxGeometry(3.6, 0.3, 3.6), trim, tx, TH - 2.8, tz)
     const tr = add(new THREE.ConeGeometry(2.75, 1.9, 4), tile, tx, TH + 0.95, tz, Math.PI / 4)
+    // Belfry: three arched openings on each face, drawn as one clean panel (cream surround, dark arches, sills).
+    const belfry = label('', { w: 512, h: 384, draw: (c) => {
+      c.fillStyle = '#e2bb7d'; c.fillRect(0, 0, 512, 384)
+      for (let k = 0; k < 3; k++) { const x = 70 + k * 150, w = 88
+        c.fillStyle = '#f4e6c6'; c.beginPath(); c.moveTo(x - 12, 330); c.lineTo(x - 12, 130); c.arc(x + w / 2, 130, w / 2 + 12, Math.PI, 0); c.lineTo(x + w + 12, 330); c.fill()
+        c.fillStyle = '#1d2a30'; c.beginPath(); c.moveTo(x, 322); c.lineTo(x, 130); c.arc(x + w / 2, 130, w / 2, Math.PI, 0); c.lineTo(x + w, 322); c.fill()
+        c.fillStyle = '#2f4f63'; c.fillRect(x + w / 2 - 3, 90, 6, 232); c.fillStyle = '#c99a5a'; c.fillRect(x - 18, 322, w + 36, 16) }
+    } })
     for (const [nx, nz, ry] of [[1, 0, Math.PI / 2], [0, 1, 0], [-1, 0, -Math.PI / 2], [0, -1, Math.PI]]) {
-      for (const k of [-0.75, 0, 0.75]) {
-        const ax = tx + nx * 1.72 + (nz ? k : 0) * Math.abs(nz), az = tz + nz * 1.72 + (nx ? -k : 0) * Math.abs(nx)
-        const win = add(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 12, 1, false, 0, Math.PI), glass, ax, TH - 1.1, az); win.rotation.set(Math.PI / 2, 0, 0); win.rotation.order = 'YXZ'; win.rotation.y = ry
-        add(new THREE.BoxGeometry(nx ? 0.06 : 0.56, 1.1, nz ? 0.06 : 0.56), glass, ax, TH - 1.7, az)
-      }
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 2.48), new THREE.MeshStandardMaterial({ map: belfry, roughness: 0.9 })); p.position.set(tx + nx * 1.71, TH - 1.45, tz + nz * 1.71); p.rotation.y = ry; F.add(p)
     }
-    const clock = label('', { w: 256, h: 256, draw: (c) => { c.clearRect(0, 0, 256, 256); c.fillStyle = '#f6efdc'; c.beginPath(); c.arc(128, 128, 120, 0, 7); c.fill(); c.strokeStyle = '#3a2a1c'; c.lineWidth = 10; c.stroke()
-      for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillStyle = '#3a2a1c'; c.fillRect(128 + Math.cos(a) * 96 - 5, 128 + Math.sin(a) * 96 - 5, 10, 10) }
-      c.lineWidth = 9; c.beginPath(); c.moveTo(128, 128); c.lineTo(128, 52); c.moveTo(128, 128); c.lineTo(180, 150); c.stroke() } })
-    // Pitchfork logo: three red forks in a ring, the parody of the three ovals.
-    const logo = (c, cx, cy, r) => { c.strokeStyle = '#d62b1f'; c.lineWidth = r * 0.12; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke()
-      for (const a of [0, 2.094, 4.189]) { c.save(); c.translate(cx, cy); c.rotate(a); c.fillStyle = '#d62b1f'; c.fillRect(-r * 0.05, -r * 0.1, r * 0.1, r * 0.8); c.fillRect(-r * 0.28, -r * 0.22, r * 0.56, r * 0.08); for (const t of [-0.28, 0, 0.2]) c.fillRect(r * t, -r * 0.62, r * 0.08, r * 0.42); c.restore() } }
+    // Pitchfork logo: one bold red pitchfork inside a ring.
+    const logo = (c, cx, cy, r) => {
+      c.fillStyle = '#fbf4e4'; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill()
+      c.strokeStyle = '#c8241a'; c.lineWidth = r * 0.12; c.beginPath(); c.arc(cx, cy, r * 0.92, 0, 7); c.stroke()
+      c.fillStyle = '#c8241a'; const u = r / 10
+      c.fillRect(cx - u * 0.55, cy - u * 1.5, u * 1.1, u * 8.2)            // handle
+      c.beginPath(); c.moveTo(cx - u * 3.6, cy - u * 1.5); c.lineTo(cx + u * 3.6, cy - u * 1.5); c.lineTo(cx + u * 3.2, cy); c.lineTo(cx - u * 3.2, cy); c.fill() // crossbar
+      for (const dx of [-3.0, 0, 3.0]) { c.beginPath(); c.moveTo(cx + (dx - 0.6) * u, cy - u * 1.4); c.lineTo(cx + (dx - 0.6) * u, cy - u * 6); c.lineTo(cx + dx * u, cy - u * 7.6); c.lineTo(cx + (dx + 0.6) * u, cy - u * 6); c.lineTo(cx + (dx + 0.6) * u, cy - u * 1.4); c.fill() } // tines
+    }
     // The tower carries the name all the way down: logo, then each word stacked big.
     const towerSign = label('', { w: 512, h: 1126, draw: (c) => { c.fillStyle = '#e2bb7d'; c.fillRect(0, 0, 512, 1126); logo(c, 256, 150, 118)
       c.textAlign = 'center'; c.fillStyle = '#c8241a'
@@ -521,6 +528,41 @@ export function dressStation(scene, U, apronY) {
       for (let k = 0; k < 9; k++) { const fr = add(new THREE.ConeGeometry(0.35, 2.6, 4), leaf, x + Math.cos(k * 0.7) * 0.9, h + 0.1, z + Math.sin(k * 0.7) * 0.9); fr.rotation.set(Math.sin(k * 0.7) * 1.9, 0, -Math.cos(k * 0.7) * 1.9) }
     }
     add(new THREE.BoxGeometry(1.3, 0.8, 0.9), M('#c9cbc6'), W / 2 + 1.2, 0.4, 1.0) // AC unit
+  }
+
+  // Megabucks' drive-thru: a DRIVE THRU sign over each end of the lane, a pickup window, and one barista.
+  {
+    const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t)
+    const at = (lx, lz) => [(-93.25 + lx * c + lz * sn) * U, (364.09 - lx * sn + lz * c) * U]
+    const green = '#1f6b45', lot = 0.045 * U
+    const dt = label('', { w: 512, h: 128, draw: (x) => { x.fillStyle = green; x.fillRect(0, 0, 512, 128); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 76px Oswald, Impact, sans-serif'; x.fillText('DRIVE THRU', 256, 94) } })
+    for (const e of [-1, 1]) { const [x, z] = at(6.5, e * (1.65 + 0.04)); plane(dt, x, lot + 0.9 * U, z, 0.95 * U, 0.24 * U, t + (e > 0 ? 0 : Math.PI), { emissive: '#ffffff', emissiveMap: dt, emissiveIntensity: 0.2 }) }
+    // The lane: dark ceiling, a light, and the pickup window on the south side wall.
+    { const [x, z] = at(6.5, 0); const ceil = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * U, 3.3 * U), M('#4a4038', { side: THREE.DoubleSide })); ceil.rotation.set(Math.PI / 2, 0, -t); ceil.position.set(x, 0.8 * U - 0.02, z); g.add(ceil) }
+    const win = label('', { w: 256, h: 192, draw: (x) => { x.fillStyle = '#2b2f31'; x.fillRect(0, 0, 256, 192); x.fillStyle = '#e8d9b8'; x.fillRect(14, 14, 228, 164); x.fillStyle = '#c9b48a'; x.fillRect(14, 120, 228, 58); x.fillStyle = green; x.fillRect(14, 14, 228, 26); x.fillStyle = '#fff'; x.font = 'bold 20px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('PICK UP HERE', 128, 34) } })
+    { const [x, z] = at(6.0 + 0.012, -0.3); plane(win, x, lot + 1.75, z, 1.6, 1.2, t + Math.PI / 2) }
+    // The barista, leaning out of the window.
+    {
+      const [x, z] = at(6.0 + 0.22, -0.3), b = new THREE.Group(); b.position.set(x, lot, z); b.rotation.y = t + Math.PI / 2; g.add(b)
+      const skin = M('#c98a6a'), apron = M(green), shirt = M('#2a2a2a'), hair = M('#3a2416')
+      const add = (geo, mat, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.castShadow = true; b.add(m); return m }
+      add(new THREE.CylinderGeometry(0.2, 0.22, 0.6, 12), shirt, 0, 1.55, -0.05)
+      add(new THREE.BoxGeometry(0.36, 0.5, 0.04), apron, 0, 1.5, 0.16)
+      add(new THREE.SphereGeometry(0.15, 14, 12), skin, 0, 2.02, 0.02)
+      add(new THREE.SphereGeometry(0.155, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 2.05, 0)
+      const bun = add(new THREE.SphereGeometry(0.08, 10, 8), hair, 0, 2.08, -0.15)
+      const visor = add(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 14, 1, false, -1.1, 2.2), apron, 0, 2.1, 0.06)
+      // One arm out over the sill with a coffee cup.
+      const arm = add(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), shirt, 0.18, 1.55, 0.25); arm.rotation.x = 1.25
+      add(new THREE.CylinderGeometry(0.06, 0.045, 0.16, 10), M('#f4f1e8'), 0.18, 1.62, 0.5)
+      add(new THREE.CylinderGeometry(0.062, 0.062, 0.02, 10), M('#4a3020'), 0.18, 1.71, 0.5)
+      add(new THREE.BoxGeometry(0.9, 0.06, 0.3), M('#c9c2b0'), 0, 1.28, 0.22) // sill
+    }
+    // Menu board at the lane's back entrance.
+    { const menu = label('', { w: 256, h: 384, draw: (x) => { x.fillStyle = '#1d2a24'; x.fillRect(0, 0, 256, 384); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 34px Oswald, sans-serif'; x.fillText('MEGABUCKS', 128, 50)
+        x.font = '22px Oswald, sans-serif'; ['PUMPKIN SPICE  $9', 'TURKEY LATTE  $11', 'GRAVY MOCHA  $10', 'CRANBERRY COLD BREW $12', 'BLACK COFFEE  $8'].forEach((l, i) => x.fillText(l, 128, 110 + i * 52)) } })
+      const [x, z] = at(6.0 - 0.15, -1.65 - 0.9); cyl(M('#2b2d31'), x, lot + 0.7, z, 0.06, 1.4, 6)
+      plane(menu, x, lot + 1.9, z, 1.0, 1.5, t + Math.PI / 2 + 0.6) }
   }
   return g
 }

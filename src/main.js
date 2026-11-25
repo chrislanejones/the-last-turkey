@@ -443,7 +443,8 @@ const wingBox = (cx, cz, t, L, D) => ({ c: u2(cx, cz), a: new V2(Math.cos(t), -M
 const boxes = [
   { c: gAt(0, 0.45), a: GA.clone(), hx: 6.05 * U, hz: 5.25 * U },
   wingBox(-81.65, 339.8, 0, 11.1, 3.4),
-  wingBox(-93.25, 364.09, Math.atan2(0.968, -0.249), 14.9, 3.3),
+  // The west strip in two pieces either side of Megabucks' drive-thru lane (local x 6.0 to 7.0).
+  ...(() => { const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t), mk = (a, b) => { const m = (a + b) / 2; return wingBox(-93.25 + m * c, 364.09 - m * sn, t, b - a, 3.3) }; return [mk(-7.45, 6.0), mk(7.0, 7.45)] })(),
   { c: u2(-87.65, 372.6).add(new V2(0, 0.9)), a: new V2(1, 0), hx: 2.35 * U, hz: 1.9 * U + 0.9 }, // with its south walk
 ]
 // The Square K: the store (with its front walk), two pump islands, the canopy posts, the price pylon.
@@ -921,6 +922,41 @@ const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18), domeGeo = new T
     crates.push({ m, half: new V3(0.44, Hh / 2, 0.44), r: 0.48, home: { pos: new V3(x, GY + Hh / 2, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, barrel: true })
   }
 }
+// Two 4-foot cardboard boxes of pitchforks on the Farmers lawn. Hit one and its three forks spill out.
+const forkWood = new THREE.MeshStandardMaterial({ color: '#8a5a2b', roughness: 0.8 }), forkSteel = new THREE.MeshStandardMaterial({ color: '#8d9396', metalness: 0.7, roughness: 0.35 })
+const makeFork = () => { const f = new THREE.Group()
+  const h = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.45, 6), forkWood); h.position.y = -0.15; h.castShadow = true; f.add(h)
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.04), forkSteel); bar.position.y = 0.6; f.add(bar)
+  for (const x of [-0.13, 0, 0.13]) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.34, 5), forkSteel); t.position.set(x, 0.79, 0); f.add(t) }
+  return f }
+const forkCrates = []
+{
+  const cardTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 256; const x = c.getContext('2d')
+    x.fillStyle = '#b98a55'; x.fillRect(0, 0, 128, 256); x.fillStyle = 'rgba(80,50,20,.15)'; for (let i = 0; i < 256; i += 7) x.fillRect(0, i, 128, 2)
+    x.fillStyle = '#2a1a0c'; x.textAlign = 'center'; x.font = 'bold 22px Oswald, Impact, sans-serif'; x.fillText('PITCHFORKS', 64, 90); x.font = 'bold 15px Oswald, sans-serif'; x.fillText('QTY 3 · THIS SIDE UP', 64, 116)
+    x.strokeStyle = '#2a1a0c'; x.lineWidth = 3; x.beginPath(); x.moveTo(64, 140); x.lineTo(64, 200); x.moveTo(44, 160); x.lineTo(64, 140); x.lineTo(84, 160); x.stroke()
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+  const card = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.9 }), cardTop = new THREE.MeshStandardMaterial({ color: '#a77a48', roughness: 0.9 })
+  for (const [x, z, yaw] of [[-97.05, 384.1, 0.3], [-96.85, 385.5, -0.2]]) {
+    const m = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.22, 0.62), [card, card, cardTop, cardTop, card, card]); b.castShadow = true; m.add(b)
+    const inner = new THREE.Group(); m.add(inner)
+    for (const [dx, dz, r] of [[-0.14, 0.1, 0.08], [0.12, -0.1, -0.1], [0.0, 0.14, 0.12]]) { const f = makeFork(); f.position.set(dx, 0.75, dz); f.rotation.set(r, dx * 3, -r); inner.add(f) }
+    scene.add(m)
+    const c = { m, half: new V3(0.31, 0.61, 0.31), r: 0.4, home: { pos: new V3(x * U, GY + 0.61, z * U), yaw }, vel: new V3(), spin: new V3(), awake: false, forks: inner }
+    crates.push(c); forkCrates.push(c)
+  }
+}
+const looseForks = []
+function spillForks(c) {
+  c.forks.visible = false
+  for (let i = 0; i < 3; i++) {
+    let f = looseForks.find((f) => !f.m.visible)
+    if (!f) { const m = makeFork(); scene.add(m); f = { m, half: new V3(0.08, 0.85, 0.08), r: 0.25, home: null, vel: new V3(), spin: new V3(), awake: false, fork: true }; looseForks.push(f); crates.push(f) }
+    const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 3
+    f.m.visible = true; f.m.position.set(c.m.position.x, c.m.position.y + 1.0, c.m.position.z); f.m.quaternion.setFromEuler(new THREE.Euler(Math.random() - 0.5, a, Math.random() - 0.5))
+    f.vel.set(c.vel.x * 0.7 + Math.cos(a) * sp, 2.5 + Math.random() * 2, c.vel.z * 0.7 + Math.sin(a) * sp); f.spin.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 10); f.awake = true
+  }
+}
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -935,7 +971,7 @@ function spillDonuts(c) {
     d.spin.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 14); d.awake = true
   }
 }
-function resetCrates() { for (const c of crates) { if (c.donut) { c.m.visible = false; c.awake = false; continue } c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+function resetCrates() { for (const c of crates) { if (c.donut || c.fork) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
@@ -955,6 +991,7 @@ function pushCrates(car) {
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
+    if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
     c.awake = true
     car.vel.multiplyScalar(0.985)
   }
@@ -979,12 +1016,12 @@ function updateCrates(dt) {
     // The ground: bounce a little, slide to a stop, and settle back flat on a face.
     // Round things (barrels, cans) can end up on their sides: rest on whichever way they fell.
     const up = _v.set(0, 1, 0).applyQuaternion(c.m.quaternion), uy = Math.abs(up.y)
-    const lying = (c.barrel || c.can) && uy < 0.6
-    const floor = GY + (c.barrel || c.can ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
+    const rolls = c.barrel || c.can || c.fork, lying = rolls && (uy < 0.6 || c.fork)
+    const floor = GY + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
       const fr = Math.exp(-6 * dt); c.vel.x *= fr; c.vel.z *= fr; c.spin.multiplyScalar(Math.exp(-5 * dt))
-      if (lying) { const hz = new V3(up.x, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
+      if (lying || c.fork) { const hz = new V3(up.x || 0.01, 0, up.z).normalize(); _q.setFromUnitVectors(new V3(0, 1, 0), hz) }
       else { _e.setFromQuaternion(c.m.quaternion, 'YXZ'); _q.setFromEuler(_e.set(0, _e.y, 0, 'YXZ')) }
       c.m.quaternion.slerp(_q, 1 - Math.exp(-6 * dt))
       if (c.vel.lengthSq() < 0.01 && c.spin.lengthSq() < 0.02) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.m.quaternion.copy(_q); c.awake = false }
