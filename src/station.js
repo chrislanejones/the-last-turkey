@@ -320,9 +320,10 @@ export function dressStation(scene, U, apronY) {
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.22, 16), M('#d9d5c8')); bed.position.set(bx, lot + 0.11, bz); g.add(bed)
       const mulch = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.35, 0.24, 16), M('#6b4f3a')); mulch.position.set(bx, lot + 0.12, bz); g.add(mulch)
       for (const [dx, dz, r] of [[0.5, 0.3, 0.55], [-0.5, 0.2, 0.5], [0, -0.6, 0.55], [0.1, 0.75, 0.4]]) { const sh = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), M('#3f6b3a', { roughness: 1 })); sh.scale.y = 0.7; sh.position.set(bx + dx, lot + 0.45, bz + dz); sh.castShadow = true; g.add(sh) }
-      cyl(steel, bx + 1.0, lot + 1.2, bz + 0.6, 0.035, 2.2, 6)
+      const stopPost = new THREE.Group(); stopPost.position.set(bx + 1.0, lot, bz + 0.6); g.add(stopPost); g.userData.stopSign = stopPost
+      { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.2, 6), steel); m.position.y = 1.15; m.castShadow = true; stopPost.add(m) }
       const stop = label('', { w: 128, h: 128, draw: (c) => { c.clearRect(0, 0, 128, 128); c.fillStyle = '#c8302b'; c.beginPath(); for (let i = 0; i < 8; i++) { const a = Math.PI / 8 + i * Math.PI / 4; c[i ? 'lineTo' : 'moveTo'](64 + Math.cos(a) * 62, 64 + Math.sin(a) * 62) } c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 5; c.stroke(); c.fillStyle = '#fff'; c.font = 'bold 40px Oswald, Impact, sans-serif'; c.textAlign = 'center'; c.fillText('STOP', 64, 79) } })
-      for (const ry of [strip.t + Math.PI / 2, strip.t - Math.PI / 2]) plane(stop, bx + 1.0, lot + 2.1, bz + 0.6, 0.8, 0.8, ry, { transparent: true, alphaTest: 0.5, side: THREE.DoubleSide })
+      for (const [ry, e] of [[strip.t + Math.PI / 2, 1], [strip.t - Math.PI / 2, -1]]) { const m = plane(stop, 0, 0, 0, 0.8, 0.8, ry, { transparent: true, alphaTest: 0.5 }); g.remove(m); m.position.set(Math.cos(strip.t) * 0.04 * e, 2.1, -Math.sin(strip.t) * 0.04 * e); stopPost.add(m) }
       g.userData.cornerBed = [bx, bz, 1.6]
     }
     // The salon in the south building: its front faces north to the lot, with a second name on the east end.
@@ -560,9 +561,11 @@ export function dressStation(scene, U, apronY) {
     { const menu = label('', { w: 256, h: 384, draw: (x) => { x.fillStyle = '#1d2a24'; x.fillRect(0, 0, 256, 384); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 34px Oswald, sans-serif'; x.fillText('MEGABUCKS', 128, 50)
         x.font = '22px Oswald, sans-serif'; ['PUMPKIN SPICE  $9', 'TURKEY LATTE  $11', 'GRAVY MOCHA  $10', 'CRANBERRY COLD BREW $12', 'BLACK COFFEE  $8'].forEach((l, i) => x.fillText(l, 128, 110 + i * 52)) } })
       // At the front mouth of the lane, facing cars as they pull in off the lot.
-      const [x, z] = at(6.0 - 0.15, 1.65 + 0.9); cyl(M('#2b2d31'), x, lot + 0.7, z, 0.06, 1.4, 6)
-      const nx = 0.5 * c + 0.85 * sn, nz = -0.5 * sn + 0.85 * c
-      plane(menu, x, lot + 1.9, z, 1.0, 1.5, Math.atan2(nx, nz)) }
+      const [x, z] = at(6.0 - 0.15, 1.65 + 0.9), post = new THREE.Group(); post.position.set(x, lot, z); g.add(post); g.userData.menuBoard = post
+      { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4, 6), M('#2b2d31')); m.position.y = 0.7; m.castShadow = true; post.add(m) }
+      const nx = 0.5 * c + 0.85 * sn, nz = -0.5 * sn + 0.85 * c, ry = Math.atan2(nx, nz)
+      const bd = new THREE.Mesh(new THREE.BoxGeometry(1.06, 1.56, 0.06), M('#2b2d31')); bd.position.y = 1.9; bd.rotation.y = ry; bd.castShadow = true; post.add(bd)
+      const f = plane(menu, 0, 0, 0, 1.0, 1.5, ry); g.remove(f); f.position.set(Math.sin(ry) * 0.035, 1.9, Math.cos(ry) * 0.035); post.add(f) }
   }
 
   // The drive-thru's open north side: square stucco pillars on stone bases carry the roof over the lane.

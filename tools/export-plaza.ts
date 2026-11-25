@@ -147,7 +147,7 @@ const inAHome = (x: number, z: number) => wb && (inFarmers(x, z) || x < -97 && x
 const bush = (...a: Parameters<typeof plants.bush>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.bush(...a)) }
 const tree = (...a: Parameters<typeof plants.tree>) => { if (!inAHome(a[0], a[1])) whole(a[0], () => plants.tree(...a)) }
 const rand = (seed: number) => { const v = Math.sin(seed * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v) }
-const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][], beds: [] as number[][], barrels: [] as number[][] }
+const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as number[][], walls: [] as number[][], drives: [] as number[][], homes: [] as number[][], beds: [] as number[][], barrels: [] as number[][], arcade: [] as number[][] }
 let thin = false
 const car = (x: number, z: number, seed: number, turn = 0, _driving = false, family?: number) => {
   if (wb && inHood(x, z)) return // keep the neighbors' driveways clear
@@ -311,6 +311,7 @@ for (let i = 0; i < 3; i++) {
   crowd.push({ id: `arcade-${s}`, seed: s, outfit: outfits[s % outfits.length], x: -86.6 + i * 3.6 + (rand(s) - .5) * .4, z: 341.1 + (rand(s + 1) - .5) * .3, pose: i % 2 ? 'chat' : 'walk', heading: (rand(s + 3) - .5) * 2.6, y: .09 })
 }
 for (const p of crowd) buildBeachPerson({ box, add, pole } as any, p)
+DATA.arcade = crowd.filter((p) => p.id.startsWith('arcade')).map((p) => [p.x * UNIT, p.z * UNIT])
 
 // Every shopper gets a buggy: a gray basket on a frame, a green handle, a bag or two in it.
 const bags = ['#a57a4a', '#d8332c', '#f2c521', '#46a04f', '#e8742c', '#f4f2ea']

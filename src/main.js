@@ -112,6 +112,7 @@ const dressing = dressStation(scene, U, APRON.y)
 const BB_POLES = [], BB_VIEW = {}
 let catTail = null, catHead = null, CAT_X = 1.2, CAT_Y = 1.0, CAT_Z = 0.05
 const SHERIFF = { x: -77.6, z: 377.2 }
+const LIQUOR_LADY = (() => { const a = DATA.arcade || []; return a.length > 1 ? { x: a[1][0], z: a[1][1] } : null })() // the shopper by Publick Liquors
 const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, hanging out over A1A Beach Blvd
 // "Call Christy Homes" billboard hugging the lot's west barrier north of Bumpkin', facing the road and Floridian.
 {
@@ -179,7 +180,7 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
 // A cat in the front window of our house on Floridian, watching the street.
 {
   const h = HOME.me, cat = new THREE.Group()
-  const fur = new THREE.MeshStandardMaterial({ color: '#d98a3c', roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: '#8a4a1c', roughness: 0.9 }), eye = new THREE.MeshStandardMaterial({ color: '#c8e04a', emissive: '#556600', emissiveIntensity: 0.4 }), pink = new THREE.MeshStandardMaterial({ color: '#e89aa0' })
+  const fur = new THREE.MeshStandardMaterial({ color: '#6b6153', roughness: 0.95 }), dark = new THREE.MeshStandardMaterial({ color: '#2b2620', roughness: 0.95 }), eye = new THREE.MeshStandardMaterial({ color: '#c8e04a', emissive: '#556600', emissiveIntensity: 0.4 }), pink = new THREE.MeshStandardMaterial({ color: '#e89aa0' })
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), fur); body.scale.set(1, 1.15, 0.85); body.position.y = 0.2; cat.add(body)
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), fur); head.position.set(0, 0.5, 0.05); cat.add(head)
   for (const e of [-1, 1]) {
@@ -191,8 +192,14 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
 
   }
   for (const dx of [-0.035, 0, 0.035]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.06, 0.02), dark); st.position.set(dx, 0.6, 0.1); st.rotation.x = -0.6; cat.add(st) } // tabby stripes
+  // Mackerel stripes: thin dark bands wrapping the body, rings on the tail, a dark line down the back.
+  // Mackerel: narrow dark stripes running down the flanks like a fish skeleton, from a dark line on the back.
+  for (const a of [0.55, 0.9, 1.25, 1.6, 1.95, 2.3]) for (const e of [-1, 1]) {
+    const st = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.009, 4, 20, 1.5), dark)
+    st.rotation.set(0, e * a, 0); st.rotation.order = 'YXZ'; const g = new THREE.Group(); g.add(st); st.rotation.z = 0.25; g.scale.set(1, 1.15, 0.85); g.position.y = 0.2; cat.add(g) }
+  { const spine = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.36, 0.02), dark); spine.position.set(0, 0.22, -0.17); cat.add(spine) }
   const nose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), pink); nose.position.set(0, 0.48, 0.18); cat.add(nose)
-  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 12, Math.PI * 1.1), fur); tail.position.set(0.12, 0.08, -0.05); tail.rotation.set(Math.PI / 2, 0, 0.6); cat.add(tail)
+  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 12, Math.PI * 1.1), dark); tail.position.set(0.12, 0.08, -0.05); tail.rotation.set(Math.PI / 2, 0, 0.6); cat.add(tail)
   cat.position.set(-471.04, 1.08, 1581.33); cat.rotation.y = 0.017; scene.add(cat); window.__cat = cat // on the sill of the front window, watching the street
   catTail = tail; catHead = head
 }
@@ -501,7 +508,7 @@ for (const e of [-1, 1]) for (const v of [-1, 1]) circles.push([-88.5 * U + e * 
 circles.push([-88.5 * U, (380.0 - 2.3) * U - 3.25, 0.6])
 // (the crossing-sign planter is a curb you hop, and its sign gets knocked down: see rideBeds and the crates)
 boxes.push({ c: new V2(-76.1 * U + 1.3, 339.8 * U - 2.5), a: new V2(1, 0), hx: 1.5, hz: 2.95 }) // the utility enclosure on the north strip's east end
-circles.push(dressing.userData.cornerBed) // and the one off the end of the west strip
+// (the stop-sign planter off the west strip's end is a curb you hop now, not a wall)
 // The drivable wedge is two convex areas that overlap: the plaza lot and the station pad.
 const mkRegion = (pts) => {
   const poly = pts.map(([x, z]) => new V2(x, z)), centroid = poly.reduce((s, p) => s.add(p), new V2()).divideScalar(poly.length)
@@ -730,7 +737,7 @@ function reset(toCutscene) {
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
   resetCrates()
-  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, conspiracy: false, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
+  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, conspiracy: false, forkTalk: false, forkReply: 0, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
   for (const c of [...sodas, ...lattes]) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
   for (const c of cans) { c.live = false; c.mesh.visible = false }
@@ -997,6 +1004,8 @@ const forkCrates = []
 const looseForks = []
 function spillForks(c) {
   c.forks.visible = false
+  if (!game.forkTalk) { game.forkTalk = true; chrisSays('MAYBE WE SHOULD THROW PITCHFORKS AT HIM.', 3)
+    game.forkReply = 3.2 }
   for (let i = 0; i < 3; i++) {
     let f = looseForks.find((f) => !f.m.visible)
     if (!f) { const m = makeFork(); scene.add(m); f = { m, half: new V3(0.08, 0.85, 0.08), r: 0.25, home: null, vel: new V3(), spin: new V3(), awake: false, fork: true }; looseForks.push(f); crates.push(f) }
@@ -1008,7 +1017,7 @@ function spillForks(c) {
 // The pedestrian-crossing sign in its planter: knock it flat, and it scrapes the Galaxie on the way down.
 { const post = dressing.userData.pedSign
   if (post) { const wp = post.getWorldPosition(new V3()); post.parent.remove(post); scene.add(post); for (const ch of post.children) ch.position.y -= 1.25 // pivot at its middle
-    crates.push({ m: post, half: new V3(0.06, 1.25, 0.06), r: 0.25, home: { pos: new V3(wp.x, GY + 1.25, wp.z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, sign: true, pivotLow: true }) } }
+    crates.push({ m: post, half: new V3(0.06, 1.25, 0.06), r: 0.25, lie: 0.43, home: { pos: new V3(wp.x, GY + 1.25, wp.z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, sign: true, pivotLow: true }) } }
 // Three roll-out trash bins behind the north strip: the conspiracy. Hit one and turkeys tumble out.
 const binTurkeys = []
 {
@@ -1050,7 +1059,7 @@ function spillTurkeys(c) {
     const um = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 8, 1, true), cloth); um.position.y = 1.1; um.castShadow = true; m.add(um)
     const tp = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 14), topM); tp.position.y = -0.5; m.add(tp)
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 12), pole); base.position.y = -1.2; m.add(base)
-    scene.add(m); crates.push({ m, half: new V3(0.35, 1.225, 0.35), r: 0.5, home: { pos: new V3(x, GY + 1.225, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, fork: false, rod: true })
+    scene.add(m); crates.push({ m, half: new V3(0.35, 1.225, 0.35), r: 0.5, lie: 0.9, home: { pos: new V3(x, GY + 1.225, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, fork: false, rod: true })
     for (let k = 0; k < 3; k++) {
       const a = k * 2.1 + e, sx = x + Math.cos(a) * 0.62, sz = z + Math.sin(a) * 0.62, st = new THREE.Group()
       const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 10), red); seat.position.y = 0.19; seat.castShadow = true; st.add(seat)
@@ -1069,7 +1078,7 @@ function spillTurkeys(c) {
     const [x, z] = at(lx, front + 0.32), m = new THREE.Group()
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.0, 12), caneM); shaft.castShadow = true; m.add(shaft)
     const hook = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.08, 10, 16, Math.PI), hookM); hook.position.set(0.28, 1.0, 0); hook.castShadow = true; m.add(hook)
-    scene.add(m); crates.push({ m, half: new V3(0.1, 1.1, 0.1), r: 0.3, home: { pos: new V3(x, GY + 1.0, z), yaw: t + Math.random() }, vel: new V3(), spin: new V3(), awake: false, rod: true })
+    scene.add(m); crates.push({ m, half: new V3(0.1, 1.1, 0.1), r: 0.3, lie: 0.12, home: { pos: new V3(x, GY + 1.0, z), yaw: t + Math.random() }, vel: new V3(), spin: new V3(), awake: false, rod: true })
   }
 }
 // The Square K price pylon: hit it hard enough and it topples, the LED prices die in a shower of sparks.
@@ -1085,6 +1094,61 @@ const pylonProp = (() => {
   const c = { m, half: new V3(0.1 * U, H / 2, 0.35 * U), r: 0.45 * U, home: { pos: new V3(-86.4 * U, GY + H / 2, 394.4 * U), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, rod: true, pylon: true, faceMat, lit: T.lit, dead: T.dead }
   crates.push(c); return c
 })()
+// Street furniture that falls over: the stop sign and Megabucks' menu board.
+for (const [key, h, lie] of [['stopSign', 2.5, 0.4], ['menuBoard', 2.7, 0.55]]) {
+  const post = dressing.userData[key]; if (!post) continue
+  const wp = post.getWorldPosition(new V3()); post.parent.remove(post); scene.add(post); for (const ch of post.children) ch.position.y -= h / 2
+  crates.push({ m: post, half: new V3(0.08, h / 2, 0.08), r: 0.3, lie, home: { pos: new V3(wp.x, GY + h / 2, wp.z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, rod: true, sign: true })
+}
+// A Cranberry Armory armored car, parked in the row in front of publick.
+{
+  const T = new THREE.Group(), L = 6.2, W = 2.4, H = 2.7
+  const body = new THREE.MeshStandardMaterial({ color: '#7a1530', roughness: 0.45, metalness: 0.35 }), steel = new THREE.MeshStandardMaterial({ color: '#9aa0a5', metalness: 0.8, roughness: 0.35 })
+  const glass = new THREE.MeshStandardMaterial({ color: '#1e2a30', roughness: 0.1, metalness: 0.5 }), tyre = new THREE.MeshStandardMaterial({ color: '#151515', roughness: 0.9 })
+  const side = (() => { const c = document.createElement('canvas'); c.width = 1024; c.height = 384; const x = c.getContext('2d')
+    x.fillStyle = '#7a1530'; x.fillRect(0, 0, 1024, 384); x.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 40; i < 1024; i += 120) x.fillRect(i, 0, 4, 384)
+    for (let i = 60; i < 1024; i += 120) for (const y of [24, 360]) { x.fillStyle = '#c9cdd0'; x.beginPath(); x.arc(i, y, 6, 0, 7); x.fill() }
+    x.fillStyle = '#f2c94c'; x.textAlign = 'center'; x.font = 'bold 112px Georgia, serif'; x.fillText('CRANBERRY', 512, 170); x.font = 'bold 84px Georgia, serif'; x.fillText('ARMORY', 512, 268)
+    x.font = 'bold 30px Oswald, sans-serif'; x.fillStyle = '#fff'; x.fillText('SECURE SAUCE TRANSPORT · SAINT PONCE', 512, 330)
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t })()
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; T.add(m); return m }
+  add(new THREE.BoxGeometry(L * 0.66, H, W), body, -L * 0.17, 0.55 + H / 2, 0) // the box
+  add(new THREE.BoxGeometry(L * 0.32, H * 0.62, W - 0.1), body, L * 0.33, 0.55 + H * 0.31, 0) // the cab
+  add(new THREE.BoxGeometry(0.06, H * 0.3, W - 0.4), glass, L * 0.49, 0.55 + H * 0.5, 0) // windshield
+  for (const e of [-1, 1]) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.64, H * 0.9), new THREE.MeshStandardMaterial({ map: side, roughness: 0.5 })); p.position.set(-L * 0.17, 0.55 + H / 2, e * (W / 2 + 0.01)); p.rotation.y = e > 0 ? 0 : Math.PI; T.add(p)
+    add(new THREE.BoxGeometry(0.7, 0.5, 0.05), glass, L * 0.36, 0.55 + H * 0.45, e * (W / 2 - 0.02))
+    for (const ax of [-L * 0.32, L * 0.3]) { const w = add(new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16), tyre, ax, 0.5, e * (W / 2 - 0.15)); w.rotation.x = Math.PI / 2
+      const hub = add(new THREE.CylinderGeometry(0.24, 0.24, 0.42, 12), steel, ax, 0.5, e * (W / 2 - 0.15)); hub.rotation.x = Math.PI / 2 }
+  }
+  add(new THREE.BoxGeometry(0.2, 0.35, W), steel, L / 2, 0.5, 0); add(new THREE.BoxGeometry(0.2, 0.35, W), steel, -L / 2, 0.5, 0)
+  add(new THREE.BoxGeometry(0.06, H * 0.8, W * 0.8), steel, -L / 2 - 0.0, 0.55 + H / 2, 0) // rear doors
+  T.position.set(-79.95 * U, GY, 353.6 * U); scene.add(T)
+  boxes.push({ c: new V2(T.position.x, T.position.z), a: new V2(1, 0), hx: L / 2 + 0.1, hz: W / 2 + 0.1 })
+}
+// Two inflatable beer-bottle balloons outside Santa Mar.
+const balloons = []
+{
+  const amber = new THREE.MeshStandardMaterial({ color: '#7a4a12', roughness: 0.3, transparent: true, opacity: 0.95 }), gold = new THREE.MeshStandardMaterial({ color: '#d9b44a', roughness: 0.5 })
+  const lab = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d')
+    x.fillStyle = '#e9d9a6'; x.fillRect(0, 0, 256, 256); x.fillStyle = '#b3261e'; x.fillRect(0, 0, 256, 28); x.fillRect(0, 228, 256, 28)
+    x.fillStyle = '#1a1a1a'; x.textAlign = 'center'; x.font = 'bold 54px Georgia, serif'; x.fillText('DOS', 128, 102); x.fillText('EXES', 128, 160); x.font = 'italic 22px Georgia, serif'; x.fillText('cerveza · no regrets', 128, 204)
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+  const labM = new THREE.MeshStandardMaterial({ map: lab, roughness: 0.6 })
+  for (const dx of [-0.75, 0.55]) {
+    const b = new THREE.Group()
+    const pts = [[0, 0], [0.55, 0.05], [0.62, 0.3], [0.62, 1.55], [0.55, 1.85], [0.24, 2.3], [0.2, 2.75], [0.24, 2.8], [0, 2.82]].map(([r, h]) => new THREE.Vector2(r, h))
+    const bottle = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), amber); bottle.castShadow = true; b.add(bottle)
+    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.635, 0.635, 0.9, 20, 1, true), labM); label.position.y = 0.95; b.add(label)
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.1, 14), gold); cap.position.y = 2.82; b.add(cap)
+    const x = (-77.1 + dx) * U, z = 342.25 * U
+    const tether = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6, 4), new THREE.MeshBasicMaterial({ color: '#f4f4f4' })); scene.add(tether)
+    b.position.set(x, GY + 1.6, z); scene.add(b); balloons.push({ b, tether, x, z, ph: dx * 3 })
+  }
+}
+function updateBalloons(t) { for (const k of balloons) { const sx = Math.sin(t * 0.9 + k.ph) * 0.12, sz = Math.cos(t * 0.7 + k.ph) * 0.1
+  k.b.rotation.set(sz, 0, -sx); k.b.position.set(k.x + sx * 1.6, GY + 1.6 + Math.sin(t * 1.3 + k.ph) * 0.05, k.z + sz * 1.6)
+  k.tether.position.set(k.x + sx * 0.8, GY + 0.8, k.z + sz * 0.8); k.tether.rotation.set(sz, 0, -sx) } }
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -1104,9 +1168,10 @@ const groundRay = new THREE.Raycaster(), groundMeshes = []
 world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
-function resetCrates() { if (pylonProp) { pylonProp.topple = null; pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
+function resetCrates() { for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
   for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
+const nxGuess = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l } }
 function pushCrates(car) {
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), speed = Math.hypot(car.vel.x, car.vel.y)
   for (const c of crates) {
@@ -1115,8 +1180,19 @@ function pushCrates(car) {
     if (dx * dx + dz * dz > (c.pylon ? 36 : 16) || p.y - c.half.y > (c.gy ?? GY) + 1.0) continue
     const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
     if (c.pylon && c.spilled) continue // once it's falling, let it fall
+    if (c.topple) { // already down: a hit just shoves it along the ground
+      if (Math.abs(along) < 2.75 + c.r && Math.abs(across) < 1.2 + c.r && c.topple.done) { c.topple.sv.set(car.vel.x * 0.8, 0, car.vel.y * 0.8); c.topple.spinY = (Math.random() - 0.5) * 3 }
+      continue }
     const pa = 2.75 + c.r * 0.8 - Math.abs(along), pc = 1.05 + c.r * 0.8 - Math.abs(across)
     if (pa <= 0 || pc <= 0) continue
+    if ((c.rod || c.sign) && !c.pylon) { // tall, thin things tip over away from the car and lie down
+      const d = new V3(car.vel.x, 0, car.vel.y); if (d.lengthSq() < 0.01) d.set(nxGuess(dx, dz).x, 0, nxGuess(dx, dz).z); d.normalize()
+      const edge = c.lie ?? c.half.x
+      c.topple = { th: 0.05, w: 1.0 + Math.min(2.5, speed * 0.12), d, axis: new V3(d.z, 0, -d.x), pivot: new V3(p.x, c.gy ?? GY, p.z).addScaledVector(d, edge + 0.15), edge, q0: c.m.quaternion.clone(), bounced: false, sv: new V3(car.vel.x * 0.45, 0, car.vel.y * 0.45), spinY: (Math.random() - 0.5) * 1.5 }
+      if (speed > 2) audio.clang(Math.min(0.7, 0.25 + speed / 30))
+      if (c.sign && !c.spilled && car === P) { c.spilled = true; game.armor = Math.max(1, game.armor - 3); hurt(1); flash('SIGN DOWN!'); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
+      car.vel.multiplyScalar(0.97); continue
+    }
     // Knock it clear of the car, carrying the car's speed plus a hop and a tumble.
     let nx, nz
     if (pa < pc) { nx = Math.sign(along) * fx; nz = Math.sign(along) * fz; p.x += nx * pa; p.z += nz * pa }
@@ -1144,6 +1220,7 @@ function pushCrates(car) {
   }
 }
 function updateCrates(dt) {
+  updateBalloons(clock.elapsedTime)
   if (pylonProp && pylonProp.sparkT > 0) { pylonProp.sparkT -= dt; if (Math.random() < 0.35) { const p = pylonProp.m.position; burst(new V2(p.x + (Math.random() - 0.5) * 2, p.z + (Math.random() - 0.5) * 2), 2, true, false, Math.random() < 0.5 ? '#ffe27a' : '#9fd8ff') } }
   pushCrates(P); pushCrates(R)
   for (const c of crates) {
@@ -1151,11 +1228,13 @@ function updateCrates(dt) {
       if (!T.done) {
         T.w += (3 * 9.8 / (2 * H)) * Math.sin(T.th) * dt; T.th += T.w * dt
         if (T.th >= Math.PI / 2) { T.th = Math.PI / 2
-          if (!T.bounced && T.w > 0.8) { T.bounced = true; T.w = -T.w * 0.18; S.hit = Math.max(S.hit, 0.5); audio.crash(0.6); for (let i = 0; i < 6; i++) burst(new V2(c.m.position.x + (Math.random() - 0.5) * 4, c.m.position.z + (Math.random() - 0.5) * 4), 2, false, false, '#9a9a90') }
+          if (!T.bounced && T.w > 0.8) { T.bounced = true; T.w = -T.w * (c.pylon ? 0.18 : 0.25); if (c.pylon) { S.hit = Math.max(S.hit, 0.5); audio.crash(0.6) } else audio.thud(0.3); if (c.pylon) for (let i = 0; i < 6; i++) burst(new V2(c.m.position.x + (Math.random() - 0.5) * 4, c.m.position.z + (Math.random() - 0.5) * 4), 2, false, false, '#9a9a90') }
           else if (T.bounced && T.w >= 0) { T.w = 0; T.done = true } } }
+      if (T.sv) { T.pivot.addScaledVector(T.sv, dt); T.sv.multiplyScalar(Math.exp(-dt * (T.done ? 4 : 1.5))); if (T.done && T.spinY) { T.yaw = (T.yaw ?? 0) + T.spinY * dt; T.spinY *= Math.exp(-dt * 4) } }
       const q = new THREE.Quaternion().setFromAxisAngle(T.axis, T.th)
+      if (T.yaw) q.premultiply(new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), T.yaw))
       c.m.quaternion.copy(q).multiply(T.q0)
-      const v0 = T.d.clone().multiplyScalar(-c.half.x).add(new V3(0, c.half.y, 0)).applyQuaternion(q)
+      const v0 = T.d.clone().multiplyScalar(-(T.edge ?? c.half.x)).add(new V3(0, c.half.y, 0)).applyQuaternion(q)
       c.m.position.copy(T.pivot).add(v0); c.awake = false; continue }
     if (!c.awake) continue
     const p = c.m.position
@@ -1236,6 +1315,7 @@ function updateCans(dt) {
 // --- her weapon: three soda cans, thrown back at the wagon once he has started it -------------
 const sodaMat = [new THREE.MeshStandardMaterial({ color: '#1f6fd0', roughness: 0.35, metalness: 0.4 }), new THREE.MeshStandardMaterial({ color: '#c9cdd0', metalness: 0.9, roughness: 0.3 }), new THREE.MeshStandardMaterial({ color: '#c9cdd0', metalness: 0.9, roughness: 0.3 })]
 const sodas = Array.from({ length: 3 }, () => { const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.26, 12), sodaMat); mesh.visible = false; mesh.castShadow = true; scene.add(mesh); return { mesh, vel: new V3(), live: false } })
+function ladyBubble(text, t) { $('bubble4').textContent = text; $('bubble4').classList.add('show'); game.b4T = t }
 function chrisSays(text, t) { if (game.b2T > 0.2) { game.chrisNext = [text, t]; return } $('bubble3').textContent = text; $('bubble3').classList.add('show'); game.b3T = t } // he waits for Becky to finish
 function freeDrive() {
   if (game.state === 'cutscene') { R.pos.copy(R_START.pos); R.heading = R_START.heading; R.vel.set(0, 0) }
@@ -1262,6 +1342,8 @@ function throwSoda() {
 function updateSodas(dt) {
   if (game.b3T > 0) { game.b3T -= dt; if (game.b3T <= 0) $('bubble3').classList.remove('show') }
   if (game.b2T > 0) { game.b2T -= dt; if (game.b2T <= 0 && game.state !== 'cutscene') $('bubble2').classList.remove('show') }
+  if (game.forkReply > 0 && (game.forkReply -= dt) <= 0) { $('bubble2').textContent = 'DON’T TAKE THOSE, OR THE FARMERS WILL BE MAD.'; $('bubble2').classList.add('show'); game.b2T = 3.4 }
+  if (game.b4T > 0) { game.b4T -= dt; if (game.b4T <= 0) $('bubble4').classList.remove('show') }
   if (game.chrisNext && game.b2T <= 0.2) { const [tx, tt] = game.chrisNext; game.chrisNext = null; chrisSays(tx, tt) }
   for (const c of [...sodas, ...lattes]) {
     if (!c.live) continue
@@ -1306,6 +1388,10 @@ function update(dt) {
   { const t = Math.atan2(0.968, -0.249), mx = (-93.25 + 6.5 * Math.cos(t)) * U, mz = (364.09 - 6.5 * Math.sin(t)) * U
     if (Math.hypot(P.pos.x - mx, P.pos.y - mz) < 14 && (game.psT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'FORGET THE TURKEY, I’D RATHER HAVE PUMPKIN SPICE. CAN WE STOP? LET’S GET THE PUMPKIN SPICE.'; $('bubble2').classList.add('show'); game.b2T = 4.2; game.psT = 30 }
     game.psT = (game.psT ?? 0) - dt }
+  // The lady outside Publick Liquors calls out to us by name.
+  { const lq = LIQUOR_LADY; if (lq) { const d = Math.hypot(P.pos.x - lq.x, P.pos.y - lq.z)
+    if (d < 24 && (game.liqT ?? 0) <= 0) { ladyBubble('CHRIS AND BECKY! TEQUILA’S ON SALE — COME AND GET IT!', 3.5); game.liqT = 30 }
+    game.liqT = (game.liqT ?? 0) - dt } }
   // Under the sheriff's dog billboard.
   { const d = Math.hypot(P.pos.x - SHERIFF.x * U, P.pos.y - SHERIFF.z * U)
     if (d < 16 && (game.dogT ?? 0) <= 0 && game.b2T <= 0) { $('bubble2').textContent = 'MAN, ALL OF A SUDDEN I REALLY WANT A DOG.'; $('bubble2').classList.add('show'); game.b2T = 3; game.dogT = 30; game.dog2 = 2.4 }
@@ -1661,7 +1747,8 @@ function hud() {
   // Over Chris, in the driver's seat on the left.
   { const h = P.heading, sx = -0.4, sz = 0.22; proj.set(P.pos.x + sx * Math.cos(h) + sz * Math.sin(h), GY + 2.25, P.pos.y - sx * Math.sin(h) + sz * Math.cos(h)).project(camera) }
   const b3 = $('bubble3'); b3.style.left = `${(proj.x * 0.5 + 0.5) * innerWidth}px`; b3.style.top = `${(-proj.y * 0.5 + 0.5) * innerHeight - ($('bubble2').classList.contains('show') ? 64 : 0)}px`
-  for (const id of ['bubble', 'bubble2', 'bubble3']) { const e = $(id); if (!e.classList.contains('show')) continue
+  if (LIQUOR_LADY) { proj.set(LIQUOR_LADY.x, GY + 2.2, LIQUOR_LADY.z).project(camera); const b4 = $('bubble4'); b4.style.left = `${(proj.x * 0.5 + 0.5) * innerWidth}px`; b4.style.top = `${(-proj.y * 0.5 + 0.5) * innerHeight}px`; b4.style.visibility = proj.z < 1 ? 'visible' : 'hidden' }
+  for (const id of ['bubble', 'bubble2', 'bubble3', 'bubble4']) { const e = $(id); if (!e.classList.contains('show')) continue
     const w = e.offsetWidth, x = parseFloat(e.style.left) || 0, m = 8
     e.style.left = `${THREE.MathUtils.clamp(x, w / 2 + m, innerWidth - w / 2 - m)}px` } // never off the edge of a phone screen
   drawMinimap()
