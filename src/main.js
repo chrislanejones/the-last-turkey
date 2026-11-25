@@ -497,6 +497,52 @@ regions.push(mkRegion([[-124.5, 387.95], [-93.2, 387.95], [-93.2, 391.3], [-124.
 // ...and the two neighbors' driveways, each reaching past the middle of the street.
 for (const d of [HOME.me, HOME.them]) { const x = d[0] / U; regions.push(mkRegion([[x - 0.46, 387.2], [x + 0.46, 387.2], [x + 0.46, 389.7], [x - 0.46, 389.7]].map(([x, z]) => [x * U, z * U]))) }
 circles.push(...tableSpots)
+
+// A dropped 53-foot reefer trailer in front of the north strip: no tractor, landing gear down,
+// TURKEY TRUCK down both sides, and the back doors swung wide open on an empty box.
+{
+  const T = new THREE.Group(); T.position.set(-78 * U, 0, 344.45 * U); scene.add(T) // long axis along x, doors at the west end
+  const L = 16, Wd = 2.6, Hb = 2.9, deck = 1.25
+  const white = new THREE.MeshStandardMaterial({ color: '#f1f1ec', roughness: 0.5, metalness: 0.15 }), steel = new THREE.MeshStandardMaterial({ color: '#9aa0a5', metalness: 0.7, roughness: 0.4 })
+  const dark = new THREE.MeshStandardMaterial({ color: '#3a3d40', roughness: 0.9 }), inside = new THREE.MeshStandardMaterial({ color: '#a9aeb0', roughness: 0.85, side: THREE.DoubleSide })
+  const tyre = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.9 })
+  const part = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; T.add(m); return m }
+  const side = (() => { const c = document.createElement('canvas'); c.width = 1024; c.height = 192; const x = c.getContext('2d')
+    x.fillStyle = '#f1f1ec'; x.fillRect(0, 0, 1024, 192); x.fillStyle = '#b3261e'; x.fillRect(0, 128, 1024, 26)
+    for (let i = 0; i < 12; i++) { x.beginPath(); x.moveTo(560 + i * 34, 128); x.lineTo(584 + i * 34, 141); x.lineTo(560 + i * 34, 154); x.fill() }
+    x.fillStyle = '#7a3b16'; x.font = 'bold 92px Oswald, Impact, sans-serif'; x.fillText('TURKEY TRUCK', 40, 104)
+    x.font = 'bold 22px Oswald, sans-serif'; x.fillStyle = '#555'; x.fillText('FRESH BIRDS · SAINT PONCE · SINCE NEVER', 44, 182)
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t })()
+  // The box: floor, roof, front wall and two sides, open at the back.
+  part(new THREE.BoxGeometry(L, 0.12, Wd), dark, 0, deck, 0)
+  part(new THREE.BoxGeometry(L, 0.08, Wd), white, 0, deck + Hb, 0)
+  part(new THREE.BoxGeometry(0.1, Hb, Wd), white, L / 2, deck + Hb / 2, 0)
+  part(new THREE.BoxGeometry(0.4, 1.2, 1.9), steel, L / 2 + 0.25, deck + Hb - 0.8, 0) // reefer unit on the nose
+  for (const e of [-1, 1]) {
+    part(new THREE.BoxGeometry(L, Hb, 0.06), white, 0, deck + Hb / 2, e * Wd / 2)
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.98, L * 0.98 * 192 / 1024 * 1.25), new THREE.MeshStandardMaterial({ map: side, roughness: 0.6 }))
+    sign.position.set(0, deck + Hb * 0.55, e * (Wd / 2 + 0.035)); sign.rotation.y = e > 0 ? 0 : Math.PI; T.add(sign)
+    // Inside face, plain and empty.
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(L, Hb), inside); wall.position.set(0, deck + Hb / 2, e * (Wd / 2 - 0.035)); T.add(wall)
+    // Rear door, swung all the way round flat against the side, hinged at the back corner.
+    const door = new THREE.Group(); door.position.set(-L / 2, deck + Hb / 2, e * (Wd / 2 + 0.05)); door.rotation.y = e * -0.5; T.add(door) // swung wide, ~150° open
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(Wd / 2, Hb - 0.1, 0.05), white); leaf.position.x = -Wd / 4 * e * -1; leaf.position.x = Wd / 4; leaf.castShadow = true; door.add(leaf)
+    for (const y of [-0.9, 0, 0.9]) { const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, Hb - 0.3, 6), steel); bar.position.set(Wd / 4 + (y * 0.2), 0, 0.05); door.add(bar) ; break }
+  }
+  const inFloor = new THREE.Mesh(new THREE.PlaneGeometry(L, Wd), inside); inFloor.rotation.x = -Math.PI / 2; inFloor.position.set(0, deck + 0.065, 0); T.add(inFloor)
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(L, Wd), inside); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, deck + Hb - 0.05, 0); T.add(ceil)
+  part(new THREE.BoxGeometry(0.15, 0.25, Wd), steel, -L / 2 + 0.05, deck - 0.1, 0) // rear sill
+  part(new THREE.BoxGeometry(0.1, 0.35, Wd - 0.2), steel, -L / 2 + 0.35, 0.55, 0) // bumper
+  // Tandem axles near the back, chassis rails, landing gear at the front.
+  for (const e of [-1, 1]) part(new THREE.BoxGeometry(L - 0.4, 0.25, 0.12), dark, 0, deck - 0.2, e * 0.5)
+  for (const ax of [-L / 2 + 2.2, -L / 2 + 3.45]) for (const e of [-1, 1]) {
+    const w = part(new THREE.CylinderGeometry(0.52, 0.52, 0.55, 16), tyre, ax, 0.52, e * (Wd / 2 - 0.35)); w.rotation.x = Math.PI / 2
+    const hub = part(new THREE.CylinderGeometry(0.28, 0.28, 0.57, 12), steel, ax, 0.52, e * (Wd / 2 - 0.35)); hub.rotation.x = Math.PI / 2
+  }
+  for (const e of [-1, 1]) { part(new THREE.BoxGeometry(0.14, deck - 0.1, 0.14), steel, L / 2 - 4, (deck - 0.1) / 2, e * 0.8); part(new THREE.BoxGeometry(0.5, 0.06, 0.5), steel, L / 2 - 4, 0.03, e * 0.8) }
+  T.position.y = GY - 0.005
+  boxes.push({ c: new V2(T.position.x, T.position.z), a: new V2(1, 0), hx: L / 2 + 0.2, hz: Wd / 2 + 0.3 })
+}
 boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(1, 0), hx: (POND.x1 - POND.x0) / 2 * U - 1, hz: (POND.z1 - POND.z0) / 2 * U - 1 }) // no swimming
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
 regions.push(mkRegion([[-124.5, 382.6], [-95.6, 382.6], [-95.6, 391.5], [-124.5, 391.5]].map(([x, z]) => [x * U, z * U])))
