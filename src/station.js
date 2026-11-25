@@ -71,12 +71,12 @@ export function dressStation(scene, U, apronY) {
   const joint = new THREE.MeshBasicMaterial({ color: '#8f8d85' })
   const ax0 = -91.6 * U, ax1 = -85.4 * U, az0 = 386.9 * U, az1 = 393.1 * U
   for (let i = 1; i < 4; i++) {
-    box(joint, ax0 + (ax1 - ax0) * i / 4, y0 + 0.004, (az0 + az1) / 2, 0.05, 0.006, az1 - az0, false)
-    box(joint, (ax0 + ax1) / 2, y0 + 0.004, az0 + (az1 - az0) * i / 4, ax1 - ax0, 0.006, 0.05, false)
+    box(joint, ax0 + (ax1 - ax0) * i / 4, y0 + 0.012, (az0 + az1) / 2, 0.05, 0.006, az1 - az0, false)
+    box(joint, (ax0 + ax1) / 2, y0 + 0.012, az0 + (az1 - az0) * i / 4, ax1 - ax0, 0.006, 0.05, false)
   }
   const stain = new THREE.MeshBasicMaterial({ color: '#3a3a36', transparent: true, opacity: 0.28, depthWrite: false })
   for (const [sx, sz, r] of [[-89.1, 391.2, 0.9], [-88.0, 391.3, 0.6], [-88.5, 389.0, 0.8], [-89.3, 390.1, 0.5], [-87.9, 390.1, 0.7]]) {
-    const m = new THREE.Mesh(new THREE.CircleGeometry(r, 16), stain); m.rotation.x = -Math.PI / 2; m.scale.x = 1.5; m.position.set(sx * U, y0 + 0.012, sz * U); g.add(m)
+    const m = new THREE.Mesh(new THREE.CircleGeometry(r, 16), stain); m.rotation.x = -Math.PI / 2; m.scale.x = 1.5; m.position.set(sx * U, y0 + 0.02, sz * U); g.add(m)
   }
 
   // Store front (faces south): labelled ice chests, a propane cage, window posters, a bin.
@@ -226,7 +226,7 @@ export function dressStation(scene, U, apronY) {
       const post = new THREE.Group(); post.position.set(bx, lot, bz); g.add(post); g.userData.pedSign = post
       { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.4, 6), steel); m.position.y = 1.3; m.castShadow = true; post.add(m) }
       const ped = label('', { w: 128, h: 128, bg: 'rgba(0,0,0,0)', draw: (c) => { c.clearRect(0, 0, 128, 128); c.fillStyle = '#f1c62f'; c.beginPath(); c.moveTo(64, 4); c.lineTo(124, 64); c.lineTo(64, 124); c.lineTo(4, 64); c.fill(); c.strokeStyle = '#111'; c.lineWidth = 4; c.stroke(); c.fillStyle = '#111'; c.beginPath(); c.arc(66, 36, 8, 0, 7); c.fill(); c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(64, 48); c.lineTo(60, 76); c.lineTo(46, 100); c.moveTo(60, 76); c.lineTo(78, 98); c.moveTo(62, 54); c.lineTo(44, 68); c.moveTo(63, 54); c.lineTo(82, 66); c.stroke() } })
-      for (const ry of [t, t + Math.PI]) { const m = plane(ped, bx, lot + 2.2, bz, 0.85, 0.85, ry, { transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }); g.remove(m); m.position.set(0, 2.2, 0); post.add(m) }
+      for (const [ry, e] of [[t, 1], [t + Math.PI, -1]]) { const m = plane(ped, bx, lot + 2.2, bz, 0.85, 0.85, ry, { transparent: true, alphaTest: 0.5 }); g.remove(m); m.position.set(Math.sin(t) * 0.05 * e, 2.2, Math.cos(t) * 0.05 * e); post.add(m) } // a face on each side, the post between them
     }
   }
   
@@ -296,7 +296,7 @@ export function dressStation(scene, U, apronY) {
     }
     // West strip: an awning over every other bay that has no name on it.
     const strip = frame(-93.25, 364.09, Math.atan2(0.968, -0.249)), bay = 14.7 / 12
-    const cols = ['#2f7d5a', '#2f6fc4', '#22305c', '#2f7d5a', '#e8a020'] // navy over Joisey Mick's
+    const cols = ['#2f7d5a', '#b3261e', '#22305c', '#2f7d5a', '#e8a020'] // red over the Christmas shop, navy over Joisey Mick's
     ;[1, 3, 5, 10].forEach((k, i) => awning(strip, -7.35 + (k + 0.5) * bay, 1.65 + 0.03, lot + 1.0 * U, bay * U - 1.6, cols[i]))
     // The ice-cream shop next door to Megabucks, on the bay that had no name.
     { const ice = label('', { w: 512, h: 160, draw: (x) => {
@@ -381,15 +381,6 @@ export function dressStation(scene, U, apronY) {
     } })
     { const W = (14.9 - 0.2) / 12 * U + 0.5, [x, z] = at(bay, front + 0.045); plane(banner, x, 0.82 * U, z, W, W * 232 / 1024, t)
       const rope = M('#d8d2c0'); for (const e of [-1, 1]) { const [rx, rz] = at(bay + e * (W / U / 2 + 0.03), front + 0.04); cyl(rope, rx, 0.82 * U, rz, 0.02, W * 232 / 1024, 4) } }
-    // Patio: two blue umbrellas over little tables with red stools.
-    const pole = M('#3b3f44', { metalness: 0.5 }), cloth = M('#22305c', { side: THREE.DoubleSide }), top = M('#2a4f9e'), red = M('#c8302b')
-    for (const e of [-0.42, 0.42]) {
-      const [x, z] = at(bay + e, front - 0.12)
-      cyl(pole, x, 1.25, z, 0.04, 2.45, 6)
-      const um = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 8, 1, true), cloth); um.position.set(x, 2.35, z); um.castShadow = true; g.add(um)
-      cyl(top, x, 0.0451 * U + 0.72, z, 0.38, 0.04, 14)
-      for (let k = 0; k < 3; k++) { const a = k * 2.1 + e, sx = x + Math.cos(a) * 0.62, sz = z + Math.sin(a) * 0.62; cyl(red, sx, 0.0451 * U + 0.42, sz, 0.17, 0.05, 10); for (const d of [[-1, -1], [1, 1], [-1, 1], [1, -1]]) cyl(red, sx + d[0] * 0.1, 0.0451 * U + 0.2, sz + d[1] * 0.1, 0.015, 0.42, 4) }
-    }
   }
 
   // The pylon sign at the A1A Beach Blvd entrance, re-faced: PONCE PLAZA up top, publick and two tenants below.
@@ -541,7 +532,10 @@ export function dressStation(scene, U, apronY) {
     // The lane: dark ceiling, a light, and the pickup window on the south side wall.
     { const [x, z] = at(6.5, 0); const ceil = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * U, 3.3 * U), M('#4a4038', { side: THREE.DoubleSide })); ceil.rotation.set(Math.PI / 2, 0, -t); ceil.position.set(x, 0.8 * U - 0.02, z); g.add(ceil) }
     const win = label('', { w: 256, h: 192, draw: (x) => { x.fillStyle = '#2b2f31'; x.fillRect(0, 0, 256, 192); x.fillStyle = '#e8d9b8'; x.fillRect(14, 14, 228, 164); x.fillStyle = '#c9b48a'; x.fillRect(14, 120, 228, 58); x.fillStyle = green; x.fillRect(14, 14, 228, 26); x.fillStyle = '#fff'; x.font = 'bold 20px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('PICK UP HERE', 128, 34) } })
-    { const [x, z] = at(6.0 + 0.012, -0.3); plane(win, x, lot + 1.75, z, 1.6, 1.2, t + Math.PI / 2) }
+    { const [x, z] = at(6.0 + 0.012, -0.3); plane(win, x, lot + 1.75, z, 1.6, 1.2, t + Math.PI / 2)
+      // A raised green frame round the window so it reads from any angle.
+      const fr = M('#1f6b45'), F = new THREE.Group(); F.position.set(x, lot + 1.75, z); F.rotation.y = t + Math.PI / 2; g.add(F)
+      for (const [w, h, px, py] of [[1.8, 0.12, 0, 0.66], [1.8, 0.12, 0, -0.66], [0.12, 1.44, 0.86, 0], [0.12, 1.44, -0.86, 0]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.1), fr); m.position.set(px, py, 0.04); F.add(m) } }
     // The barista, leaning out of the window.
     {
       const [x, z] = at(6.0 + 0.03, -0.3), b = new THREE.Group(); b.position.set(x, lot, z); b.rotation.y = t + Math.PI / 2; g.add(b) // standing in the window, not out in the lane
@@ -579,6 +573,35 @@ export function dressStation(scene, U, apronY) {
       const b = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.9, 0.86), M('#b3a38b')); b.position.set(x, lot + 0.45, z); b.rotation.y = t; g.add(b)
       const k = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.14, 0.86), M('#cfb07a')); k.position.set(x, lot + H - 0.07, z); k.rotation.y = t; g.add(k)
     }
+  }
+
+  // The Christmas shop, in the two bays left of Joisey Mick's (over the old stretch studio): a red-and-green
+  // sign, wreaths, and "TOO SOON" sprayed all over its windows by unimpressed locals.
+  {
+    const t = Math.atan2(0.968, -0.249), X = [Math.cos(t), -Math.sin(t)], Z = [Math.sin(t), Math.cos(t)]
+    const at = (lx, lz) => [(-93.25 + lx * X[0] + lz * Z[0]) * U, (364.09 + lx * X[1] + lz * Z[1]) * U]
+    const bayC = (k) => -7.35 + (k + 0.5) * 1.225, lot = 0.045 * U
+    const sign = label('', { w: 1024, h: 160, draw: (x) => {
+      x.fillStyle = '#dcbf86'; x.fillRect(0, 0, 1024, 160); x.fillStyle = '#b3261e'; x.beginPath(); x.roundRect(20, 14, 984, 132, 26); x.fill()
+      x.strokeStyle = '#f4f1e8'; x.lineWidth = 6; x.setLineDash([22, 14]); x.strokeRect(34, 28, 956, 104); x.setLineDash([])
+      x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 92px Georgia, serif'; x.fillText('NORTH POLE OUTLET', 512, 112)
+      x.fillStyle = '#2f7d32'; for (const px of [70, 954]) { x.beginPath(); x.moveTo(px, 40); x.lineTo(px + 26, 110); x.lineTo(px - 26, 110); x.fill() }
+    } })
+    { const [x, z] = at((bayC(3) + bayC(4)) / 2, 1.65 + 0.075); plane(sign, x, (1.45 - 0.2) * U, z, 2.35 * U, 2.35 * U * 160 / 1024, t, { emissive: '#ffffff', emissiveMap: sign, emissiveIntensity: 0.15 }) }
+    // Graffiti: a few different hands, colours and angles.
+    const tags = [['TOO SOON', '#e8268c', -0.12], ['IT’S TOO SOON', '#2fd04a', 0.08], ['TOO SOON!!', '#f0e030', -0.05], ['NOT YET', '#38a8ff', 0.15], ['TOO SOON', '#ff7a1a', 0.1], ['IT’S NOT EVEN THANKSGIVING', '#ff3b3b', -0.07]]
+    const spray = (txt, col, rot) => label('', { w: 512, h: 256, bg: 'rgba(0,0,0,0)', draw: (x) => { x.clearRect(0, 0, 512, 256); x.save(); x.translate(256, 128); x.rotate(rot)
+      let px = 120; do { x.font = `bold ${px}px 'Marker Felt', 'Comic Sans MS', Impact, sans-serif`; px -= 4 } while (x.measureText(txt).width > 470)
+      x.textAlign = 'center'; x.lineJoin = 'round'; x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 10; x.strokeText(txt, 0, px * 0.35); x.fillStyle = col; x.fillText(txt, 0, px * 0.35)
+      for (let i = 0; i < 18; i++) { x.globalAlpha = 0.6; x.fillRect((Math.random() - 0.5) * 420, px * 0.4 + Math.random() * 60, 4, 10 + Math.random() * 40) } x.restore() } })
+    const winZ = 1.65 - 0.75 + 0.02
+    ;[[3, -0.2, 0.1], [3, 0.22, -0.08], [4, -0.22, 0.06], [4, 0.2, -0.1], [3, 0.0, -0.18], [4, 0.0, 0.12]].forEach(([k, dx, dy], i) => {
+      const [x, z] = at(bayC(k) + dx, winZ + i * 0.002); const [txt, col, rot] = tags[i]
+      plane(spray(txt, col, rot), x, lot + (0.42 + dy) * U, z, 0.62 * U, 0.31 * U, t, { transparent: true, depthWrite: false }) })
+    // A wreath on each door pier.
+    const green = M('#2f6b34'), red = M('#c8241a')
+    for (const k of [3, 4]) { const [x, z] = at(bayC(k) - 0.5, 1.65 - 0.1 + 0.07); const w = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.11, 8, 18), green); w.position.set(x, lot + 2.3, z); w.rotation.y = t; g.add(w)
+      const bow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.06), red); bow.position.set(x, lot + 2.0, z); bow.rotation.y = t; g.add(bow) }
   }
   return g
 }

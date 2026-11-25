@@ -553,7 +553,7 @@ regions.push(mkRegion([[-124.5, 382.6], [-95.6, 382.6], [-95.6, 391.5], [-124.5,
 // The 280 Floridian lot, south of the street, open up to the barrier at the road block.
 regions.push(mkRegion([[-100.75, 391.0], [-92.0, 391.0], [-92.0, 396.25], [-100.75, 396.25]].map(([x, z]) => [x * U, z * U])))
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
-for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45 })
+for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45, low: true })
 circles.push([-74.9 * U, 349.5 * U, 1.3]) // the plaza's pylon sign by its entrance
 circles.push([-83.72 * U, 379.6 * U, 1.6]) // the bank's sign
 for (const [x, z] of [[-72.0, 341.6], [-73.05, 345.0], [-74.2, 348.6], [-76.5, 356.0], [-78.1, 361.5], [-80.2, 368.5]]) circles.push([x * U, z * U, 0.45]) // roadside palms
@@ -989,6 +989,43 @@ function spillTurkeys(c) {
   if (!game.conspiracy) { game.conspiracy = true; $('bubble2').textContent = 'WHAT IN THE WORLD? HOW IS THERE ONLY ONE TURKEY? THEY’RE ALL IN THESE TRASH CANS!'; $('bubble2').classList.add('show'); game.b2T = 4.5
     chrisSays('IT’S A CONSPIRACY!', 3) }
 }
+
+// Knock-around things on the south strip's walk: Joisey Mick's patio (two umbrella tables, six stools)
+// and the Christmas shop's giant candy canes.
+{
+  const t = Math.atan2(0.968, -0.249), c = Math.cos(t), sn = Math.sin(t)
+  const at = (lx, lz) => [(-93.25 + lx * c + lz * sn) * U, (364.09 - lx * sn + lz * c) * U]
+  const pole = new THREE.MeshStandardMaterial({ color: '#3b3f44', metalness: 0.5 }), cloth = new THREE.MeshStandardMaterial({ color: '#22305c', side: THREE.DoubleSide }), topM = new THREE.MeshStandardMaterial({ color: '#2a4f9e' }), red = new THREE.MeshStandardMaterial({ color: '#c8302b' })
+  const bay = -0.6125, front = 1.65
+  for (const e of [-0.42, 0.42]) {
+    const [x, z] = at(bay + e, front - 0.12)
+    const m = new THREE.Group()
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.45, 6), pole); m.add(p)
+    const um = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.5, 8, 1, true), cloth); um.position.y = 1.1; um.castShadow = true; m.add(um)
+    const tp = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 14), topM); tp.position.y = -0.5; m.add(tp)
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 12), pole); base.position.y = -1.2; m.add(base)
+    scene.add(m); crates.push({ m, half: new V3(0.35, 1.225, 0.35), r: 0.5, home: { pos: new V3(x, GY + 1.225, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, fork: false, rod: true })
+    for (let k = 0; k < 3; k++) {
+      const a = k * 2.1 + e, sx = x + Math.cos(a) * 0.62, sz = z + Math.sin(a) * 0.62, st = new THREE.Group()
+      const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 10), red); seat.position.y = 0.19; seat.castShadow = true; st.add(seat)
+      for (const d of [[-1, -1], [1, 1], [-1, 1], [1, -1]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.42, 4), red); l.position.set(d[0] * 0.1, -0.02, d[1] * 0.1); st.add(l) }
+      scene.add(st); crates.push({ m: st, half: new V3(0.17, 0.22, 0.17), r: 0.22, home: { pos: new V3(sx, GY + 0.22, sz), yaw: a }, vel: new V3(), spin: new V3(), awake: false })
+    }
+  }
+  // Candy canes, taller than a person, in front of the Christmas shop.
+  const caneTex = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 256; const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 64, 256); x.fillStyle = '#d0142c'
+    for (let i = -2; i < 12; i++) { x.beginPath(); x.moveTo(0, i * 26); x.lineTo(64, i * 26 - 30); x.lineTo(64, i * 26 - 16); x.lineTo(0, i * 26 + 14); x.fill() }
+    const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(1, 3); return tx })()
+  const caneM = new THREE.MeshStandardMaterial({ map: caneTex, roughness: 0.35 })
+  const hookTex = caneTex.clone(); hookTex.repeat.set(3, 1); hookTex.needsUpdate = true
+  const hookM = new THREE.MeshStandardMaterial({ map: hookTex, roughness: 0.35 })
+  for (const lx of [-3.5, -2.85, -2.2, -1.55]) {
+    const [x, z] = at(lx, front + 0.32), m = new THREE.Group()
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.0, 12), caneM); shaft.castShadow = true; m.add(shaft)
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.08, 10, 16, Math.PI), hookM); hook.position.set(0.28, 1.0, 0); hook.castShadow = true; m.add(hook)
+    scene.add(m); crates.push({ m, half: new V3(0.1, 1.1, 0.1), r: 0.3, home: { pos: new V3(x, GY + 1.0, z), yaw: t + Math.random() }, vel: new V3(), spin: new V3(), awake: false, rod: true })
+  }
+}
 const donutCols = ['#e9a6c2', '#6b3f22', '#f4e2b8', '#c8302b', '#f1b62f']
 const donutGeo = (() => { const g = new THREE.TorusGeometry(0.11, 0.055, 8, 14); g.rotateX(Math.PI / 2); return g })()
 const donutMats = donutCols.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
@@ -1055,7 +1092,7 @@ function updateCrates(dt) {
     // The ground: bounce a little, slide to a stop, and settle back flat on a face.
     // Round things (barrels, cans) can end up on their sides: rest on whichever way they fell.
     const up = _v.set(0, 1, 0).applyQuaternion(c.m.quaternion), uy = Math.abs(up.y)
-    const rolls = c.barrel || c.can || c.fork || c.sign, lying = rolls && (uy < 0.6 || c.fork || c.sign)
+    const rolls = c.barrel || c.can || c.fork || c.sign || c.rod, lying = rolls && (uy < 0.6 || c.fork || c.sign || (c.rod && uy < 0.85))
     const floor = (c.gy ?? GY) + (rolls ? uy * c.half.y + Math.sqrt(1 - uy * uy) * c.half.x : c.half.y)
     if (p.y < floor) {
       p.y = floor; if (c.vel.y < 0) c.vel.y *= -0.25
@@ -1226,7 +1263,9 @@ function update(dt) {
 // Mulch beds in the lot: the Galaxie hops up onto the concrete curb, rides over, and takes a scrape.
 const BEDS = (DATA.beds || []).map(([x, z, w, d, t, top]) => ({ x, z, hw: w / 2 + 0.05, hd: d / 2 + 0.05, c: Math.cos(t), s: Math.sin(t), h: top - GY }))
 const onBed = (x, z) => { for (const b of BEDS) { const dx = x - b.x, dz = z - b.z, lx = dx * b.c - dz * b.s, lz = dx * b.s + dz * b.c; if (Math.abs(lx) < b.hw && Math.abs(lz) < b.hd) return b.h } return 0 }
-BEDS.push({ x: PED_BED[0] * U, z: PED_BED[1] * U, hw: 1.3, hd: 1.3, c: 1, s: 0, h: 0.24 }) // the round crossing-sign planter
+BEDS.push({ x: PED_BED[0] * U, z: PED_BED[1] * U, hw: 1.3, hd: 1.3, c: 1, s: 0, h: 0.36 }) // the round crossing-sign planter: a taller curb than the palm islands
+{ const t = Math.atan2(0.968, -0.249), lx = 8.2, lz = 1.0 // the round stop-sign planter off the north end of the west strip
+  BEDS.push({ x: (-93.25 + lx * Math.cos(t) + lz * Math.sin(t)) * U, z: (364.09 - lx * Math.sin(t) + lz * Math.cos(t)) * U, hw: 1.5, hd: 1.5, c: 1, s: 0, h: 0.36 }) }
 Object.assign(P, { curbLift: 0, curbPitch: 0, curbRoll: 0, curbWheels: 0 })
 function rideBeds(dt, live) {
   const fx = Math.sin(P.heading), fz = Math.cos(P.heading), rx = fz, rz = -fx
@@ -1316,6 +1355,24 @@ addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey)) return
   if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomBy(0.88) } else if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomBy(1 / 0.88) } else if (e.key === '0') { e.preventDefault(); camZoom = 1 }
 })
+// Does the line from the car to the camera pass through a building's footprint (not a low barrier)?
+let camLift = 0, camLiftT = 0, camSwing = 0, camArm = 1
+function camBlocked(x0, z0, x1, z1) {
+  let best = Infinity
+  for (const b of boxes) {
+    if (b.low || b.hx < 0.6) continue
+    const ax = b.a.x, az = b.a.y, px = x0 - b.c.x, pz = z0 - b.c.y, dx = x1 - x0, dz = z1 - z0
+    const u0 = px * ax + pz * az, v0 = -px * az + pz * ax, du = dx * ax + dz * az, dv = -dx * az + dz * ax
+    let t0 = 0, t1 = 1
+    for (const [p, d, h] of [[u0, du, b.hx + 0.4], [v0, dv, b.hz + 0.4]]) {
+      if (Math.abs(d) < 1e-6) { if (Math.abs(p) > h) { t0 = 2; break } continue }
+      let ta = (-h - p) / d, tb = (h - p) / d; if (ta > tb) [ta, tb] = [tb, ta]
+      t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) break
+    }
+    if (t0 <= t1 && t0 < 1 && t1 > 0.05) best = Math.min(best, Math.max(0, t0))
+  }
+  return best
+}
 const CAM_NAMES = ['CHASE CAM', 'CLOSE CAM']
 function cycleCam() { camMode = (camMode + 1) % 2; flash(CAM_NAMES[camMode]) }
 let orbitYaw = 0, orbitPitch = 0, dragging = false, lastDrag = -10, lx = 0, ly = 0
@@ -1356,7 +1413,21 @@ function updateCamera(dt) {
     if (!dragging && clock.elapsedTime - lastDrag > 1.6 && Math.abs(P.fwd) > 1) { orbitYaw *= Math.exp(-2.5 * dt); orbitPitch *= Math.exp(-2.5 * dt) }
     const [d0, h0] = camMode === 0 ? [8.2, 2.9] : [4.8, 2.0], dist = d0 * camZoom, height = h0 * (0.45 + 0.55 * camZoom)
     const yaw = P.heading + Math.PI + orbitYaw
-    want = carP.clone().add(new V3(Math.sin(yaw) * dist * Math.cos(orbitPitch), height + Math.sin(orbitPitch) * dist, Math.cos(yaw) * dist * Math.cos(orbitPitch)))
+    // Keep the camera out of buildings: if a house, shop or bank stands between the car and the camera,
+    // swing round to the nearest clear side (and rise a little); only if every side is blocked, go up high.
+    const hitAt = (off) => camBlocked(carP.x, carP.z, carP.x + Math.sin(yaw + off) * dist * 1.15, carP.z + Math.cos(yaw + off) * dist * 1.15)
+    const clear = (off) => hitAt(off) === Infinity
+    let pick = null
+    for (const off of [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.1, -2.1, Math.PI]) if (clear(off)) { pick = off; break }
+    if (pick !== null && Math.abs(pick - camSwing) > 0.3 && clear(camSwing)) pick = camSwing // don't flip sides while the current one is still clear
+    // Boxed in on every side (a drive-thru lane, a tight gap between houses): pull the camera in on its arm instead.
+    const arm = pick === null ? THREE.MathUtils.clamp(hitAt(camSwing) * 1.15 * 0.85, 0.3, 1) : 1
+    camLiftT = pick === null ? 0 : Math.min(1, Math.abs(pick) * 0.35)
+    camSwing += ((pick ?? camSwing) - camSwing) * (1 - Math.exp(-dt * 4))
+    camLift += (camLiftT - camLift) * (1 - Math.exp(-dt * (camLiftT > camLift ? 6 : 2.5)))
+    camArm += (arm - camArm) * (1 - Math.exp(-dt * (arm < camArm ? 12 : 3)))
+    const yw = yaw + camSwing, d2 = dist * camArm, h2 = height * (0.55 + 0.45 * camArm) + camLift * 4
+    want = carP.clone().add(new V3(Math.sin(yw) * d2 * Math.cos(orbitPitch), h2 + Math.sin(orbitPitch) * d2, Math.cos(yw) * d2 * Math.cos(orbitPitch)))
     look = carP.clone().addScaledVector(f, camMode === 0 ? 2.4 : 0.6).add(new V3(0, 1.1, 0))
     fov = 54 + Math.min(14, Math.abs(P.fwd) * 0.45)
   }
