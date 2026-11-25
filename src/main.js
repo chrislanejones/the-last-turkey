@@ -753,6 +753,7 @@ for (const b of document.querySelectorAll('[data-touch]')) {
 $('camBtn').addEventListener('click', cycleCam)
 $('sodaBtn').addEventListener('click', throwSoda)
 $('retryBtn').addEventListener('click', () => reset(true))
+$('freeBtn').addEventListener('click', (e) => { e.currentTarget.blur(); freeDrive() })
 $('playBtn').addEventListener('click', start)
 function start() { audio.start(); if (game.state !== 'intro') return; game.state = 'cutscene'; game.t = 0; camMode = 0; camPos.set(0, 0, 0); $('intro').classList.add('gone'); $('hud').classList.remove('hidden') }
 
@@ -1079,7 +1080,7 @@ const groundRay = new THREE.Raycaster(), groundMeshes = []
 world.scene.traverse((o) => { if (o.isMesh && o.name === 'ground') groundMeshes.push(o) }); groundMeshes.push(ground)
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
-function resetCrates() { if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
+function resetCrates() { if (pylonProp) { pylonProp.topple = null; pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
   for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 function pushCrates(car) {
@@ -1105,8 +1106,11 @@ function pushCrates(car) {
     if (c.turkeyBin && !c.spilled) { c.spilled = true; spillTurkeys(c) }
     if (c.pylon && !c.spilled) { c.spilled = true
       // Topple away from the car rather than fly: a slow shove and a tip about the horizontal axis.
-      const sp2 = Math.hypot(car.vel.x, car.vel.y) || 1, dx = car.vel.x / sp2, dz = car.vel.y / sp2
-      c.vel.set(dx * 1.5, 0.5, dz * 1.5); c.spin.set(dz * 1.9, 0, -dx * 1.9)
+      // It falls flat on its face: pick the face away from the car, then pivot over the base's edge.
+      const lxv = new V3(1, 0, 0).applyQuaternion(c.m.quaternion); lxv.y = 0; lxv.normalize()
+      const d = lxv.clone().multiplyScalar(Math.sign(car.vel.x * lxv.x + car.vel.y * lxv.z) || 1)
+      c.topple = { th: 0.06, w: 0.5 + Math.min(1.2, Math.hypot(car.vel.x, car.vel.y) * 0.06), d, axis: new V3(d.z, 0, -d.x), pivot: new V3(c.home.pos.x, c.gy ?? GY, c.home.pos.z).addScaledVector(d, c.half.x), q0: c.m.quaternion.clone(), bounced: false }
+      c.vel.set(0, 0, 0); c.spin.set(0, 0, 0)
       c.faceMat.map = c.dead; c.faceMat.emissiveMap = c.dead; c.faceMat.emissiveIntensity = 0.05; c.faceMat.needsUpdate = true; c.sparkT = 1.6
       if (car === P) { game.armor = Math.max(1, game.armor - 4); hurt(1); audio.clang(0.8); flash('PRICES DOWN!')
         $('bubble2').textContent = 'THAT’S NOT EVEN THE FIRST TIME THAT SIGN HAS BEEN KNOCKED OVER.'; $('bubble2').classList.add('show'); game.b2T = 3.8 } }
@@ -1119,6 +1123,16 @@ function updateCrates(dt) {
   if (pylonProp && pylonProp.sparkT > 0) { pylonProp.sparkT -= dt; if (Math.random() < 0.35) { const p = pylonProp.m.position; burst(new V2(p.x + (Math.random() - 0.5) * 2, p.z + (Math.random() - 0.5) * 2), 2, true, false, Math.random() < 0.5 ? '#ffe27a' : '#9fd8ff') } }
   pushCrates(P); pushCrates(R)
   for (const c of crates) {
+    if (c.topple) { const T = c.topple, H = c.half.y * 2
+      if (!T.done) {
+        T.w += (3 * 9.8 / (2 * H)) * Math.sin(T.th) * dt; T.th += T.w * dt
+        if (T.th >= Math.PI / 2) { T.th = Math.PI / 2
+          if (!T.bounced && T.w > 0.8) { T.bounced = true; T.w = -T.w * 0.18; S.hit = Math.max(S.hit, 0.5); audio.crash(0.6); for (let i = 0; i < 6; i++) burst(new V2(c.m.position.x + (Math.random() - 0.5) * 4, c.m.position.z + (Math.random() - 0.5) * 4), 2, false, false, '#9a9a90') }
+          else if (T.bounced && T.w >= 0) { T.w = 0; T.done = true } } }
+      const q = new THREE.Quaternion().setFromAxisAngle(T.axis, T.th)
+      c.m.quaternion.copy(q).multiply(T.q0)
+      const v0 = T.d.clone().multiplyScalar(-c.half.x).add(new V3(0, c.half.y, 0)).applyQuaternion(q)
+      c.m.position.copy(T.pivot).add(v0); c.awake = false; continue }
     if (!c.awake) continue
     const p = c.m.position
     c.vel.y -= 9.8 * dt; p.addScaledVector(c.vel, dt)
