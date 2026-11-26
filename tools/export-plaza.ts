@@ -42,7 +42,7 @@ const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the 
 /** PCN Bank steps south to make room for the street. */
 const BANK_MOVE = [0.5, 9.2]
 /** The west end of the street turns north here into the loop: the two back houses in the way and the corner's trees go. */
-const loopCut = (x: number, z: number, layer: string) => ((layer === 'foliage' || layer === 'wood') && x > -124.3 && z > 353.8 && z < 406.4 && x < -106.34 + (z - 340) * .2275 - 1.6) || (layer !== 'ground' && x > -105.6 && x < -94.5 && z > 389.4 && z < 398.4) || (layer !== 'ground' && x < -120.2 && z > 391 && z < 398.2) || ((layer === 'foliage' || layer === 'wood') && x < -117.6 && x > -126 && z > 390 && z < 406.2)
+const loopCut = (x: number, z: number, layer: string) => (layer !== 'ground' && x > -124.3 && z > 353.8 && z < 389.2 && x < -106.34 + (z - 340) * .2275 - 1.6) || ((layer === 'foliage' || layer === 'wood') && x > -124.3 && z > 353.8 && z < 406.4 && x < -106.34 + (z - 340) * .2275 - 1.6) || (layer !== 'ground' && x > -105.6 && x < -94.5 && z > 389.4 && z < 398.4) || (layer !== 'ground' && x < -120.2 && z > 391 && z < 398.2) || ((layer === 'foliage' || layer === 'wood') && x < -117.6 && x > -126 && z > 390 && z < 406.2)
 const hoodCut = (x: number, z: number) => z > 391.5 && x > -102.6 // the part that would land on PCN Bank
 const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb', '#dcc7b1', '#8fb5a6', '#e7c9d1']
 /** The neighborhood west of A1A S that comes straight from the map's own west-blocks builder. */
@@ -394,9 +394,10 @@ const A1A = (z: number) => -106.34 + (z - 340) * .2275
 box('ground', '#878c8e', -103.8, .0612, 400.3, .85, .03, 5.7)
 // The rest of the neighborhood: a street back out to A1A S at the north end, one along the far west side joining them,
 // and a middle street between, parallel to the highway.
+let rN = 0
 const arc = (cx: number, cz: number, r: number, a0: number, a1: number) => Array.from({ length: 9 }, (_, i) => { const a = a0 + (a1 - a0) * i / 8; return [cx + Math.cos(a) * r, cz + Math.sin(a) * r] })
 for (const R of [[[A1A(356) - 1.3, 356], [-119.2, 356]], [[-121.7, 358.5], [-121.7, 401.7]], arc(-119.2, 358.5, 2.5, -Math.PI / 2, -Math.PI), arc(-119.2, 401.7, 2.5, Math.PI, Math.PI / 2), [[A1A(365.6) - 12.6, 365.6], [A1A(365.6) - 1.3, 365.6]], [[A1A(356) - 12.6, 356.7], [A1A(404) - 12.6, 403.4]]] as number[][][]) {
-  add('ground', ribbon(R, .78, .0605, 0), '#878c8e', 0, 0, 0); for (let i = 0; i + 1 < R.length; i++) roads.push([...R[i], ...R[i + 1], 1.56]) }
+  add('ground', ribbon(R, .78, .068 + (rN++ % 3) * .0025, 0), '#878c8e', 0, 0, 0); for (let i = 0; i + 1 < R.length; i++) roads.push([...R[i], ...R[i + 1], 1.56]) }
 // Between the two mouths, the woods along A1A S are the barrier.
 for (const [z0, z1] of [[358.2, 364.4], [366.8, 397.5]]) { const a = [A1A(z0) - 2.0, z0], b = [A1A(z1) - 2.0, z1], len = Math.hypot(b[0] - a[0], b[1] - a[1]), turn = Math.atan2(b[0] - a[0], b[1] - a[1]); DATA.walls.push([(a[0] + b[0]) / 2 * UNIT, (a[1] + b[1]) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2) * UNIT]) }
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
