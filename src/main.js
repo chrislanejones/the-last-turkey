@@ -1637,6 +1637,18 @@ const lotIslands = []
     const post = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.7, 0.3), trim); post.position.y = 1.35; pg.add(post); circles.push([-90.6 * U, 424 * U, 0.8])
   }
 
+  // --- Spray paint on the big blank west wall of the OOPS Store block.
+  { const c = document.createElement('canvas'); c.width = 2048; c.height = 384; const x = c.getContext('2d')
+    x.lineJoin = 'round'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = 'italic 900 118px "Comic Sans MS", "Marker Felt", cursive'
+    const L1 = 'CHRISTY HOMES AND I WERE IN THE', L2 = 'BACK OF THE JEEP LAST NIGHT'
+    for (const [t, y] of [[L1, 110], [L2, 270]]) { x.strokeStyle = '#141018'; x.lineWidth = 22; x.strokeText(t, 1024, y, 1960); x.fillStyle = '#e8287a'; x.fillText(t, 1024, y, 1960) }
+    for (let i = 0; i < 40; i++) { const dx = 120 + Math.random() * 1800, g2 = x.createLinearGradient(0, 0, 0, 90); g2.addColorStop(0, 'rgba(232,40,122,.7)'); g2.addColorStop(1, 'rgba(232,40,122,0)'); x.fillStyle = g2; x.fillRect(dx, 150 + Math.random() * 180, 4, 30 + Math.random() * 60) }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(19, 3.56), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
+    // Find the strip's long blank back wall (it faces A1A S) and paint straight onto it.
+    const rc = new THREE.Raycaster(new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0)), h = rc.intersectObject(world.scene, true)[0]
+    if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } } // the big blank wall facing A1A S
+
   // --- A sign on the sidewalk under the Christy billboard: knock it flat if you want.
   { const c = document.createElement('canvas'); c.width = 256; c.height = 320; const x = c.getContext('2d'); x.fillStyle = '#f6f6f2'; x.fillRect(0, 0, 256, 320); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 240, 304)
     x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 44px Anton, Impact, sans-serif'; ['DO NOT', 'LOOK AT', 'SIGN WHILE', 'DRIVING'].forEach((t, i) => x.fillText(t, 128, 78 + i * 64, 220))
@@ -1752,7 +1764,8 @@ function pushCrates(car) {
     const kick = 1.5 + speed * 0.35
     c.vel.set(car.vel.x * 0.85 + nx * kick, Math.min(5.5, 1.2 + speed * 0.28) * (0.7 + Math.random() * 0.5), car.vel.y * 0.85 + nz * kick)
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
-    if (c.heavy) { c.vel.multiplyScalar(0.22); c.vel.y = 0; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
+    if (c.heavy && c.m.position.distanceTo(c.home.pos) > 1.3) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); car.vel.multiplyScalar(-0.25); continue } // on its leash: it only shoves so far, then it's a wall
+    if (c.heavy) { c.vel.multiplyScalar(0.1); c.vel.y = 0; p.x = c.m.position.x; p.z = c.m.position.z; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
