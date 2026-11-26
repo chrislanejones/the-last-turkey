@@ -1556,7 +1556,7 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
     boxes.push({ c: new V2(wx - 0.67, 1572.0), a: new V2(1, 0), hx: 0.7, hz: 1.35 })
     add(new THREE.BoxGeometry(0.35, 0.6, 0.8), white, wx - 0.2, 0.45, 1574.4); add(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 12), grey, wx - 0.385, 0.45, 1574.4).rotation.z = Math.PI / 2
     add(new THREE.BoxGeometry(0.14, 0.5, 0.36), grey, wx - 0.08, 1.5, 1569.8); add(new THREE.BoxGeometry(0.14, 0.34, 0.26), grey, wx - 0.08, 1.45, 1570.3); add(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 5), grey, wx - 0.05, 2.4, 1569.8)
-    add(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 8), orange, wx - 0.3, 0.55, 1568.9); add(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 8), orange, wx - 0.3, 0.55, 1579.3)
+    void 0 // (the orange bollards are gone)
     for (const [rx, rz, rs] of [[-368.5, 1571.5, 1], [-365.2, 1574.5, 1.2], [-362.2, 1571.8, 0.9]]) { add(new THREE.BoxGeometry(1.5 * rs, 0.9 * rs, 1.2 * rs), grey, rx, 3.75 + 0.45 * rs, rz); add(new THREE.CylinderGeometry(0.35 * rs, 0.35 * rs, 0.06, 10), new THREE.MeshStandardMaterial({ color: '#3a3d40' }), rx, 3.76 + 0.9 * rs, rz) }
     // A spreading live oak on the grass by A1A S.
     const ox = -380.3, oz = 1571.2, bark = new THREE.MeshStandardMaterial({ color: '#4f4336', roughness: 1 }), leafM = [new THREE.MeshStandardMaterial({ color: '#35602f', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#44743a', roughness: 1, flatShading: true })], oy = surfaceAt(ox, oz) - GY
