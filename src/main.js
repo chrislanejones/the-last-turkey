@@ -28,14 +28,14 @@ const ZONE_R = 6.5
 // The two drivers are next-door neighbors on Floridian Ave, west of Rosewood St: two of the map's
 // own houses. Both cars start nose-in on their driveways (the map's drives) and have to back out.
 // The neighborhood's street meets A1A S at the tip now (moved +1.5, +5.6).
-const HD = [1.5, 5.6]
+const HD = [3.4, 14.6]
 const driveNear = (hx) => DATA.drives.filter((d) => d[1] / U < 388.5 + HD[1] && d[1] / U > 386 + HD[1]).reduce((b, d) => (Math.abs(d[0] / U - hx) < Math.abs(b[0] / U - hx) ? d : b))
 const HOME = { me: driveNear(-115.34 + HD[0]), them: driveNear(-118.84 + HD[0]) }
 const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street, round the tip past the welcome sign, into the gas station from A1A Beach Blvd,
 // up the back of the Square K and the bank, through the OOPS Store's boxes, out onto the boulevard and in at the plaza entrance.
-const PATH = [u2(-112, 394.9), u2(-103.5, 394.8), u2(-96, 395.2), u2(-93.0, 395.7), u2(-91.9, 397.6), u2(-90.7, 400.2), u2(-89.3, 401.6), u2(-87.3, 402.0), u2(-85.6, 401.5), u2(-84.5, 400.3), u2(-84.6, 398.3), u2(-85.0, 396.4), u2(-85.3, 394.4), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
+const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-90.6, 404.0), u2(-88.6, 403.0), u2(-87.0, 402.2), u2(-85.6, 401.6), u2(-84.5, 400.3), u2(-84.6, 398.3), u2(-85.0, 396.4), u2(-85.3, 394.4), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -369,7 +369,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
-      const tz = az + (bz - az) * t; if (side < 0 && tz > 387.8 && tz < 403.4) continue // the neighborhood and PCN Bank front the road here
+      const tz = az + (bz - az) * t; if (side < 0 && tz > 396.8 && tz < 413.2) continue // the neighborhood and PCN Bank front the road here
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       if (side > 0 && Math.abs(tz - GATE.z) < 1.25) px += 2.3 * U // set back behind the neighborhood's gate
       if (side > 0 && tz > 406.0 && tz < 418) px += 6.5 * U // round the back of the shops south of the tip
@@ -415,7 +415,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
 }
 const tableSpots = []
 // The pond south of Floridian Ave, grown to fill the open field up to the houses' back yards.
-const POND = { x0: -111.4 + HD[0], x1: -100.6 + HD[0], z0: 392.5 + HD[1], z1: 401.5 + HD[1] }
+const POND = { x0: -111.4 + HD[0] - 3.2, x1: -100.6 + HD[0] - 3.2, z0: 392.5 + HD[1], z1: 401.5 + HD[1] }
 {
   const cx = (POND.x0 + POND.x1) / 2 * U, cz = (POND.z0 + POND.z1) / 2 * U, w = (POND.x1 - POND.x0) * U, d = (POND.z1 - POND.z0) * U
   const sh = new THREE.Shape(); const r = 9; sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2)
@@ -597,7 +597,7 @@ const along = (pts, z, off) => {
   const [a, b] = p.slice(-2); return a[0] + (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + off
 }
 const regions = []
-for (let z = 333; z < 405; z += 1) {
+for (let z = 333; z < 418; z += 1) {
   const z0 = z - 0.3, z1 = z + 1.3
   regions.push(mkRegion([[along(ROAD_W, z0, -2.9), z0], [along(ROAD, z0, 1.0), z0], [along(ROAD, z1, 1.0), z1], [along(ROAD_W, z1, -2.9), z1]].map(([x, zz]) => [x * U, zz * U])))
 }
@@ -660,7 +660,8 @@ boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
 regions.push(mkRegion([[-124.5, 382.6], [-95.0, 382.6], [-95.0, 391.5], [-124.5, 391.5]].map(([x, z]) => [(x + HD[0]) * U, (z + HD[1]) * U])))
 // The 280 Floridian lot, south of the street, open up to the barrier at the road block.
-// (the old 280 Floridian lot is PCN Bank's corner now)
+// Melvin's Island's lot, south of the tip: drive right up to the shop front.
+regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 416.6], [-85.6, 416.6]].map(([x, z]) => [x * U, z * U])))
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
 for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45, low: true })
 circles.push([-74.9 * U, 349.5 * U, 1.3]) // the plaza's pylon sign by its entrance
@@ -867,14 +868,14 @@ function rivalInput(dt) {
   if (game.ai === 'evade') { game.aiT -= dt; if (game.aiT <= 0 || R.pos.distanceTo(game.target) < 6) game.ai = 'seek' }
   // Every so often, when the Galaxie is close, he turns and goes for it instead.
   game.attackCool -= dt
-  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 24 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
+  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 22 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
     game.attackCool = 5 + Math.random() * 5
     if (Math.random() < 0.6) { game.ai = 'attack'; game.aiT = 2.4 }
   }
   if (game.ai === 'attack') { game.aiT -= dt; game.target.copy(P.pos).addScaledVector(P.vel, 0.35); if (game.aiT <= 0) game.ai = 'seek' }
   if (game.ai === 'seek') {
     // Out of the station and up the lot, one waypoint at a time; then the door.
-    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 24 && R.pos.y < PATH[game.pathI].y))) game.pathI++
+    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 22 && R.pos.y < PATH[game.pathI].y))) game.pathI++
     game.target.copy(game.pathI < PATH.length ? PATH[game.pathI] : DOOR)
   }
   const to = game.target.clone().sub(R.pos), dist = to.length()
@@ -1311,9 +1312,17 @@ const lotIslands = []
   x.beginPath(); x.arc(170, 110, 78, 0, 7); x.strokeStyle = '#5d7f86'; x.lineWidth = 4; x.stroke()
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8
   const face = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, roughness: 0.8 }), Wd = 6.4, Hd = 2.5
-  for (const sgn of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Hd), face); f.position.set(0, 1.75, sgn * 0.07); if (sgn < 0) f.rotation.y = Math.PI; f.castShadow = true; G.add(f) }
+  // A carved slab with real thickness: the plank's outline extruded, the painted faces set on both sides, the seal standing proud.
+  const P2 = (cx, cy) => [(cx / 1024 - 0.5) * Wd, (0.5 - cy / 400) * Hd], sh = new THREE.Shape(), mv = (cx, cy) => sh.moveTo(...P2(cx, cy)), ln = (cx, cy) => sh.lineTo(...P2(cx, cy)), bz = (a, b, c2, d, e, f) => sh.bezierCurveTo(...P2(a, b), ...P2(c2, d), ...P2(e, f))
+  mv(30, 210); ln(60, 170); ln(40, 140); ln(120, 120); ln(300, 128); bz(520, 150, 660, 120, 760, 96); bz(800, 70, 850, 60, 880, 84); bz(860, 92, 862, 112, 890, 122); ln(990, 150); ln(968, 190); ln(1000, 232); ln(960, 300); ln(700, 312); ln(400, 300); ln(120, 316); ln(50, 290); ln(66, 250); ln(30, 210)
+  const TH = 0.42, slab = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: TH - 0.08, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.04, bevelSegments: 2, curveSegments: 10 }), new THREE.MeshStandardMaterial({ color: '#2f7c84', roughness: 0.85 })); slab.position.set(0, 1.75, -TH / 2 + 0.04); slab.castShadow = true; G.add(slab)
+  const sc2 = document.createElement('canvas'); sc2.width = sc2.height = 256; sc2.getContext('2d').drawImage(c, 62, 2, 216, 216, 0, 0, 256, 256); const sealT = new THREE.CanvasTexture(sc2); sealT.colorSpace = THREE.SRGBColorSpace
+  const sealM = new THREE.MeshStandardMaterial({ map: sealT, roughness: 0.7, alphaTest: 0.5 }), stoneM = new THREE.MeshStandardMaterial({ color: '#d9d2bb', roughness: 0.8 })
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.66, TH + 0.2, 28), stoneM); disc.rotation.x = Math.PI / 2; disc.position.set(-2.137, 2.31, 0); disc.castShadow = true; G.add(disc)
+  for (const sgn of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Hd), face); f.position.set(0, 1.75, sgn * (TH / 2 + 0.006)); if (sgn < 0) f.rotation.y = Math.PI; G.add(f)
+    const sf = new THREE.Mesh(new THREE.CircleGeometry(0.675, 28), sealM); sf.position.set(-2.137, 2.31, sgn * (TH / 2 + 0.105)); if (sgn < 0) sf.rotation.y = Math.PI; G.add(sf) }
   const postM = new THREE.MeshStandardMaterial({ color: '#4d8a84', roughness: 0.9 }), rockM = new THREE.MeshStandardMaterial({ color: '#6f6f6b', roughness: 1, flatShading: true })
-  for (const px of [-1.5, 1.6]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.7, 0.12), postM); p.position.set(px, 0.85, 0); p.castShadow = true; G.add(p) }
+  for (const px of [-1.5, 1.6]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.26, 1.7, 0.26), postM); p.position.set(px, 0.85, 0); p.castShadow = true; G.add(p) }
   const rock = new THREE.DodecahedronGeometry(1, 0)
   for (const [rx, rz, sx, sy, sz, ry] of [[-2.0, 0.5, 1.5, 0.75, 1.0, 0.4], [-0.9, 0.7, 0.8, 0.45, 0.7, 1.9], [2.1, 0.4, 1.2, 0.8, 0.9, 2.7], [2.9, 0.9, 0.6, 0.35, 0.5, 0.9], [-2.4, -0.6, 0.9, 0.5, 0.8, 1.2], [1.8, -0.7, 1.0, 0.55, 0.7, 2.2]]) { const r = new THREE.Mesh(rock, rockM); r.scale.set(sx, sy, sz); r.position.set(rx, sy * 0.45, rz); r.rotation.y = ry; r.castShadow = r.receiveShadow = true; G.add(r) }
   // Dune grass and yellow-green crotons round it, and three little spotlights out front.
@@ -1492,7 +1501,7 @@ const lotIslands = []
   }
 
   // --- PCN Bank across A1A S: a green standing-seam roof, its lot, oaks, and the power line marching up the road.
-  { const bx = -96.65 * U, bz = 400.85 * U, yaw = 0.32, g = new THREE.Group(); g.position.set(bx, surfaceAt(bx + 9, bz - 12), bz); g.rotation.y = yaw; scene.add(g)
+  { const bx = -96.15 * U, bz = 410.05 * U, yaw = 0.32, g = new THREE.Group(); g.position.set(bx, surfaceAt(bx + 9, bz - 12), bz); g.rotation.y = yaw; scene.add(g)
     const seam = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#7fae98'; x.fillRect(0, 0, 64, 64); x.fillStyle = '#5f8f7a'; for (let i = 0; i < 64; i += 16) x.fillRect(i, 0, 3, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 1); return t })()
     const roof = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4, 1), new THREE.MeshStandardMaterial({ map: seam, roughness: 0.5, metalness: 0.3, flatShading: true })); roof.rotation.y = Math.PI / 4; const rg = new THREE.Group(); rg.add(roof); rg.scale.set(10.6, 2.0, 8.6); rg.position.y = 5.3; g.add(rg); roof.castShadow = true
     const fascia = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.5, 12.0), new THREE.MeshStandardMaterial({ color: '#e9e6dc', roughness: 0.8 })); fascia.position.y = 4.3; g.add(fascia)
@@ -1503,7 +1512,7 @@ const lotIslands = []
     const oak = (x, z, sc) => { const y = surfaceAt(x, z), t = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * sc, 0.4 * sc, 2.6 * sc, 7), bark); t.position.set(x, y + 1.3 * sc, z); t.rotation.z = 0.12; t.castShadow = true; scene.add(t)
       for (let i = 0; i < 4; i++) { const a = i * 1.57 + x, c = new THREE.Mesh(blob, leaf[i % 2]); c.scale.set(2.2 * sc, 1.1 * sc, 2.2 * sc); c.position.set(x + Math.sin(a) * 1.9 * sc, y + (3.6 + (i % 2) * 0.5) * sc, z + Math.cos(a) * 1.9 * sc); c.castShadow = true; scene.add(c) }
       const top = new THREE.Mesh(blob, leaf[0]); top.scale.set(2.5 * sc, 1.2 * sc, 2.5 * sc); top.position.set(x, y + 4.5 * sc, z); scene.add(top) }
-    for (const [ox, oz, sc] of [[-94.2, 397.6, 1.1], [-94.4, 400.6, 1.0], [-99.8, 398.2, 1.3], [-100.6, 401.6, 1.2]]) oak(ox * U, oz * U, sc)
+    for (const [ox, oz, sc] of [[-99.6, 408.0, 1.2], [-100.0, 412.2, 1.2], [-93.6, 413.4, 1.1], [-96.6, 414.2, 1.2]]) oak(ox * U, oz * U, sc)
     // Concrete utility poles with crossarms and a transformer now and then; sagging wires between them.
     const conc = new THREE.MeshStandardMaterial({ color: '#b3ada0', roughness: 0.9 }), dk = new THREE.MeshStandardMaterial({ color: '#4a4d50', roughness: 0.7 }), wire = new THREE.LineBasicMaterial({ color: '#1b1b1b' })
     const line = ROAD_W.filter(([, z]) => z < 386).map(([x, z]) => [(x - 2.62) * U, z * U]), tops = []
@@ -1517,19 +1526,21 @@ const lotIslands = []
   }
 
   // --- The big road block across A1A south of the tip: striped barricades, a wall of cones, ROAD CLOSED boards, flashing ambers.
-  { const A = [-92.0 * U, 404.2 * U], B = [-82.4 * U, 403.2 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
+  { const A = [-88.4 * U, 416.8 * U], B = [-83.2 * U, 416.5 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
     const stripe = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 256, 32); x.fillStyle = '#e8641b'; for (let i = -32; i < 256; i += 48) { x.beginPath(); x.moveTo(i, 32); x.lineTo(i + 24, 32); x.lineTo(i + 56, 0); x.lineTo(i + 32, 0); x.fill() } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const board = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 512, 256); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 496, 240); x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 110px Anton, Impact, sans-serif'; x.fillText('ROAD', 256, 116); x.fillText('CLOSED', 256, 226); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const sm = new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.7 }), bm = new THREE.MeshStandardMaterial({ map: board, roughness: 0.7 }), leg = new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.8 }), cone = new THREE.MeshStandardMaterial({ color: '#f26a1b', roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: '#f4f4f0', roughness: 0.6 }), amber = new THREE.MeshBasicMaterial({ color: '#ffb020' })
     const at = (sA, d) => [A[0] + tx * sA + nx * d, A[1] + tz * sA + nz * d]
-    for (let i = 0; i < 6; i++) { const [x, z] = at(3.5 + i * (len - 7) / 5, 1.5), g = new THREE.Group(); g.position.set(x, surfaceAt(x, z), z); g.rotation.y = yaw + (i % 2 ? 0.08 : -0.06); scene.add(g)
+    for (let i = 0; i < 5; i++) { const [x, z] = at(2.2 + i * (len - 4.4) / 4, 1.5), g = new THREE.Group(); g.position.set(x, surfaceAt(x, z), z); g.rotation.y = yaw + (i % 2 ? 0.08 : -0.06); scene.add(g)
       for (const y of [1.25, 0.85, 0.45]) { const r = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.24, 0.05), sm); r.position.y = y; r.castShadow = true; g.add(r) }
       for (const e of [-1.3, 1.3]) for (const f of [-0.35, 0.35]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.07), leg); l.position.set(e, 0.72, f * 0.6); l.rotation.x = -f * 0.5; g.add(l) }
       const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), amber); lamp.position.set(-1.3, 1.55, 0); g.add(lamp)
       if (i % 2 === 0) { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), bm); b.position.set(0, 1.9, -0.04); b.rotation.y = Math.PI; g.add(b); const b2 = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), bm); b2.position.set(0, 1.9, 0.04); g.add(b2); const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.7, 0.04), leg); p.position.set(0, 1.5, 0); g.add(p) }
       boxes.push({ c: new V2(x, z), a: new V2(tx, tz), hx: 1.6, hz: 0.4, low: true }) }
     const cg = new THREE.ConeGeometry(0.2, 0.72, 10), bg = new THREE.CylinderGeometry(0.095, 0.125, 0.12, 10), fg = new THREE.BoxGeometry(0.46, 0.04, 0.46)
-    for (let i = 0; i < 26; i++) { const [x, z] = at(1 + i * (len - 2) / 25, 3.4 + (i % 2) * 1.1), y = surfaceAt(x, z); const c = new THREE.Mesh(cg, cone); c.position.set(x, y + 0.38, z); c.castShadow = true; scene.add(c); const b = new THREE.Mesh(bg, band); b.position.set(x, y + 0.45, z); scene.add(b); const f = new THREE.Mesh(fg, cone); f.position.set(x, y + 0.02, z); scene.add(f) }
+    // The cones are loose: drive through them and they scatter.
+    for (let i = 0; i < 22; i++) { const [x, z] = at(1 + i * (len - 2) / 21, 3.4 + (i % 2) * 1.1), y = surfaceAt(x, z), m = new THREE.Group(); const c = new THREE.Mesh(cg, cone); c.castShadow = true; m.add(c); const b = new THREE.Mesh(bg, band); b.position.y = 0.07; m.add(b); const f = new THREE.Mesh(fg, cone); f.position.y = -0.36; m.add(f); scene.add(m)
+      crates.push({ m, half: new V3(0.2, 0.38, 0.2), r: 0.24, home: { pos: new V3(x, y + 0.38, z), yaw: i }, vel: new V3(), spin: new V3(), awake: false }) }
   }
 
   // --- A bumpy hedge in a mulch strip behind the tall curb along A1A S: the lot is shut from that side.

@@ -409,7 +409,7 @@ export function dressStation(scene, U, apronY) {
   // Tan stucco, terracotta hip roofs, a corner clock tower with blue arched windows, red feather flags,
   // and two farmers guarding the door with pitchforks.
   {
-    const F = new THREE.Group(); F.position.set((-100.2 + 1.5) * U, 0.045 * U, (384.9 + 5.6) * U); F.rotation.y = 0.19; g.add(F)
+    const F = new THREE.Group(); F.position.set((-100.2 + 3.4) * U, 0.045 * U, (384.9 + 14.6) * U); F.rotation.y = 0.19; g.add(F)
     const W = 3.9 * U - 0.8, D = 2.7 * U - 0.8, H = 4.3
     const stucco = M('#e2bb7d', { roughness: 0.95 }), trim = M('#c99a5a'), tile = M('#b5532e', { roughness: 0.8 }), dk = M('#4a2a1c'), glass = M('#25343a', { roughness: 0.15, metalness: 0.4 })
     const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; F.add(m); return m }

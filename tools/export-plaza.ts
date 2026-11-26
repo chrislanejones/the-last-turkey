@@ -36,8 +36,10 @@ const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
 let wb = false, loving = false
 /** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
-const HS = [1.5, 5.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
-const hoodCut = (x: number, z: number) => z > 391.5 && x > -101.2 // the part that would land on PCN Bank
+const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
+/** PCN Bank steps south to make room for the street. */
+const BANK_MOVE = [0.5, 9.2]
+const hoodCut = (x: number, z: number) => z > 391.5 && x > -102.6 // the part that would land on PCN Bank
 const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb', '#dcc7b1', '#8fb5a6', '#e7c9d1']
 /** The neighborhood west of A1A S that comes straight from the map's own west-blocks builder. */
 const inHood = (x: number, z: number) => (x < -98.5 || (x < -96 && z > 391)) && x > -131 && z > 377 && z < 397
@@ -254,7 +256,7 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-95.88, 388.2], [-123, 388.2], [-123, 397.1], [-93.7, 397.1], [-92.8, 400.5], [-92.0, 404.2], [-82.4, 403.2]] // down A1A S, round the neighborhood, past PCN Bank, and across the road south of the tip
+  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-95.34, 390.15], [-93.5, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-91.3, 406.1], [-90.2, 410.5], [-88.4, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
   for (let i = 0; i + 1 < W.length; i++) wallRun(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1])
 }
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
@@ -366,6 +368,7 @@ const keep = (g: BufferGeometry) => {
     if (!inHood(cx, cz) || hoodCut(cx, cz)) return false
     g.translate(HS[0], 0, HS[1]); return true
   }
+  if (cx > -99.5 && cx < -94.2 && cz > 396.9 && cz < 403.4) g.translate(BANK_MOVE[0], 0, BANK_MOVE[1])
   return cz > Z0 - 1 && cz < Z1 + 1 && cx > X0 - 1 && cx < X1 + 1
 }
 const scene = new Scene()
