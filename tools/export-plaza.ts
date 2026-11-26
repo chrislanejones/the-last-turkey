@@ -36,7 +36,7 @@ const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
 let wb = false, loving = false, groundK = 0
 /** A1A S past the plaza, redrawn as one road: two lanes and a centre turn lane, set back from the plaza's curb. */
-const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418], [-84.93, 434]] // dead straight, clear of the plaza's curb all the way
+const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418], [-84.93, 434], [-81.28, 450], [-77.63, 466], [-73.98, 482], [-70.33, 498]] // dead straight, and on south out of town, clear of the plaza's curb all the way
 /** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
 const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
 /** PCN Bank steps south to make room for the street. */
@@ -162,6 +162,7 @@ const DATA = { cars: [] as number[][], palms: [] as number[][], poles: [] as num
 let thin = false
 const car = (x: number, z: number, seed: number, turn = 0, _driving = false, family?: number) => {
   if (wb && inHood(x, z)) return // keep the neighbors' driveways clear
+  if (!thin && x > -86.8 && z > 405 && z < 434) { if (rand(seed * 2.17 + 3) > .22) return; DATA.cars.push([x * UNIT, z * UNIT, turn]) } // Melvin's lot: just a few
   if (thin) { if (rand(seed * 1.37 + 5) > .13 || (Math.abs(x + 84.8) < 1.3 && z > 352 && z < 368) || (x > -85 && z > 364)) return; DATA.cars.push([x * UNIT, z * UNIT, turn]) }
   whole(x, () => {
     const start = LAYERS.map((l) => parts[l].length)
@@ -410,24 +411,8 @@ DATA.arcade = crowd.filter((p) => p.id.startsWith('arcade')).map((p) => [p.x * U
 
 // Every shopper gets a buggy: a gray basket on a frame, a green handle, a bag or two in it.
 const bags = ['#a57a4a', '#d8332c', '#f2c521', '#46a04f', '#e8742c', '#f4f2ea']
-crowd.forEach((p, i) => {
-  const h = p.heading, c = Math.cos(h), sn = Math.sin(h), y0 = p.y ?? .05
-  const at = (lx: number, lz: number) => [p.x + lx * c + lz * sn, p.z - lx * sn + lz * c] as const
-  const part = (layer: Layer, color: string, lx: number, y: number, lz: number, w: number, hh: number, d: number) => { const [x, z] = at(lx, lz); box(layer, color, x, y0 + y, z, w, hh, d, h) }
-  const z0 = .2 // the basket's middle, ahead of the shopper
-  part('wood', '#b9bdc1', 0, .185, z0, .13, .012, .2)                 // basket floor
-  for (const e of [-1, 1]) part('wood', '#c9cdd0', e * .062, .225, z0, .008, .08, .2)
-  part('wood', '#c9cdd0', 0, .225, z0 + .098, .13, .08, .008)
-  part('wood', '#c9cdd0', 0, .225, z0 - .098, .13, .08, .008)
-  part('wood', '#8f9498', 0, .09, z0, .11, .012, .19)                 // lower rack
-  for (const e of [-1, 1]) for (const v of [-1, 1]) {
-    part('wood', '#8f9498', e * .055, .13, z0 + v * .085, .01, .1, .01)
-    part('wood', '#2a2d30', e * .055, .03, z0 + v * .085, .014, .035, .035)
-  }
-  part('wood', '#2f8f3a', 0, .265, z0 - .115, .14, .014, .014)        // handle
-  part('wood', bags[i % bags.length], -.02, .235, z0 + .03, .06, .07, .07)
-  if (i % 2) part('wood', bags[(i + 3) % bags.length], .03, .225, z0 - .04, .05, .05, .06)
-})
+// (the game builds them, so they can be knocked over and their bags spill)
+;(DATA as any).shopCarts = crowd.map((p, i) => { const h = p.heading; return [(p.x + .2 * Math.sin(h)) * UNIT, (p.z + .2 * Math.cos(h)) * UNIT, h, i] })
 
 DATA.homes = DATA.homes.filter(([x, z]) => !hoodCut(x / UNIT, z / UNIT)).map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
 DATA.drives = DATA.drives.map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])

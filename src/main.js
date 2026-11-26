@@ -435,6 +435,13 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
         inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, rn() * 6, 0, ci)
         for (let c = 0; c < 3; c++) { const a = rn() * 6.28, dd = sc * (0.6 + rn() * 0.35); inst(leafI, px + Math.cos(a) * dd, hgt - sc * (0.05 + rn() * 0.3), pz + Math.sin(a) * dd, sc * 0.72, sc * 0.5, sc * 0.72, a, 0, (ci + c + 1) % 5) }
         inst(scrubI, px - nx * (off - 1.0) + (rn() - 0.5), sc * 0.3, pz - nz * (off - 1.0) + (rn() - 0.5), sc * 0.8, sc * 0.42, sc * 0.8, rn() * 6, 0, (ci + 2) % 5) } } }
+  // Woods both sides of A1A S where it runs on south past the road block.
+  { let sd = 61; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    for (let z = 434; z < 500; z += 1.1) for (const side of [-1, 1]) for (const row of [0, 1, 2]) { const cx = -84.93 + (z - 434) * 0.228, off = 2.4 + row * 1.15 + rn() * 0.6, px = (cx + side * off) * U, pz = (z + (rn() - 0.5) * 0.8) * U
+      const sc = 2.3 + rn() * 1.6 + row * 0.6, hgt = sc * (1.25 + rn() * 0.5) + row * 1.4, ci = Math.floor(rn() * 5)
+      inst(trunkI, px, hgt * 0.5, pz, 0.22 + sc * 0.06, hgt, 0.22 + sc * 0.06, rn() * 6, (rn() - 0.5) * 0.25)
+      inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, rn() * 6, 0, ci)
+      for (let c = 0; c < 2; c++) { const a = rn() * 6.28, dd = sc * 0.7; inst(leafI, px + Math.cos(a) * dd, hgt - sc * 0.15, pz + Math.sin(a) * dd, sc * 0.72, sc * 0.5, sc * 0.72, a, 0, (ci + c + 1) % 5) } } }
   const mk = (list, g, mat, shadow) => { const im = new THREE.InstancedMesh(g, mat, list.length), col = new THREE.Color(); list.forEach(([m, c], n) => { im.setMatrixAt(n, m); im.setColorAt(n, col.set(greens[c])) }); im.castShadow = shadow; im.receiveShadow = true; im.frustumCulled = false; scene.add(im) }
   mk(leafI, geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), true)
   mk(scrubI, geo, new THREE.MeshStandardMaterial({ color: '#c9d6c0', roughness: 1, flatShading: true }), false)
@@ -1619,6 +1626,38 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
       const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), mulchM); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-tz, tx)); m.position.set((ax + bx) / 2 * U + nx * ins * 1.15, GY + 0.02, (az + bz) / 2 * U + nz * ins * 1.15); m.receiveShadow = true; scene.add(m) }
     const im = new THREE.InstancedMesh(blob, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), ms.length), c = new THREE.Color(); ms.forEach((m, n) => { im.setMatrixAt(n, m); im.setColorAt(n, c.set(['#3b6b30', '#4c7d38', '#335f2c'][n % 3])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
 
+  // --- A few more cars parked in the main lot, north and south ends. Hit one and it budges a little — and dents the Galaxie.
+  { const cols = ['#2f4f6f', '#b8b3a6', '#7a1f1f', '#3d3d3d', '#d9d4c6', '#4a6b3a', '#1f3554', '#8a8a86']
+    const taken = (x, z) => DATA.cars.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 3.2)
+    let n = 0, sd = 31; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    const spots = []; for (const rx of [-354.2, -339.0, -323.8]) for (const side of [-1, 1]) for (let k = 0; k < 17; k++) spots.push([rx + side * 2.7, 1431 + (k + 0.5) * 3.1855, side])
+    spots.sort(() => rn() - 0.5)
+    const north = [], south = []
+    for (const [x, z, side] of spots) { if (taken(x, z) || [...north, ...south].some(([a, b]) => Math.hypot(a - x, b - z) < 3)) continue; const list = z < 1459 ? north : south; if (list.length < 4) list.push([x, z, side]) }
+    for (const [x, z, side] of [...north, ...south]) { const v = buildSUV(cols[n++ % cols.length]), m = v.car, drop = []
+      m.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; if (o.parent === v.body && o.position.y > 1.9) drop.push(o); if (o.material && o.material.color && o.material.color.getHex() === 0x8a5a33) o.material = v.M.paint }) // plain cars: no woodgrain, nothing on the roof
+      for (const o of drop) o.parent.remove(o); scene.add(m)
+      crates.push({ m, parked: true, heavy: true, half: new V3(1.0, 0.8, 2.3), r: 2.0, home: { pos: new V3(x, surfaceAt(x, z) - 0.0, z), yaw: side > 0 ? -Math.PI / 2 : Math.PI / 2 }, vel: new V3(), spin: new V3(), awake: false, lie: 0 }) } }
+
+  // --- Two old Galaxies left to rot in the Winn-Trixie lot, sun-faded paint, and a few tired parking lines.
+  { for (const [x, z, yaw, col] of [[-99.6, 414.4, 1.62, '#7d8f93'], [-95.2, 420.6, -1.45, '#a8916a']]) { const v = buildGalaxie(col), m = v.car; m.traverse((o) => { if (o.isMesh) { o.castShadow = true; if (o.material && o.material.color && !o.material.map) { o.material = o.material.clone(); o.material.roughness = Math.min(1, (o.material.roughness ?? 0.5) + 0.35); o.material.metalness = 0 } } })
+      if (v.tails) v.tails.forEach((t, i) => { if (i % 2) t.visible = false }); scene.add(m); const X = x * U, Z = z * U
+      crates.push({ m, parked: true, heavy: true, half: new V3(1.0, 0.7, 2.7), r: 2.2, home: { pos: new V3(X, surfaceAt(X, Z), Z), yaw }, vel: new V3(), spin: new V3(), awake: false }) }
+    const line = decalTex(32, 512, (x, w, h) => { x.fillStyle = '#ece6d2'; x.fillRect(6, 0, 20, h) }, 0.55)
+    for (const [cx, z0, n] of [[-99.6, 410.6, 7], [-95.2, 416.0, 6]]) for (let k = 0; k <= n; k++) decal(line, cx * U, (z0 + k * 0.78) * U, 0.28, 5.0, Math.PI / 2) }
+
+  // --- The shoppers' buggies: knock one and it goes over and the bags tumble out. The shoppers just stand there.
+  { const bagCols = ['#a57a4a', '#d8332c', '#f2c521', '#46a04f', '#e8742c', '#f4f2ea'], K = U
+    const wire = new THREE.MeshStandardMaterial({ color: '#c9cdd0', roughness: 0.4, metalness: 0.6 }), rack = new THREE.MeshStandardMaterial({ color: '#8f9498', roughness: 0.5, metalness: 0.5 }), grip = new THREE.MeshStandardMaterial({ color: '#2f8f3a', roughness: 0.6 }), tyre = new THREE.MeshStandardMaterial({ color: '#2a2d30', roughness: 0.9 })
+    for (const [x, z, h, i] of DATA.shopCarts || []) { const g = new THREE.Group(), food = []
+      const part = (m, lx, y, lz, w, hh, d) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w * K, hh * K, d * K), m); o.position.set(lx * K, (y - 0.15) * K, lz * K); o.castShadow = true; g.add(o); return o }
+      part(wire, 0, .185, 0, .13, .012, .2); for (const e of [-1, 1]) part(wire, e * .062, .225, 0, .008, .08, .2); part(wire, 0, .225, .098, .13, .08, .008); part(wire, 0, .225, -.098, .13, .08, .008)
+      part(rack, 0, .09, 0, .11, .012, .19); for (const e of [-1, 1]) for (const v of [-1, 1]) { part(rack, e * .055, .13, v * .085, .01, .1, .01); part(tyre, e * .055, .03, v * .085, .014, .035, .035) }
+      part(grip, 0, .265, -.115, .14, .014, .014)
+      food.push(part(new THREE.MeshStandardMaterial({ color: bagCols[i % 6], roughness: 0.8 }), -.02, .235, .03, .06, .07, .07))
+      if (i % 2) food.push(part(new THREE.MeshStandardMaterial({ color: bagCols[(i + 3) % 6], roughness: 0.8 }), .03, .225, -.04, .05, .05, .06))
+      scene.add(g); crates.push({ m: g, food, half: new V3(0.3, 0.15 * K, 0.42), r: 0.42, home: { pos: new V3(x, surfaceAt(x, z) + 0.15 * K, z), yaw: h }, vel: new V3(), spin: new V3(), awake: false }) } }
+
   // --- Two loaded shopping buggies where the cart corrals were, out front of publick: knock them over.
   { const spots = []; for (const [x, z, t] of DATA.corrals || []) { const s = spots.find((p) => Math.hypot(p[0] - x, p[1] - z) < 2.5); if (s) { s[0] = (s[0] + x) / 2; s[1] = (s[1] + z) / 2 } else spots.push([x, z, t]) }
     const wire = new THREE.MeshStandardMaterial({ color: '#c3c8cc', roughness: 0.35, metalness: 0.7 }), grip = new THREE.MeshStandardMaterial({ color: '#2f8f3a', roughness: 0.6 }), tyre = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 })
@@ -1636,12 +1675,12 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
       for (const [x, z] of [[-0.22, -0.38], [0.22, -0.38], [-0.2, 0.38], [0.2, 0.38]]) { add(rod(0.5), wire, x, -0.25, z); add(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 10), tyre, x, -0.48, z, 0, Math.PI / 2) }
       add(new THREE.BoxGeometry(0.48, 0.012, 0.8), wire, 0, -0.32, 0)
       // The groceries: a loaf, a milk jug, cereal, a frozen turkey breast, apples, a pumpkin pie.
-      let k = seed; for (let i = 0; i < 9; i++, k++) { const [col, dim] = foods[k % foods.length], mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 })
+      const food = []; let k = seed; for (let i = 0; i < 9; i++, k++) { const [col, dim] = foods[k % foods.length], mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 })
         const m = Array.isArray(dim) ? new THREE.Mesh(new THREE.BoxGeometry(...dim), mat) : new THREE.Mesh(new THREE.SphereGeometry(dim, 10, 8), mat)
-        m.position.set(-0.15 + (i % 3) * 0.15, 0.1 + Math.floor(i / 3) * 0.12 + (i % 2) * 0.03, -0.28 + (i % 4) * 0.18); m.rotation.y = i; m.castShadow = true; g.add(m) }
-      const pie = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.05, 16), new THREE.MeshStandardMaterial({ color: '#c96a1e', roughness: 0.7 })); pie.position.set(0.08, 0.42, 0.2); g.add(pie)
+        m.position.set(-0.15 + (i % 3) * 0.15, 0.1 + Math.floor(i / 3) * 0.12 + (i % 2) * 0.03, -0.28 + (i % 4) * 0.18); m.rotation.y = i; m.castShadow = true; g.add(m); food.push(m) }
+      const pie = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.05, 16), new THREE.MeshStandardMaterial({ color: '#c96a1e', roughness: 0.7 })); pie.position.set(0.08, 0.42, 0.2); g.add(pie); food.push(pie); g.userData.food = food
       g.traverse((o) => { if (o.isMesh) o.position.y -= 0.0 }); return g }
-    spots.slice(0, 2).forEach(([x, z, t], i) => { const m = buggy(i * 3); scene.add(m); crates.push({ m, half: new V3(0.3, 0.5, 0.48), r: 0.5, home: { pos: new V3(x, GY + 0.5, z), yaw: t + 0.4 - i * 0.8 }, vel: new V3(), spin: new V3(), awake: false }) })
+    spots.slice(0, 2).forEach(([x, z, t], i) => { const m = buggy(i * 3); scene.add(m); crates.push({ m, food: m.userData.food, half: new V3(0.3, 0.5, 0.48), r: 0.5, home: { pos: new V3(x, GY + 0.5, z), yaw: t + 0.4 - i * 0.8 }, vel: new V3(), spin: new V3(), awake: false }) })
   }
 
   // --- The Winn-Trixie end of the lot has gone to seed: potholes, weeds in the cracks, litter, a car on blocks,
@@ -1714,10 +1753,19 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
           const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.24, 8), new THREE.MeshStandardMaterial({ color: '#8a6a3a', roughness: 0.4 })); bottle.position.set(0.36, 0.2, 0.1); m.add(bottle) }
         return g }
       const spots = [[-99.2, 411.8, 0.4, 0], [-96.6, 418.4, 2.2, 1], [-93.8, 413.6, 1.1, 0], [-99.8, 427.6, -0.6, 2], [-95.4, 424.9, 2.9, 0], [-92.9, 429.4, 0.8, 1], [-97.6, 421.2, 1.7, 0]]
-      spots.forEach(([x, z, yaw, side], i) => { const m = cart(i, i === 6); scene.add(m); const X = x * U, Z = z * U
+      spots.forEach(([x, z, yaw, side], i) => { const m = cart(i, false); scene.add(m); const X = x * U, Z = z * U
         if (side) { m.rotation.z = side === 1 ? Math.PI / 2 : -Math.PI / 2 }  // lying on its side
-        crates.push({ m, half: new V3(0.3, side ? 0.3 : 0.5, 0.48), r: 0.5, heavy: i === 6, home: { pos: new V3(X, surfaceAt(X, Z) + (side ? 0.3 : 0.5), Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
-        if (side) crates[crates.length - 1].home.roll = m.rotation.z }) }
+        crates.push({ m, half: new V3(0.3, side ? 0.3 : 0.5, 0.48), r: 0.5, home: { pos: new V3(X, surfaceAt(X, Z) + (side ? 0.3 : 0.5), Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
+        if (side) crates[crates.length - 1].home.roll = m.rotation.z })
+      // His cart's man: standing beside it in a green cap, bottle in hand, staring at nothing. He doesn't move, and you can't hit him.
+      { const g = new THREE.Group(), X = -98.15 * U, Z = 421.6 * U; g.position.set(X, surfaceAt(X, Z), Z); g.rotation.y = 2.4; scene.add(g)
+        const add = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; g.add(o); return o }
+        for (const e of [-1, 1]) { add(new THREE.CylinderGeometry(0.075, 0.065, 0.85, 8), jeans, e * 0.1, 0.45, 0); add(new THREE.BoxGeometry(0.11, 0.08, 0.24), tyreM, e * 0.1, 0.04, 0.05)
+          add(new THREE.CylinderGeometry(0.05, 0.045, 0.6, 8), coat, e * 0.27, 1.12, 0.02, 0, e * 0.12) }
+        add(new THREE.CylinderGeometry(0.19, 0.17, 0.62, 10), coat, 0, 1.18, 0); add(new THREE.SphereGeometry(0.13, 12, 10), skin, 0, 1.62, 0.02)
+        add(new THREE.CylinderGeometry(0.14, 0.14, 0.07, 12), cap, 0, 1.72, 0.02); add(new THREE.BoxGeometry(0.2, 0.02, 0.12), cap, 0, 1.69, 0.16)
+        add(new THREE.CylinderGeometry(0.04, 0.045, 0.24, 8), new THREE.MeshStandardMaterial({ color: '#8a6a3a', roughness: 0.4 }), 0.29, 0.86, 0.05)
+        circles.push([X, Z, 0.45]) } }
     // Six dumpsters lined up along the store's blank side wall, one of them with a man living in it.
     { const green = new THREE.MeshStandardMaterial({ color: '#2f5a3c', roughness: 0.8 }), blue = new THREE.MeshStandardMaterial({ color: '#2a4f7a', roughness: 0.8 }), lidM = new THREE.MeshStandardMaterial({ color: '#1d1f20', roughness: 0.6 }), bagM = new THREE.MeshStandardMaterial({ color: '#17181a', roughness: 0.45 }), whl = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.7 })
       const skin = new THREE.MeshStandardMaterial({ color: '#b98a66', roughness: 0.8 }), beanie = new THREE.MeshStandardMaterial({ color: '#b5541e', roughness: 0.9 }), coat = new THREE.MeshStandardMaterial({ color: '#5b5a3c', roughness: 0.95 }), beard = new THREE.MeshStandardMaterial({ color: '#8a8478', roughness: 1 })
@@ -1947,7 +1995,7 @@ for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.
 for (const c of crates) if (c.home && !c.home.grounded) { c.home.grounded = true; const d = surfaceAt(c.home.pos.x, c.home.pos.z) - GY; if (Math.abs(d) > 0.02 && Math.abs(d) < 0.4) c.home.pos.y += d }
 function resetCrates() { for (const k of balloons) { k.popped = false; k.b.visible = true; k.tether.visible = true }
  for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
-  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; if (c.lenses) for (const l of c.lenses) l.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, c.home.roll || 0, 'YXZ')); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; if (c.lenses) for (const l of c.lenses) l.visible = true; if (c.food) for (const f of c.food) f.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, c.home.roll || 0, 'YXZ')); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 const nxGuess = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l } }
 function pushCrates(car) {
@@ -1981,10 +2029,15 @@ function pushCrates(car) {
     c.vel.set(car.vel.x * 0.85 + nx * kick, Math.min(5.5, 1.2 + speed * 0.28) * (0.7 + Math.random() * 0.5), car.vel.y * 0.85 + nz * kick)
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
     if (c.heavy && c.m.position.distanceTo(c.home.pos) > 1.3) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); car.vel.multiplyScalar(-0.25); continue } // on its leash: it only shoves so far, then it's a wall
+    if (c.parked && car === P && (game.parkHitT ?? 0) <= 0 && speed > 3) { game.parkHitT = 0.6; game.armor = Math.max(1, game.armor - Math.min(9, 1.5 + speed * 0.45)); hurt(2); flash('DENT!'); S.hit = Math.max(S.hit, 0.6); audio.crash(Math.min(1, speed / 12)); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
     if (c.heavy) { c.vel.multiplyScalar(0.1); c.vel.y = 0; p.x = c.m.position.x; p.z = c.m.position.z; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.vote && car === R && !game.georgeDown && game.state !== 'cutscene') { game.georgeDown = true; $('bubble2').textContent = 'HIT HIM HARDER! HE JUST RAN OVER THE SIGN FOR GEORGE — NOOO, VOTE GEORGE!'; $('bubble2').classList.add('show'); game.b2T = 3.6 }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
+    if (c.food && !c.spilled) { c.spilled = true; for (const f of c.food) { const wp = f.getWorldPosition(new V3()), q = f.getWorldQuaternion(new THREE.Quaternion()); f.visible = false
+      const m = f.clone(); m.visible = true; m.position.copy(wp).y += 0.2; m.quaternion.copy(q); scene.add(m); const bb = new THREE.Box3().setFromObject(m), hs = bb.getSize(new V3()).multiplyScalar(0.5)
+      const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 3.5
+      crates.push({ m, half: hs, r: Math.max(hs.x, hs.z), home: null, donut: true, gy: c.gy, vel: new V3(car.vel.x * 0.5 + Math.cos(a) * sp, 2 + Math.random() * 2.5, car.vel.y * 0.5 + Math.sin(a) * sp), spin: new V3((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 12), awake: true }) } }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
     if (c.turkeyBin && !c.spilled) { c.spilled = true; spillTurkeys(c) }
     if (c.pylon && !c.spilled) { c.spilled = true
@@ -2145,7 +2198,7 @@ function updateSodas(dt) {
 }
 
 function update(dt) {
-  game.t += dt; game.hitCool -= dt
+  game.t += dt; game.hitCool -= dt; game.parkHitT = (game.parkHitT ?? 0) - dt
   if (game.bubbleT > 0) { game.bubbleT -= dt; if (game.bubbleT <= 0) $('bubble').classList.remove('show') }
   const s = game.state
   if (s === 'intro') return
