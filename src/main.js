@@ -43,7 +43,7 @@ const WAYPOINTS = [u2(-79.4, 349.5), u2(-77.5, 343.8), u2(-88.4, 357), u2(-84.8,
 
 // A1A S along the west side (both carriageways and the median), blocked at the same two places.
 // A1A S is one road now (two lanes and a centre turn lane); this line runs 1.1 east of its centre, so the drivable band (to 2.9 west of it) covers the whole road.
-const ROAD_W = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418]].map(([x, z]) => [x + 1.1, z])
+const ROAD_W = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418], [-84.93, 434]].map(([x, z]) => [x + 1.1, z])
 const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
@@ -366,7 +366,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
   const leafI = [], trunkI = [], scrubI = [], M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), greens = ['#35602f', '#44743a', '#2b5230', '#557f3c', '#3c6a44']
   const inst = (list, x, y, z, sx, sy, sz, ry = 0, rz = 0, col = 0) => { M4.compose(new V3(x, y, z), Q.setFromEuler(E.set(0, ry, rz)), new V3(sx, sy, sz)); list.push([M4.clone(), col]) }
   let k = 0
-  for (const [pts, side] of [[[[-84.2, 417], [-84.7, 412.4], [-84.5, 407], [-83.1, 403.5], [-81.7, 401], [-81.8, 398.6], [-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
+  for (const [pts, side] of [[[[-79.4, 433], [-82.2, 424], [-84.2, 417], [-84.7, 412.4], [-84.5, 407], [-83.1, 403.5], [-81.7, 401], [-81.8, 398.6], [-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
     const [ax, az] = pts[i], [bx, bz] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 1.1)
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
@@ -389,10 +389,11 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
   }
   // A wall of oaks round the neighborhood and PCN Bank, instead of barriers.
   { let sd = 21; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
-    const inYard = (x, z) => (x > -121.1 * U && x < -91 * U && z > 397.2 * U && z < 406.1 * U) || (x > -101.5 * U && x < -88 * U && z > 405 * U && z < 414.6 * U)
+    const inYard = (x, z) => (x > -121.1 * U && x < -91 * U && z > 397.2 * U && z < 406.1 * U) || (x > -108.5 * U && x < -86 * U && z > 405 * U && z < 432.5 * U)
     for (const [ax, az, bx, bz] of DATA.treeRuns || []) { const len = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len, tz = (bz - az) / len; let nx = tz, nz = -tx; if (inYard((ax + bx) / 2 + nx * 3, (az + bz) / 2 + nz * 3)) { nx = -nx; nz = -nz }
       const n = Math.ceil(len / 3.4)
-      for (let j = 0; j < n; j++) for (const row of [0, 1]) { const d = (j + 0.3 + row * 0.5 + rn() * 0.3) / n * len, off = 2.0 + row * 3.2 + rn(), px = ax + tx * d + nx * off, pz = az + tz * d + nz * off, sc = 2.3 + rn() * 1.5 + row, hgt = sc * (1.25 + rn() * 0.5) + row * 1.6, ci = Math.floor(rn() * 5)
+      for (let j = 0; j < n; j++) for (const row of [0, 1, 2, 3]) { const d = (j + 0.3 + row * 0.5 + rn() * 0.3) / n * len, off = 2.0 + row * 3.4 + rn() * 1.4, // four rows: woods going off into the distance
+ px = ax + tx * d + nx * off, pz = az + tz * d + nz * off, sc = 2.3 + rn() * 1.5 + row, hgt = sc * (1.25 + rn() * 0.5) + row * 1.6, ci = Math.floor(rn() * 5)
         if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.25 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.25 })) continue // not through a neighbor's house
         inst(trunkI, px, hgt * 0.5, pz, 0.22 + sc * 0.06, hgt, 0.22 + sc * 0.06, rn() * 6, (rn() - 0.5) * 0.25)
         inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, rn() * 6, 0, ci)
@@ -610,7 +611,7 @@ const along = (pts, z, off) => {
   const [a, b] = p.slice(-2); return a[0] + (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + off
 }
 const regions = []
-for (let z = 333; z < 418; z += 1) {
+for (let z = 333; z < 432; z += 1) {
   const z0 = z - 0.3, z1 = z + 1.3
   regions.push(mkRegion([[along(ROAD_W, z0, -2.9), z0], [along(ROAD, z0, 1.0), z0], [along(ROAD, z1, 1.0), z1], [along(ROAD_W, z1, -2.9), z1]].map(([x, zz]) => [x * U, zz * U])))
 }
@@ -676,7 +677,9 @@ regions.push(mkRegion([[-124.5, 382.6], [-95.0, 382.6], [-95.0, 391.5], [-124.5,
 // PCN Bank's corner, south of the street: open, with the bank itself solid.
 regions.push(mkRegion([[-101.5, 405.4], [-88.6, 405.4], [-88.6, 414.6], [-101.5, 414.6]].map(([x, z]) => [x * U, z * U])))
 boxes.push({ c: new V2(-96.1 * U, 410.05 * U), a: new V2(1, 0), hx: 1.75 * U, hz: 1.75 * U })
-for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2], [-93.6, 413.4], [-96.6, 414.2]]) circles.push([ox * U, oz * U, 0.5])
+for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2]]) circles.push([ox * U, oz * U, 0.5])
+// The lot PCN Bank shares with the Winn-Trixie, south of the neighborhood.
+regions.push(mkRegion([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => [x * U, z * U])))
 // Melvin's Island's lot, south of the tip: drive right up to the shop front.
 regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 416.6], [-85.6, 416.6]].map(([x, z]) => [x * U, z * U])))
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
@@ -1540,7 +1543,7 @@ const lotIslands = []
     const oak = (x, z, sc) => { const y = surfaceAt(x, z), t = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * sc, 0.4 * sc, 2.6 * sc, 7), bark); t.position.set(x, y + 1.3 * sc, z); t.rotation.z = 0.12; t.castShadow = true; scene.add(t)
       for (let i = 0; i < 4; i++) { const a = i * 1.57 + x, c = new THREE.Mesh(blob, leaf[i % 2]); c.scale.set(2.2 * sc, 1.1 * sc, 2.2 * sc); c.position.set(x + Math.sin(a) * 1.9 * sc, y + (3.6 + (i % 2) * 0.5) * sc, z + Math.cos(a) * 1.9 * sc); c.castShadow = true; scene.add(c) }
       const top = new THREE.Mesh(blob, leaf[0]); top.scale.set(2.5 * sc, 1.2 * sc, 2.5 * sc); top.position.set(x, y + 4.5 * sc, z); scene.add(top) }
-    for (const [ox, oz, sc] of [[-99.6, 408.0, 1.2], [-100.0, 412.2, 1.2], [-93.6, 413.4, 1.1], [-96.6, 414.2, 1.2]]) oak(ox * U, oz * U, sc)
+    for (const [ox, oz, sc] of [[-99.6, 408.0, 1.2], [-100.0, 412.2, 1.2]]) oak(ox * U, oz * U, sc)
     // Concrete utility poles with crossarms and a transformer now and then; sagging wires between them.
     const conc = new THREE.MeshStandardMaterial({ color: '#b3ada0', roughness: 0.9 }), dk = new THREE.MeshStandardMaterial({ color: '#4a4d50', roughness: 0.7 }), wire = new THREE.LineBasicMaterial({ color: '#1b1b1b' })
     const line = ROAD_W.filter(([, z]) => z < 386).map(([x, z]) => [(x - 3.4) * U, z * U]), tops = []
@@ -1554,7 +1557,7 @@ const lotIslands = []
   }
 
   // --- The big road block across A1A south of the tip: striped barricades, a wall of cones, ROAD CLOSED boards, flashing ambers.
-  { const A = [-90.9 * U, 416.8 * U], B = [-83.2 * U, 416.5 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
+  { const A = [-88.9 * U, 432.5 * U], B = [-81.6 * U, 432.5 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
     const stripe = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 256, 32); x.fillStyle = '#e8641b'; for (let i = -32; i < 256; i += 48) { x.beginPath(); x.moveTo(i, 32); x.lineTo(i + 24, 32); x.lineTo(i + 56, 0); x.lineTo(i + 32, 0); x.fill() } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const board = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 512, 256); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 496, 240); x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 110px Anton, Impact, sans-serif'; x.fillText('ROAD', 256, 116); x.fillText('CLOSED', 256, 226); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const sm = new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.7 }), bm = new THREE.MeshStandardMaterial({ map: board, roughness: 0.7 }), leg = new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.8 }), cone = new THREE.MeshStandardMaterial({ color: '#f26a1b', roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: '#f4f4f0', roughness: 0.6 }), amber = new THREE.MeshBasicMaterial({ color: '#ffb020' })
@@ -1579,6 +1582,58 @@ const lotIslands = []
         D.position.set(x, GY + sc * 0.6, z); D.rotation.set(0, rn() * 6, 0); D.scale.set(sc * 1.25, sc, sc * 1.15); D.updateMatrix(); ms.push(D.matrix.clone()) }
       const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), mulchM); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-tz, tx)); m.position.set((ax + bx) / 2 * U + nx * ins * 1.15, GY + 0.02, (az + bz) / 2 * U + nz * ins * 1.15); m.receiveShadow = true; scene.add(m) }
     const im = new THREE.InstancedMesh(blob, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), ms.length), c = new THREE.Color(); ms.forEach((m, n) => { im.setMatrixAt(n, m); im.setColorAt(n, c.set(['#3b6b30', '#4c7d38', '#335f2c'][n % 3])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
+
+  // --- Two loaded shopping buggies where the cart corrals were, out front of publick: knock them over.
+  { const spots = []; for (const [x, z, t] of DATA.corrals || []) { const s = spots.find((p) => Math.hypot(p[0] - x, p[1] - z) < 2.5); if (s) { s[0] = (s[0] + x) / 2; s[1] = (s[1] + z) / 2 } else spots.push([x, z, t]) }
+    const wire = new THREE.MeshStandardMaterial({ color: '#c3c8cc', roughness: 0.35, metalness: 0.7 }), grip = new THREE.MeshStandardMaterial({ color: '#2f8f3a', roughness: 0.6 }), tyre = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 })
+    const foods = [['#c9a25e', [0.34, 0.16, 0.16]], ['#d8332c', 0.09], ['#f4f4ee', [0.13, 0.24, 0.13]], ['#f2c521', [0.2, 0.26, 0.12]], ['#7a3b12', [0.26, 0.2, 0.22]], ['#46a04f', 0.1], ['#e8742c', [0.2, 0.24, 0.12]], ['#d8332c', 0.09]]
+    const buggy = (seed) => { const g = new THREE.Group(), bars = []
+      const add = (geo, mat, x, y, z, rx = 0, rz = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, 0, rz); m.castShadow = true; g.add(m); return m }
+      const rod = (len) => new THREE.CylinderGeometry(0.012, 0.012, len, 5)
+      // Basket: a wire frame, open on top.
+      for (const y of [0.0, 0.24, 0.48]) { add(rod(0.9), wire, -0.27, y, 0, Math.PI / 2); add(rod(0.9), wire, 0.27, y, 0, Math.PI / 2); add(rod(0.54), wire, 0, y, 0.45, 0, Math.PI / 2); add(rod(0.54), wire, 0, y, -0.45, 0, Math.PI / 2) }
+      for (let i = -3; i <= 3; i++) { add(rod(0.48), wire, -0.27, 0.24, i * 0.14); add(rod(0.48), wire, 0.27, 0.24, i * 0.14) }
+      for (let i = -2; i <= 2; i++) { add(rod(0.48), wire, i * 0.12, 0.24, 0.45); add(rod(0.48), wire, i * 0.12, 0.24, -0.45) }
+      add(new THREE.BoxGeometry(0.54, 0.015, 0.9), wire, 0, 0, 0)
+      add(new THREE.CylinderGeometry(0.022, 0.022, 0.6, 8), grip, 0, 0.56, -0.56, 0, Math.PI / 2)
+      for (const sx of [-0.27, 0.27]) add(rod(0.2), wire, sx, 0.52, -0.5, 0.9)
+      for (const [x, z] of [[-0.22, -0.38], [0.22, -0.38], [-0.2, 0.38], [0.2, 0.38]]) { add(rod(0.5), wire, x, -0.25, z); add(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 10), tyre, x, -0.48, z, 0, Math.PI / 2) }
+      add(new THREE.BoxGeometry(0.48, 0.012, 0.8), wire, 0, -0.32, 0)
+      // The groceries: a loaf, a milk jug, cereal, a frozen turkey breast, apples, a pumpkin pie.
+      let k = seed; for (let i = 0; i < 9; i++, k++) { const [col, dim] = foods[k % foods.length], mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 })
+        const m = Array.isArray(dim) ? new THREE.Mesh(new THREE.BoxGeometry(...dim), mat) : new THREE.Mesh(new THREE.SphereGeometry(dim, 10, 8), mat)
+        m.position.set(-0.15 + (i % 3) * 0.15, 0.1 + Math.floor(i / 3) * 0.12 + (i % 2) * 0.03, -0.28 + (i % 4) * 0.18); m.rotation.y = i; m.castShadow = true; g.add(m) }
+      const pie = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.05, 16), new THREE.MeshStandardMaterial({ color: '#c96a1e', roughness: 0.7 })); pie.position.set(0.08, 0.42, 0.2); g.add(pie)
+      g.traverse((o) => { if (o.isMesh) o.position.y -= 0.0 }); return g }
+    spots.slice(0, 2).forEach(([x, z, t], i) => { const m = buggy(i * 3); scene.add(m); crates.push({ m, half: new V3(0.3, 0.5, 0.48), r: 0.5, home: { pos: new V3(x, GY + 0.5, z), yaw: t + 0.4 - i * 0.8 }, vel: new V3(), spin: new V3(), awake: false }) })
+  }
+
+  // --- Winn-Trixie, sharing a lot with PCN Bank: a long tan box with a red banner apologizing for the turkeys.
+  { const fx = -104.6, cz = 420.5, L = 9.0 * U, D = 3.4 * U, H = 6.4, y = GY
+    const lotM = new THREE.MeshStandardMaterial({ color: '#5d6466', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); lotM.onBeforeCompile = paveShader
+    const shp = new THREE.Shape([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => new THREE.Vector2(x * U, -z * U)))
+    const lot = new THREE.Mesh(new THREE.ShapeGeometry(shp).rotateX(-Math.PI / 2), lotM); lot.position.y = y - 0.012; lot.receiveShadow = true; scene.add(lot)
+    const tan = new THREE.MeshStandardMaterial({ color: '#dccdb0', roughness: 0.9 }), trim = new THREE.MeshStandardMaterial({ color: '#b8a888', roughness: 0.9 }), glass = new THREE.MeshStandardMaterial({ color: '#2f3d44', roughness: 0.2, metalness: 0.5 })
+    const g = new THREE.Group(); g.position.set(fx * U, y, cz * U); scene.add(g)
+    const box = (w, h, d, m, x, yy, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, yy, z); b.castShadow = b.receiveShadow = true; g.add(b); return b }
+    box(D, H, L, tan, -D / 2, H / 2, 0); box(D + 0.4, 0.5, L + 0.4, trim, -D / 2, H + 0.25, 0)
+    box(0.6, H + 1.6, 7, tan, 0.3, (H + 1.6) / 2, 0)
+    box(0.05, 2.6, 5.4, glass, 0.63, 1.3, 0); box(2.4, 0.3, 7.4, trim, 1.2, 3.2, 0)
+    for (const dz of [-1, 1]) for (const k of [0, 1, 2]) box(0.05, 1.8, 2.6, glass, 0.03, 1.4, dz * (7.5 + k * 3.2))
+    const tex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t }
+    const name = tex(1024, 192, (x, w, h) => { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = '#d6202a'; x.font = 'italic 900 128px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('Winn-Trixie', w / 2 - 50, h / 2 + 6, 760)
+      x.strokeStyle = '#d6202a'; x.lineWidth = 22; x.lineCap = 'round'; x.beginPath(); x.moveTo(w - 170, h / 2); x.lineTo(w - 130, h / 2 + 40); x.lineTo(w - 50, h / 2 - 50); x.stroke() })
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 1.24), new THREE.MeshStandardMaterial({ map: name, roughness: 0.6 })); sign.rotation.y = Math.PI / 2; sign.position.set(0.62, H + 0.75, 0); g.add(sign)
+    const ban = tex(2048, 256, (x, w, h) => { x.fillStyle = '#c8102e'; x.fillRect(0, 0, w, h); x.strokeStyle = '#fff'; x.lineWidth = 10; x.strokeRect(14, 14, w - 28, h - 28); x.fillStyle = '#fff'; x.font = '900 120px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('WE HAVEN’T HAD TURKEYS IN WEEKS — SORRY', w / 2, h / 2 + 4, w - 80) })
+    const bm = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.86, L * 0.86 / 8), new THREE.MeshStandardMaterial({ map: ban, roughness: 0.8, side: THREE.DoubleSide })); bm.rotation.y = Math.PI / 2; bm.position.set(0.66, 4.6, 0); g.add(bm)
+    boxes.push({ c: new V2((fx * U) - D / 2 + 0.3, cz * U), a: new V2(1, 0), hx: D / 2 + 0.6, hz: L / 2 + 0.2 })
+    const stall = decalTex(64, 512, (x, w, h) => { x.fillStyle = CREAM; x.fillRect(w / 2 - 4, 0, 8, h) }, 0.4)
+    for (const row of [-98.2, -94.2]) for (let k = 0; k < 9; k++) decal(stall, row * U, (412 + k * 2.2) * U, 0.7, 5.4, Math.PI / 2)
+    const ps = tex(512, 384, (x, w, h) => { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = '#d6202a'; x.font = 'italic 900 92px Georgia, serif'; x.textAlign = 'center'; x.fillText('Winn-Trixie', w / 2, 140, 470); x.fillRect(0, 220, w, 164); x.fillStyle = '#fff'; x.font = '900 54px Anton, Impact, sans-serif'; x.fillText('NO TURKEYS · SORRY', w / 2, 320, 470) })
+    const pg = new THREE.Group(); pg.position.set(-90.6 * U, surfaceAt(-90.6 * U, 424 * U), 424 * U); pg.rotation.y = Math.PI / 2; scene.add(pg)
+    for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.55), new THREE.MeshStandardMaterial({ map: ps, roughness: 0.6 })); f.position.set(0, 4.0, s2 * 0.16); if (s2 < 0) f.rotation.y = Math.PI; pg.add(f) }
+    const post = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.7, 0.3), trim); post.position.y = 1.35; pg.add(post); circles.push([-90.6 * U, 424 * U, 0.8])
+  }
 
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
   { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
@@ -1650,6 +1705,8 @@ const lotIslands = []
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 0.08, 14), cap); c.position.set(x, y + 0.84, z); scene.add(c) }
 }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
+// Anything set down off the lot's asphalt (on grass, a sidewalk, the street) sits on what's actually under it, not floating.
+for (const c of crates) if (c.home && !c.home.grounded) { c.home.grounded = true; const d = surfaceAt(c.home.pos.x, c.home.pos.z) - GY; if (Math.abs(d) > 0.02 && Math.abs(d) < 0.4) c.home.pos.y += d }
 function resetCrates() { for (const k of balloons) { k.popped = false; k.b.visible = true; k.tether.visible = true }
  for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
   for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }

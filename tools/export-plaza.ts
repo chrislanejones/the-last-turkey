@@ -36,7 +36,7 @@ const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
 let wb = false, loving = false, groundK = 0
 /** A1A S past the plaza, redrawn as one road: two lanes and a centre turn lane, set back from the plaza's curb. */
-const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418]] // dead straight, clear of the plaza's curb all the way
+const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418], [-84.93, 434]] // dead straight, clear of the plaza's curb all the way
 /** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
 const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
 /** PCN Bank steps south to make room for the street. */
@@ -89,6 +89,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
 const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.6, clear: .8 } // open right through to the north end: pillars hold it up
 let cutting = false
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
+  if (layer === 'wood' && color === '#9fa6a5' && Math.abs(w - .02) < 1e-6) { ((DATA as any).corrals ||= []).push([x * UNIT, z * UNIT, turn]); return } // the grey cart-corral rails: the game puts buggies there instead
   if (layer === 'ground' && color === '#6e7472') y -= .007 // the Square K's parking strip sat exactly level with the pump apron and flickered through it
   // Megabucks' drive-thru: a lane cut clean through the strip's north end, roofed over above car height.
   if (!cutting && layer !== 'ground' && Math.abs(turn - DT.t) < 1e-3) {
@@ -260,7 +261,7 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.7, 365.1], [-99.5, 378.85], [-98.7, 382.6], [-96.95, 390.15], [-95.35, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-101.5, 406.1], [-101.5, 414.6], [-91.2, 414.6], [-90.9, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
+  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.7, 365.1], [-99.5, 378.85], [-98.7, 382.6], [-96.95, 390.15], [-95.35, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-108.5, 406.1], [-108.5, 432.5], [-88.9, 432.5], [-81.6, 432.5]] // down A1A S, round the neighborhood and the Winn-Trixie lot, and across the road past it
   const W = W0
   ;(DATA as any).treeRuns = []
   for (let i = 0; i + 1 < W.length; i++) {
@@ -384,6 +385,8 @@ console.log('roads', roads.length, 'houses', houses.length, 'plants', planted, '
 wb = true
 buildWestBlocks(kit)
 wb = false
+// A little lane north off the street, between the houses, to the ones at the back.
+box('ground', '#878c8e', -103.8, .0612, 400.3, .85, .03, 5.7)
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
 DATA.homes.push([FARMERS.x * UNIT, FARMERS.z * UNIT, FARMERS.hw * 2 * UNIT, FARMERS.hd * 2 * UNIT, FARMERS.t])
 
