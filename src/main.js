@@ -815,7 +815,7 @@ function reset(toCutscene) {
   Object.assign(P, { heading: P_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); P.pos.copy(P_START.pos); P.vel.set(0, 0)
   Object.assign(R, { heading: R_START.heading, steer: 0, pitch: 0, roll: 0, bounce: 0, loose: 0, fwd: 0 }); R.pos.copy(R_START.pos); R.vel.set(0, 0)
   resetCrates()
-  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, conspiracy: false, forkTalk: false, forkReply: 0, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
+  Object.assign(game, { state: toCutscene ? 'cutscene' : 'intro', t: 0, health: 100, grab: 0, hitCool: 0, ai: 'seek', aiT: 0, stuckT: 0, reverseT: 0, bubbleT: 0, rams: 0, pathI: 0, touchT: 0, georgeDown: false, armor: 100, attackCool: 6, people: 100, cans: 10, canHits: 0, lastCanT: 1.4, throwCool: 3, soda: 3, lattes: 0, gotLattes: false, conspiracy: false, forkTalk: false, forkReply: 0, sodaReady: false, b2T: 0, backedOut: false, backT: 0 })
   for (const c of [...sodas, ...lattes]) { c.live = false; c.mesh.visible = false }
   $('bubble2').textContent = 'WE HAVE TO GET THAT LAST TURKEY!'
   for (const c of cans) { c.live = false; c.mesh.visible = false }
@@ -1637,33 +1637,36 @@ const lotIslands = []
     const post = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.7, 0.3), trim); post.position.y = 1.35; pg.add(post); circles.push([-90.6 * U, 424 * U, 0.8])
   }
 
-  // --- Spray paint on the big blank west wall of the OOPS Store block.
-  { const c = document.createElement('canvas'); c.width = 2048; c.height = 384; const x = c.getContext('2d')
+  // --- Spray-painted graffiti: hand-tilted letters, outline, fade, drips and overspray, stuck onto the first wall a ray hits.
+  const sprayTag = (lines, [c0, c1, c2, glow], from, dir, W, H) => { const c = document.createElement('canvas'); c.width = 2048; c.height = 384; const x = c.getContext('2d')
     // Hand-sprayed: every letter tilted and bounced on its own, a fat dark outline, a pink-to-purple fade, a white shine,
     // soft overspray round the edges, and paint dripping down.
     let sd = 42; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
-    const lines = [['CHRISTY HOMES AND I WERE IN THE', 118], ['BACK OF THE JEEP LAST NIGHT', 270]], drips = []
+    const drips = []
     x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineCap = 'round'
     for (const [text, y0] of lines) {
       const font = (sz) => `italic 900 ${sz}px "Arial Black", Impact, sans-serif`; x.font = font(104)
-      let w = 0; const ws = [...text].map((ch) => { const v = ch === ' ' ? 34 : x.measureText(ch).width * 0.86; w += v; return v }), k = Math.min(1, 1960 / w)
+      let w = 0; const ws = [...text].map((ch) => { const v = ch === ' ' ? 34 : x.measureText(ch).width * 0.86; w += v; return v }), k = Math.min(lines.length > 1 ? 1 : 2.1, 1960 / w)
       let px = 1024 - w * k / 2
       const glyphs = [...text].map((ch, i) => { const g = { ch, x: px + ws[i] * k / 2, y: y0 + (rn() - 0.5) * 16 + Math.sin(i * 0.7) * 5, r: (rn() - 0.5) * 0.22, sz: 104 * k * (0.9 + rn() * 0.22) }; px += ws[i] * k; return g })
       for (const pass of ['spray', 'outline', 'fill', 'shine']) for (const g of glyphs) { if (g.ch === ' ') continue
         x.save(); x.translate(g.x, g.y); x.rotate(g.r); x.transform(1, 0, -0.18, 1, 0, 0); x.font = font(g.sz); x.textAlign = 'center'
-        if (pass === 'spray') { x.shadowColor = 'rgba(190,40,140,0.85)'; x.shadowBlur = 26; x.fillStyle = 'rgba(190,40,140,0.35)'; x.fillText(g.ch, 0, 0) }
+        if (pass === 'spray') { x.shadowColor = glow; x.shadowBlur = 26; x.fillStyle = glow.replace('0.85', '0.35'); x.fillText(g.ch, 0, 0) }
         if (pass === 'outline') { x.strokeStyle = '#1a0c1e'; x.lineWidth = 20; x.strokeText(g.ch, 0, 0); x.strokeStyle = '#f7f2ff'; x.lineWidth = 9; x.strokeText(g.ch, 0, 0) }
-        if (pass === 'fill') { const gr = x.createLinearGradient(0, -g.sz / 2, 0, g.sz / 2); gr.addColorStop(0, '#ff4fb0'); gr.addColorStop(0.55, '#e0218a'); gr.addColorStop(1, '#7a2bd6'); x.fillStyle = gr; x.fillText(g.ch, 0, 0); if (rn() < 0.45) drips.push([g.x + (rn() - 0.5) * g.sz * 0.4, g.y + g.sz * 0.38, 18 + rn() * 70]) }
+        if (pass === 'fill') { const gr = x.createLinearGradient(0, -g.sz / 2, 0, g.sz / 2); gr.addColorStop(0, c0); gr.addColorStop(0.55, c1); gr.addColorStop(1, c2); x.fillStyle = gr; x.fillText(g.ch, 0, 0); if (rn() < 0.45) drips.push([g.x + (rn() - 0.5) * g.sz * 0.4, g.y + g.sz * 0.38, 18 + rn() * 70]) }
         if (pass === 'shine') { x.globalAlpha = 0.55; x.fillStyle = '#fff'; x.fillRect(-g.sz * 0.25, -g.sz * 0.33, g.sz * 0.18, 4) }
         x.restore() }
     }
-    for (const [dx, dy, len] of drips) { const gr = x.createLinearGradient(0, dy, 0, dy + len); gr.addColorStop(0, '#d01e84'); gr.addColorStop(1, 'rgba(122,43,214,0.0)'); x.fillStyle = gr; x.fillRect(dx - 2.5, dy, 5, len); x.beginPath(); x.arc(dx, dy + len - 4, 4, 0, 7); x.globalAlpha = 0.6; x.fill(); x.globalAlpha = 1 }
-    for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(214,40,140,${0.08 + rn() * 0.25})`; const a = rn() * 6.28, r = 40 + rn() * 180; x.fillRect(1024 + Math.cos(a) * r * 5.2 * rn(), 190 + Math.sin(a) * r * 0.9 * rn(), 2, 2) }
+    for (const [dx, dy, len] of drips) { const gr = x.createLinearGradient(0, dy, 0, dy + len); gr.addColorStop(0, c1); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(dx - 2.5, dy, 5, len); x.beginPath(); x.arc(dx, dy + len - 4, 4, 0, 7); x.globalAlpha = 0.6; x.fill(); x.globalAlpha = 1 }
+    for (let i = 0; i < 1400; i++) { x.globalAlpha = 0.08 + rn() * 0.25; x.fillStyle = c1; const a = rn() * 6.28, r = 40 + rn() * 180; x.fillRect(1024 + Math.cos(a) * r * 5.2 * rn(), 190 + Math.sin(a) * r * 0.9 * rn(), 2, 2) } x.globalAlpha = 1
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(19, 3.56), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
     // Find the strip's long blank back wall (it faces A1A S) and paint straight onto it.
-    const rc = new THREE.Raycaster(new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0)), h = rc.intersectObject(world.scene, true)[0]
-    if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } } // the big blank wall facing A1A S
+    const rc = new THREE.Raycaster(from, dir), h = rc.intersectObject(world.scene, true)[0]
+    if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } }
+
+  sprayTag([['CHRISTY HOMES AND I WERE IN THE', 118], ['BACK OF THE JEEP LAST NIGHT', 270]], ['#ff4fb0', '#e0218a', '#7a2bd6', 'rgba(190,40,140,0.85)'], new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0), 19, 3.56) // the big blank wall facing A1A S
+  sprayTag([['UNIONS FOR DANIEL', 192]], ['#ffe14a', '#ff8a1c', '#d12a1a', 'rgba(255,120,20,0.85)'], new V3(-80 * U, GY + 2.2, 373.05 * U), new V3(-1, 0, 0), 9.4, 1.76) // round the corner from the OOPS Store, under PIZZAZZ
 
   // --- VOTE GEORGE yard signs on the town sign's lawn; one leans out over the boulevard where Brad cuts the corner.
   { const c = document.createElement('canvas'); c.width = 512; c.height = 320; const x = c.getContext('2d')
@@ -1677,7 +1680,7 @@ const lotIslands = []
       const m = new THREE.Group(); for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.56), face); f.position.set(0, 0.17, s2 * 0.012); if (s2 < 0) f.rotation.y = Math.PI; f.castShadow = true; m.add(f) }
       for (const lx of [-0.3, 0.3]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.9, 4), wireM); w.position.set(lx, -0.1, 0); m.add(w) }
       scene.add(m); const X = sx * U, Z = sz * U
-      crates.push({ m, half: new V3(0.45, 0.46, 0.05), r: 0.45, home: { pos: new V3(X, surfaceAt(X, Z) + (lawn ? 0.21 : 0) + 0.45, Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
+      crates.push({ m, vote: true, half: new V3(0.45, 0.46, 0.05), r: 0.45, home: { pos: new V3(X, surfaceAt(X, Z) + (lawn ? 0.21 : 0) + 0.45, Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
     } }
 
   // --- A sign on the sidewalk under the Christy billboard: knock it flat if you want.
@@ -1798,6 +1801,7 @@ function pushCrates(car) {
     if (c.heavy && c.m.position.distanceTo(c.home.pos) > 1.3) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); car.vel.multiplyScalar(-0.25); continue } // on its leash: it only shoves so far, then it's a wall
     if (c.heavy) { c.vel.multiplyScalar(0.1); c.vel.y = 0; p.x = c.m.position.x; p.z = c.m.position.z; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
+    if (c.vote && car === R && !game.georgeDown && game.state !== 'cutscene') { game.georgeDown = true; $('bubble2').textContent = 'HIT HIM HARDER! HE JUST RAN OVER THE SIGN FOR GEORGE — NOOO, VOTE GEORGE!'; $('bubble2').classList.add('show'); game.b2T = 3.6 }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
     if (c.turkeyBin && !c.spilled) { c.spilled = true; spillTurkeys(c) }
