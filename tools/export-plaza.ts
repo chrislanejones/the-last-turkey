@@ -263,13 +263,13 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.7, 365.1], [-99.5, 378.85], [-98.7, 382.6], [-96.95, 390.15], [-95.35, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-108.5, 406.1], [-108.5, 432.5], [-88.9, 432.5], [-81.6, 432.5]] // down A1A S, round the neighborhood and the Winn-Trixie lot, and across the road past it
+  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-105.4, 353.9], [-123.0, 353.9], [-123.0, 406.1], [-108.5, 406.1], [-108.5, 432.5], [-88.9, 432.5], [-81.6, 432.5]] // down A1A S, round the neighborhood and the Winn-Trixie lot, and across the road past it
   const W = W0
   ;(DATA as any).treeRuns = []
   for (let i = 0; i + 1 < W.length; i++) {
     const [ax, az] = W[i], [bx, bz] = W[i + 1]
-    if (i > 11) { wallRun(ax, az, bx, bz); continue }
-    if (i < 7) { // along A1A S the trees and houses are the barrier: nothing drawn, just the edge you can't pass
+    if (i > 6) { wallRun(ax, az, bx, bz); continue }
+    if (i < 2) { // along A1A S the trees and houses are the barrier: nothing drawn, just the edge you can't pass
       const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
       DATA.walls.push([(ax + bx) / 2 * UNIT, (az + bz) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT]); continue }
     // Round the neighborhood and the bank it's a wall of trees: the game plants them, this is only what you bump into.
@@ -388,7 +388,14 @@ wb = true
 buildWestBlocks(kit)
 wb = false
 // A little lane north off the street, between the houses, to the ones at the back.
+const A1A = (z: number) => -106.34 + (z - 340) * .2275
 box('ground', '#878c8e', -103.8, .0612, 400.3, .85, .03, 5.7)
+// The rest of the neighborhood: a street back out to A1A S at the north end, one along the far west side joining them,
+// and a middle street between, parallel to the highway.
+for (const R of [[[A1A(356) - 1.3, 356], [-121.7, 356]], [[-121.7, 355.25], [-121.7, 404.9]], [[A1A(356) - 12.6, 356.7], [A1A(404) - 12.6, 403.4]]] as number[][][]) {
+  add('ground', ribbon(R, .78, .0605, 0), '#878c8e', 0, 0, 0); roads.push([...R[0], ...R[1], 1.56]) }
+// Between the two mouths, the woods along A1A S are the barrier.
+{ const a = [A1A(358.2) - 2.0, 358.2], b = [A1A(397.5) - 2.0, 397.5], len = Math.hypot(b[0] - a[0], b[1] - a[1]), turn = Math.atan2(b[0] - a[0], b[1] - a[1]); DATA.walls.push([(a[0] + b[0]) / 2 * UNIT, (a[1] + b[1]) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2) * UNIT]) }
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
 DATA.homes.push([FARMERS.x * UNIT, FARMERS.z * UNIT, FARMERS.hw * 2 * UNIT, FARMERS.hd * 2 * UNIT, FARMERS.t])
 
@@ -431,6 +438,7 @@ const keep = (g: BufferGeometry) => {
     if (g.userData.layer !== 'architecture' && g.userData.layer !== 'roof' && g.userData.layer !== 'ground' && cz > 390.2 && cx > -104.2) return false // no half-trees left over where the bank's block was cut away
     g.translate(HS[0], 0, HS[1]); return true
   }
+  if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -123.5 && cz > 353.5 && cz < 397.5 && cx < -106.34 + (cz - 340) * .2275 - 1.2) return false // cleared for the new neighborhood blocks
   if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -101 && cx < -92.8 && cz > 395.5 && cz < 404.8) return false // the old bank lot's trees don't come along (or stay in the street)
   if (g.userData.layer !== 'ground' && g.userData.layer !== 'foliage' && g.userData.layer !== 'wood' && cx > -108 && cx < -86.5 && cz > 414.8 && cz < 433) return false // the map's own supermarket-plaza bits (its sign and a wall) under the new Winn-Trixie lot
   if (cx > -99.5 && cx < -94.2 && cz > 396.9 && cz < 403.4) g.translate(BANK_MOVE[0], 0, BANK_MOVE[1])
