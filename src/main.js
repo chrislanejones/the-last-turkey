@@ -559,7 +559,7 @@ for (const r of [chris, woman]) r.traverse((m) => {
 const circles = [[PEDESTAL.x, PEDESTAL.y, 1.1]]
 for (const [x, z, turn] of DATA.cars) for (const e of [-1.2, 0, 1.2]) circles.push([x + Math.sin(turn) * e, z + Math.cos(turn) * e, 1.0])
 for (const [x, z] of DATA.palms) circles.push([x, z, 0.45])
-for (const [x, z] of DATA.poles) circles.push([x, z, 0.3])
+// (the lot's light poles are knock-down props now: see the crates)
 for (const [x, z] of BB_POLES) circles.push([x, z, 0.4])
 // Buildings: [center, unit vector along local x, half x, half z]. The grocery's box also covers its front walk.
 const wingBox = (cx, cz, t, L, D) => ({ c: u2(cx, cz), a: new V2(Math.cos(t), -Math.sin(t)), hx: (L / 2) * U, hz: (D / 2) * U })
@@ -1777,7 +1777,16 @@ const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.ani
 
   // Light poles stand on concrete footings painted safety yellow, scuffed by a thousand bumpers.
   const foot = new THREE.MeshStandardMaterial({ color: '#d6c79c', roughness: 0.9 }), cap = new THREE.MeshStandardMaterial({ color: '#a9a595', roughness: 0.9 })
-  for (const [x, z] of DATA.poles) { const y = surfaceAt(x, z), f = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.33, 0.8, 14), foot); f.position.set(x, y + 0.4, z); f.castShadow = f.receiveShadow = true; scene.add(f)
+  // Twin-head light poles on those footings: hit one hard and it comes down, the lamp glass shatters, and the Galaxie pays for it.
+  const poleM = new THREE.MeshStandardMaterial({ color: '#3e4446', roughness: 0.6, metalness: 0.4 }), headM = new THREE.MeshStandardMaterial({ color: '#3a4042', roughness: 0.5, metalness: 0.4 })
+  const PH = 2.5 * U, poleGeo = new THREE.CylinderGeometry(0.03 * U, 0.045 * U, PH, 10), headGeo = new THREE.BoxGeometry(0.32 * U, 0.05 * U, 0.14 * U), lensGeo = new THREE.PlaneGeometry(0.28 * U, 0.1 * U)
+  for (const [x, z] of DATA.poles) { const m = new THREE.Group(), p = new THREE.Mesh(poleGeo, poleM); p.castShadow = true; m.add(p)
+    const lensM = new THREE.MeshBasicMaterial({ color: '#fff3d6' }), lenses = []
+    for (const side of [-1, 1]) { const h = new THREE.Mesh(headGeo, headM); h.position.set(side * 0.2 * U, PH / 2 - 0.05 * U, 0); h.castShadow = true; m.add(h)
+      const l = new THREE.Mesh(lensGeo, lensM); l.rotation.x = Math.PI / 2; l.position.set(side * 0.2 * U, PH / 2 - 0.08 * U, 0); m.add(l); lenses.push(l) }
+    scene.add(m); const y0 = surfaceAt(x, z) + 0.84
+    crates.push({ m, half: new V3(0.18, PH / 2, 0.18), r: 0.32, lie: 0.2, home: { pos: new V3(x, y0 + PH / 2, z), yaw: 0 }, vel: new V3(), spin: new V3(), awake: false, rod: true, pivotLow: true, lamp: true, lenses }) }
+  for (const [x, z] of DATA.poles) { const y = surfaceAt(x, z), f = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.33, 0.8, 14), foot); f.position.set(x, y + 0.4, z); f.castShadow = f.receiveShadow = true; scene.add(f); circles.push([x, z, 0.1])
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 0.08, 14), cap); c.position.set(x, y + 0.84, z); scene.add(c) }
 }
 for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.z); c.home.pos.y += c.gy - GY }
@@ -1785,7 +1794,7 @@ for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.
 for (const c of crates) if (c.home && !c.home.grounded) { c.home.grounded = true; const d = surfaceAt(c.home.pos.x, c.home.pos.z) - GY; if (Math.abs(d) > 0.02 && Math.abs(d) < 0.4) c.home.pos.y += d }
 function resetCrates() { for (const k of balloons) { k.popped = false; k.b.visible = true; k.tether.visible = true }
  for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
-  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; if (c.lenses) for (const l of c.lenses) l.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 const nxGuess = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l } }
 function pushCrates(car) {
@@ -1793,7 +1802,7 @@ function pushCrates(car) {
   for (const c of crates) {
     if (!c.m.visible) continue
     const p = c.m.position, dx = p.x - car.pos.x, dz = p.z - car.pos.y
-    if (dx * dx + dz * dz > (c.pylon ? 36 : 16) || p.y - c.half.y > (c.gy ?? GY) + 1.0) continue
+    if (dx * dx + dz * dz > (c.pylon ? 36 : 16) || (!c.lamp && p.y - c.half.y > (c.gy ?? GY) + 1.0)) continue // (a light pole stands on its footing, so its base is high)
     const along = dx * fx + dz * fz, across = -dx * fz + dz * fx
     if (c.pylon && c.spilled) continue // once it's falling, let it fall
     if (c.topple) { // already down: a hit just shoves it along the ground
@@ -1806,6 +1815,8 @@ function pushCrates(car) {
       const edge = c.lie ?? c.half.x
       c.topple = { th: 0.05, w: 1.0 + Math.min(2.5, speed * 0.12), d, axis: new V3(d.z, 0, -d.x), pivot: new V3(p.x, c.gy ?? GY, p.z).addScaledVector(d, edge + 0.15), edge, q0: c.m.quaternion.clone(), bounced: false, sv: new V3(car.vel.x * 0.45, 0, car.vel.y * 0.45), spinY: (Math.random() - 0.5) * 1.5 }
       if (speed > 2) audio.clang(Math.min(0.7, 0.25 + speed / 30))
+      if (c.lamp && !c.spilled) { c.spilled = true; for (const l of c.lenses) l.visible = false; const top = c.m.position.clone().addScaledVector(c.topple.d, c.half.y); for (let i = 0; i < 3; i++) burst(new V2(top.x + c.topple.d.x * c.half.y * 0.9 + (Math.random() - 0.5) * 2, top.z + c.topple.d.z * c.half.y * 0.9 + (Math.random() - 0.5) * 2), 6, true, false, '#e6f2ff'); setTimeout(() => audio.crash(0.9), 650)
+        if (car === P) { game.armor = Math.max(1, game.armor - 14); hurt(5); flash('POLE DOWN!'); S.hit = Math.max(S.hit, 0.8); car.vel.multiplyScalar(0.35); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') } else car.vel.multiplyScalar(0.5) }
       if (c.sign && !c.spilled && car === P) { c.spilled = true; game.armor = Math.max(1, game.armor - 3); hurt(1); flash('SIGN DOWN!'); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
       car.vel.multiplyScalar(0.97); continue
     }

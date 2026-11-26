@@ -60,7 +60,7 @@ const homeAt = (x: number, z: number, pad: number) => PONCE_HOUSES.findIndex(([h
   return Math.abs(lx) < w / 2 + pad && Math.abs(lz) < d / 2 + pad
 })
 const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: number, z: number, rotation = 0, _glow?: string | null) => {
-  if ((input as any).parameters?.height === 2.5 && layer === 'wood') DATA.poles.push([x * UNIT, z * UNIT])
+  if ((input as any).parameters?.height === 2.5 && layer === 'wood') { DATA.poles.push([x * UNIT, z * UNIT]); input.dispose(); return } // the game builds the light poles, so they can be knocked down
   if (wb && inFarmers(x, z)) { input.dispose(); return }
   if (!wb && layer === 'architecture' && Math.hypot(x + 86.4, z - 394.4) < .5 && y > .05) { input.dispose(); return } // the price pylon: the game builds it, so it can fall // the corner office is built by the game
   let g = input.index ? input.toNonIndexed() : input.clone()
@@ -89,6 +89,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
 const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.6, clear: .8 } // open right through to the north end: pillars hold it up
 let cutting = false
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
+  if (layer === 'wood' && color === '#3a4042' && Math.abs(w - .32) < 1e-6 && Math.abs(y - 2.5) < 1e-6) return // light-pole heads: also built by the game
   if (layer === 'wood' && color === '#9fa6a5' && Math.abs(w - .02) < 1e-6) { ((DATA as any).corrals ||= []).push([x * UNIT, z * UNIT, turn]); return } // the grey cart-corral rails: the game puts buggies there instead
   if (layer === 'ground' && color === '#6e7472') y -= .007 // the Square K's parking strip sat exactly level with the pump apron and flickered through it
   // Megabucks' drive-thru: a lane cut clean through the strip's north end, roofed over above car height.
