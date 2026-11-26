@@ -446,6 +446,7 @@ const keep = (g: BufferGeometry) => {
     g.translate(HS[0], 0, HS[1]); return true
   }
   if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -101 && cx < -92.8 && cz > 395.5 && cz < 404.8) return false // the old bank lot's trees don't come along (or stay in the street)
+  if (g.userData.layer !== 'ground' && g.userData.layer !== 'foliage' && g.userData.layer !== 'wood' && cx > -108 && cx < -86.5 && cz > 414.8 && cz < 433) return false // the map's own supermarket-plaza bits (its sign and a wall) under the new Winn-Trixie lot
   if (cx > -99.5 && cx < -94.2 && cz > 396.9 && cz < 403.4) g.translate(BANK_MOVE[0], 0, BANK_MOVE[1])
   return cz > Z0 - 1 && cz < Z1 + 1 && cx > X0 - 1 && cx < X1 + 1
 }

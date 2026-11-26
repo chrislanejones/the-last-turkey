@@ -366,7 +366,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
   const leafI = [], trunkI = [], scrubI = [], M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), greens = ['#35602f', '#44743a', '#2b5230', '#557f3c', '#3c6a44']
   const inst = (list, x, y, z, sx, sy, sz, ry = 0, rz = 0, col = 0) => { M4.compose(new V3(x, y, z), Q.setFromEuler(E.set(0, ry, rz)), new V3(sx, sy, sz)); list.push([M4.clone(), col]) }
   let k = 0
-  for (const [pts, side] of [[[[-79.4, 433], [-82.2, 424], [-84.2, 417], [-84.7, 412.4], [-84.5, 407], [-83.1, 403.5], [-81.7, 401], [-81.8, 398.6], [-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
+  for (const [pts, side] of [[[[-78.6, 433], [-79.0, 424], [-79.6, 418.5], [-84.2, 417], [-84.7, 412.4], [-84.5, 407], [-83.1, 403.5], [-81.7, 401], [-81.8, 398.6], [-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
     const [ax, az] = pts[i], [bx, bz] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 1.1)
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
@@ -681,7 +681,7 @@ for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2]]) circles.push([ox * U, 
 // The lot PCN Bank shares with the Winn-Trixie, south of the neighborhood.
 regions.push(mkRegion([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => [x * U, z * U])))
 // Melvin's Island's lot, south of the tip: drive right up to the shop front.
-regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 416.6], [-85.6, 416.6]].map(([x, z]) => [x * U, z * U])))
+regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 432.1], [-85.6, 432.1]].map(([x, z]) => [x * U, z * U]))) // ...and on south past it, level with the end of the Winn-Trixie lot
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
 for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45, low: true })
 circles.push([-74.9 * U, 349.5 * U, 1.3]) // the plaza's pylon sign by its entrance
@@ -1613,6 +1613,8 @@ const lotIslands = []
     const lotM = new THREE.MeshStandardMaterial({ color: '#5d6466', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); lotM.onBeforeCompile = paveShader
     const shp = new THREE.Shape([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => new THREE.Vector2(x * U, -z * U)))
     const lot = new THREE.Mesh(new THREE.ShapeGeometry(shp).rotateX(-Math.PI / 2), lotM); lot.position.y = y - 0.012; lot.receiveShadow = true; scene.add(lot)
+    const shp2 = new THREE.Shape([[-87.3, 416.4], [-80.35, 416.4], [-80.35, 432.1], [-83.9, 432.1]].map(([x, z]) => new THREE.Vector2(x * U, -z * U)))
+    const lot2 = new THREE.Mesh(new THREE.ShapeGeometry(shp2).rotateX(-Math.PI / 2), lotM); lot2.position.y = y - 0.012; lot2.receiveShadow = true; scene.add(lot2)
     const tan = new THREE.MeshStandardMaterial({ color: '#dccdb0', roughness: 0.9 }), trim = new THREE.MeshStandardMaterial({ color: '#b8a888', roughness: 0.9 }), glass = new THREE.MeshStandardMaterial({ color: '#2f3d44', roughness: 0.2, metalness: 0.5 })
     const g = new THREE.Group(); g.position.set(fx * U, y, cz * U); scene.add(g)
     const box = (w, h, d, m, x, yy, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, yy, z); b.castShadow = b.receiveShadow = true; g.add(b); return b }
@@ -1634,6 +1636,15 @@ const lotIslands = []
     for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.55), new THREE.MeshStandardMaterial({ map: ps, roughness: 0.6 })); f.position.set(0, 4.0, s2 * 0.16); if (s2 < 0) f.rotation.y = Math.PI; pg.add(f) }
     const post = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.7, 0.3), trim); post.position.y = 1.35; pg.add(post); circles.push([-90.6 * U, 424 * U, 0.8])
   }
+
+  // --- A sign on the sidewalk under the Christy billboard: knock it flat if you want.
+  { const c = document.createElement('canvas'); c.width = 256; c.height = 320; const x = c.getContext('2d'); x.fillStyle = '#f6f6f2'; x.fillRect(0, 0, 256, 320); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 240, 304)
+    x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 44px Anton, Impact, sans-serif'; ['DO NOT', 'LOOK AT', 'SIGN WHILE', 'DRIVING'].forEach((t, i) => x.fillText(t, 128, 78 + i * 64, 220))
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+    const z = 380.2, sx = -100.5 + (z - 355.3) * 0.2275 - 0.47, X = sx * U, Z = z * U, m = new THREE.Group(); scene.add(m)
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.5, 6), new THREE.MeshStandardMaterial({ color: '#8d9194', metalness: 0.5, roughness: 0.5 })); m.add(post)
+    for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.78), new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 })); f.position.set(0, 0.85, s2 * 0.03); if (s2 < 0) f.rotation.y = Math.PI; f.castShadow = true; m.add(f) }
+    crates.push({ m, half: new V3(0.06, 1.25, 0.06), r: 0.25, lie: 0.43, home: { pos: new V3(X, surfaceAt(X, Z) + 1.25, Z), yaw: -0.22 }, vel: new V3(), spin: new V3(), awake: false, rod: true, pivotLow: true }) }
 
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
   { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
@@ -1673,7 +1684,8 @@ const lotIslands = []
       for (const sx of [-0.53, 0.53]) { const lid = new THREE.Mesh(new THREE.BoxGeometry(1.03, 0.05, 1.4), lidM); lid.position.set(sx, 1.37, 0); if (open && sx > 0) { lid.rotation.x = -1.9; lid.position.set(sx, 1.95, -0.75) } lid.castShadow = true; g.add(lid) }
       if (open) for (let i = 0; i < 5; i++) { const b = new THREE.Mesh(blob, i % 3 ? bagM : bagW); b.scale.set(0.34, 0.28, 0.32); b.position.set(0.15 + (i % 3) * 0.3, 1.38 + (i > 2 ? 0.25 : 0), -0.3 + (i % 2) * 0.45); g.add(b) }
       for (const [wx, wz] of [[-0.9, -0.55], [0.9, -0.55], [-0.9, 0.55], [0.9, 0.55]]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.06, 8), dark); wh.rotation.z = Math.PI / 2; wh.position.set(wx, 0.09, wz); g.add(wh) }
-      put(g, sA, d, 0, wallYaw + (open ? 0.12 : -0.05)); boxes.push({ c: new V2(...W(sA, d)), a: new V2(tx, tz), hx: 1.15, hz: 0.78, low: true }) }
+      g.traverse((o) => { if (o.isMesh) o.position.y -= 0.72 }); scene.add(g); const [hx0, hz0] = W(sA, d)
+      crates.push({ m: g, half: new V3(1.05, 0.72, 0.68), r: 1.1, heavy: true, home: { pos: new V3(hx0, GY + 0.72, hz0), yaw: wallYaw + (open ? 0.12 : -0.05) }, vel: new V3(), spin: new V3(), awake: false }) }
     dumpster(-9, 1.1, false); dumpster(-14.2, 1.3, true)
     // Loose junk you can plough through: pallets, bags, flattened cartons, milk crates and a cart missing a wheel.
     const wood = new THREE.MeshStandardMaterial({ color: '#a98a5c', roughness: 0.95 }), card = new THREE.MeshStandardMaterial({ color: '#b08a56', roughness: 1 }), milk = [new THREE.MeshStandardMaterial({ color: '#2a5fb0', roughness: 0.7 }), new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.7 })]
@@ -1740,6 +1752,7 @@ function pushCrates(car) {
     const kick = 1.5 + speed * 0.35
     c.vel.set(car.vel.x * 0.85 + nx * kick, Math.min(5.5, 1.2 + speed * 0.28) * (0.7 + Math.random() * 0.5), car.vel.y * 0.85 + nz * kick)
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
+    if (c.heavy) { c.vel.multiplyScalar(0.22); c.vel.y = 0; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }
     if (c.forks && !c.spilled) { c.spilled = true; spillForks(c) }
