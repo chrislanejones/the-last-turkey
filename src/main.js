@@ -35,7 +35,7 @@ const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street, round the tip past the welcome sign, into the gas station from A1A Beach Blvd,
 // up the back of the Square K and the bank, through the OOPS Store's boxes, out onto the boulevard and in at the plaza entrance.
-const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-91.7, 405.2), u2(-90.7, 408.5), u2(-89.9, 412.2), u2(-88.7, 414.4), u2(-87.5, 412.6), u2(-86.5, 410.0), u2(-85.5, 407.6), u2(-84.6, 405.2), u2(-83.8, 402.4), u2(-83.5, 399.6), u2(-84.0, 398.0), u2(-85.0, 396.4), u2(-85.3, 394.4), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
+const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-91.7, 405.2), u2(-90.7, 408.5), u2(-89.9, 412.2), u2(-88.7, 414.4), u2(-87.5, 412.6), u2(-86.5, 410.0), u2(-85.5, 407.6), u2(-84.6, 405.2), u2(-83.8, 402.4), u2(-83.4, 399.6), u2(-83.5, 397.6), u2(-83.9, 395.6), u2(-84.9, 394.0), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -97,6 +97,7 @@ sun.shadow.mapSize.set(matchMedia('(pointer:coarse)').matches ? 2048 : 4096, mat
 Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 400 })
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03
 scene.add(sun, sun.target)
+const _sr = new THREE.Vector3(), _su = new THREE.Vector3(), _sp = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0)
 
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: '#8fa07a', roughness: 1 }))
 ground.rotation.x = -Math.PI / 2; ground.position.set(G.x, 0.02, G.y); ground.receiveShadow = true; scene.add(ground)
@@ -428,7 +429,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
 const tableSpots = []
 // The pond south of Floridian Ave, grown to fill the open field up to the houses' back yards.
 const POND = { x0: -111.4 + HD[0] - 3.2, x1: -100.6 + HD[0] - 3.2, z0: 392.5 + HD[1], z1: 401.5 + HD[1] }
-{
+if (false) { // the pond is gone
   const cx = (POND.x0 + POND.x1) / 2 * U, cz = (POND.z0 + POND.z1) / 2 * U, w = (POND.x1 - POND.x0) * U, d = (POND.z1 - POND.z0) * U
   const sh = new THREE.Shape(); const r = 9; sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2)
   const bank = new THREE.Mesh(new THREE.ShapeGeometry(sh, 10), new THREE.MeshStandardMaterial({ color: '#5a5f45', roughness: 1 })); bank.rotation.x = -Math.PI / 2; bank.scale.setScalar(1.06); bank.position.set(cx, 0.06, cz); scene.add(bank)
@@ -442,7 +443,7 @@ const POND = { x0: -111.4 + HD[0] - 3.2, x1: -100.6 + HD[0] - 3.2, z0: 392.5 + H
   const wood = new THREE.MeshStandardMaterial({ color: '#9a6a3f', roughness: 0.9 }), leg = new THREE.MeshStandardMaterial({ color: '#5b5f63', metalness: 0.4, roughness: 0.6 })
   const turn = Math.atan2(2.2, 9.4) // along the wall
   // Spread out in two staggered rows across the gap; the stagger leaves no lane a car could thread.
-  const spots = [[349.3, 1.25, 0.3], [350.3, 1.35, -0.2], [351.3, 1.25, 0.45]] // on the lot side of the entrance island, which is what blocks the gap now
+  const spots = [] // on the lot side of the entrance island, which is what blocks the gap now
   for (const [z0, off, spin] of spots) {
     const z = z0 + off * 0.228, x = -102.7 + (z0 - 345.9) * (2.2 / 9.4) + off * 0.973
     const t = new THREE.Group(); t.position.set(x * U, 0.12, z * U); t.rotation.y = turn + Math.PI / 2 + spin; scene.add(t)
@@ -668,7 +669,7 @@ circles.push(...tableSpots)
   T.position.y = GY - 0.005
   boxes.push({ c: new V2(T.position.x, T.position.z), a: new V2(1, 0), hx: L / 2 + 0.2, hz: Wd / 2 + 0.3 })
 }
-boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(1, 0), hx: (POND.x1 - POND.x0) / 2 * U - 1, hz: (POND.z1 - POND.z0) / 2 * U - 1 }) // no swimming
+// (no pond to keep out of)
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
 regions.push(mkRegion([[-124.5, 382.6], [-95.0, 382.6], [-95.0, 391.5], [-124.5, 391.5]].map(([x, z]) => [(x + HD[0]) * U, (z + HD[1]) * U])))
 // The 280 Floridian lot, south of the street, open up to the barrier at the road block.
@@ -1028,7 +1029,7 @@ const lidGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 18), domeGeo = new T
 {
   const a = 0.035, ox = -88.76 * U, oz = 385.41 * U
   for (const lz of [1.3, 2.3, 3.3]) {
-    const lx = -1.68 * U - 1.55, x = ox + lx * Math.cos(a) + lz * Math.sin(a), z = oz - lx * Math.sin(a) + lz * Math.cos(a)
+    const lx = -1.68 * U - 2.9 - (lz - 1.3) * 0.25, x = ox + lx * Math.cos(a) + lz * Math.sin(a), z = oz - lx * Math.sin(a) + lz * Math.cos(a)
     const m = new THREE.Group(), body = new THREE.Mesh(canGeoT, tinMat), lid = new THREE.Mesh(lidGeo, tinMat); lid.position.y = 0.49; body.castShadow = lid.castShadow = true; m.add(body, lid)
     const dome = new THREE.Mesh(domeGeo, tinMat); dome.scale.y = 0.6; dome.position.y = 0.43; dome.castShadow = true; const hdl = new THREE.Mesh(handleGeo, tinMat); hdl.position.y = 0.62; m.add(dome, hdl)
     for (let r = 0; r < 6; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.325, 0.012, 4, 18), tinMat); rib.rotation.x = Math.PI / 2; rib.position.y = -0.36 + r * 0.14; m.add(rib) }
@@ -1066,7 +1067,7 @@ const forkCrates = []
     x.strokeStyle = '#2a1a0c'; x.lineWidth = 3; x.beginPath(); x.moveTo(64, 140); x.lineTo(64, 200); x.moveTo(44, 160); x.lineTo(64, 140); x.lineTo(84, 160); x.stroke()
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
   const card = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.9 }), cardTop = new THREE.MeshStandardMaterial({ color: '#a77a48', roughness: 0.9 })
-  for (const [x, z, yaw] of [[-96.3 + HD[0], 387.2 + HD[1], 0.3], [-97.05 + HD[0], 386.5 + HD[1], -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
+  for (const [x, z, yaw] of [[-94.5, 401.7, 0.3], [-95.4, 402.0, -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
     const m = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.22, 0.62), [card, card, cardTop, cardTop, card, card]); b.castShadow = true; m.add(b)
     const inner = new THREE.Group(); m.add(inner)
     for (const [dx, dz, r] of [[-0.14, 0.1, 0.08], [0.12, -0.1, -0.1], [0.0, 0.14, 0.12]]) { const f = makeFork(); f.position.set(dx, 0.75, dz); f.rotation.set(r, dx * 3, -r); inner.add(f) }
@@ -1278,6 +1279,9 @@ float fbm(vec2 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a
   float dist = length(vWPos - cameraPosition), nearK = 1.0 - smoothstep(10.0, 45.0, dist), midK = 1.0 - smoothstep(60.0, 160.0, dist);
   float asphalt = (1.0 - smoothstep(0.05, 0.09, sat)) * (1.0 - smoothstep(0.3, 0.42, lum));
   float paint = smoothstep(0.6, 0.75, lum);
+#ifndef PAINT_MESH
+  paint *= step(0.34, vWPos.y); // only the raised stall lines wear: concrete pads and sidewalks are not paint
+#endif
   float grass = smoothstep(0.02, 0.08, c.g - max(c.r, c.b));
   float grain = (vn(p * 9.0) - 0.5) * midK, speck = (h21(floor(p * 34.0)) - 0.5) * nearK;
   float blot = fbm(p * 0.07) - 0.5, blot2 = fbm(p * 0.6 + 40.0) - 0.5;
@@ -1372,7 +1376,8 @@ const lotIslands = []
         if (ch.w >= 4.9 && Math.floor(run / 95) !== Math.floor((run - len / n) / 95)) manholes.push([mxp + nx * 1.6, mzp + nz * 1.6, y])
         for (const [o, w, c, dash] of stripes) {
           if (dash && Math.floor(run / 3) % 3 !== 0) continue
-          { const px = mxp + nx * o, pz = mzp + nz * o; let inside = false; chains.forEach((oc, oi) => { if (oi === ci || inside || (c === YEL && oi > ci)) return; for (let j = 0; j + 1 < oc.p.length; j++) if (segD(px, pz, oc.p[j], oc.p[j + 1]) < oc.w * 0.75 - 0.3) { inside = true; break } }); if (inside) continue } // where two carriageways merge, don't paint one's lines across the other
+          { const px = mxp + nx * o, pz = mzp + nz * o; let inside = false; chains.forEach((oc, oi) => { if (oi === ci || inside || (c === YEL && oi > ci)) return; for (let j = 0; j + 1 < oc.p.length; j++) if (segD(px, pz, oc.p[j], oc.p[j + 1]) < oc.w * 0.75 - 0.3) { inside = true; break } }); if (!inside && c === WHT && pz > 402.5 * U && pz < 416 * U && px > -92 * U && px < -84.5 * U && Math.abs(o) > 0.5 && (o > 0) === (ch.w > 8 ? nx > 0 : nx < 0)) inside = true // no edge lines across the junction south of the tip
+            if (inside) continue } // where two carriageways merge, don't paint one's lines across the other
           const q = [[s0, o - w / 2], [s1, o - w / 2], [s1, o + w / 2], [s0, o + w / 2]].map(([s, d]) => [a[0] + tx * s + nx * d, y, a[1] + tz * s + nz * d])
           for (const t of [0, 2, 1, 0, 3, 2]) { pos.push(...q[t]); col.push(...c) }
         }
@@ -1381,7 +1386,7 @@ const lotIslands = []
   })
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.computeVertexNormals()
   const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, side: THREE.DoubleSide })
-  m.onBeforeCompile = paveShader
+  m.defines = { PAINT_MESH: 1 }; m.onBeforeCompile = paveShader
   const lines = new THREE.Mesh(g, m); lines.receiveShadow = true; scene.add(lines)
 
   // Painted and cast-iron things lying on the asphalt.
@@ -1480,28 +1485,28 @@ const lotIslands = []
   }
 
   // --- The town sign's island: a curbed lawn filling the tip.
-  { const pts = [[-91.45, 394.9], [-90.2, 400.5], [-89.4, 404.0], [-88.6, 407.5], [-88.0, 410.0], [-87.5, 410.6], [-87.2, 408.5], [-86.6, 406.0], [-86.0, 403.6], [-85.5, 401.0], [-85.6, 398.0], [-86.1, 394.9]], mk2 = (k) => { const sh = new THREE.Shape(), cx = -88.3, cz = 402.5; pts.forEach(([x, z], i) => { const px = (cx + (x - cx) * k) * U, pz = -(cz + (z - cz) * k) * U; i ? sh.lineTo(px, pz) : sh.moveTo(px, pz) }); return sh }
+  { const pts = [[-91.45, 394.9], [-90.2, 400.5], [-89.75, 402.6], [-89.3, 404.6], [-88.4, 406.6], [-87.6, 407.6], [-86.9, 406.8], [-86.2, 405.0], [-85.6, 403.2], [-84.9, 401.6], [-84.6, 399.5], [-84.6, 397.0], [-85.2, 395.4], [-86.1, 394.9]], mk2 = (k) => { const sh = new THREE.Shape(), cx = -88.4, cz = 399.5; pts.forEach(([x, z], i) => { const px = (cx + (x - cx) * k) * U, pz = -(cz + (z - cz) * k) * U; i ? sh.lineTo(px, pz) : sh.moveTo(px, pz) }); return sh }
     const y = surfaceAt(-88.6 * U, 398.2 * U)
     const curb = new THREE.Mesh(new THREE.ExtrudeGeometry(mk2(1), { depth: 0.2, bevelEnabled: false }).rotateX(-Math.PI / 2), curbM); curb.position.y = y; curb.receiveShadow = true; scene.add(curb)
     const lawn = new THREE.Mesh(new THREE.ShapeGeometry(mk2(0.975)).rotateX(-Math.PI / 2), turfM); lawn.position.y = y + 0.21; lawn.receiveShadow = true; scene.add(lawn)
-    lotIslands.push({ x: -88.7 * U, z: 398.2 * U, hw: 2.3 * U, hd: 3.1 * U, c: 1, s: 0, h: 0.2 }, { x: -87.9 * U, z: 405.8 * U, hw: 1.2 * U, hd: 4.2 * U, c: 1, s: 0, h: 0.2 }) }
+    lotIslands.push({ x: -88.7 * U, z: 398.2 * U, hw: 2.3 * U, hd: 3.1 * U, c: 1, s: 0, h: 0.2 }, { x: -87.6 * U, z: 403.6 * U, hw: 1.3 * U, hd: 3.0 * U, c: 1, s: 0, h: 0.2 }) }
 
   // --- The sabal palm grove at the south tip, behind the welcome sign.
   { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const tipEdge = (z) => -92.15 + (z - 392) * 0.2278; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (let zi = 0; zi < 4; zi++) for (let xi = 0; xi < 7; xi++) { const z = (396.1 + zi * 0.5 + (rn() - 0.5) * 0.3) * U, half = (400.6 - z / U) / 4.6 * 2.9, x = -88.35 * U + ((xi - 3) / 3 * 2.6 + (rn() - 0.5) * 0.35) * U
       if (Math.abs(x / U + 88.35) > half - 0.25 || x / U < tipEdge(z / U) + 0.45) continue
       const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone())
-      D.position.set(x, y0 + h - 0.35, z); D.rotation.set(0, 0, 0); D.scale.set(1.7, 2.2, 1.7); D.updateMatrix(); sk.push(D.matrix.clone())
+      D.position.set(x, y0 + h - 0.35, z); D.rotation.set(0, 0, 0); D.scale.set(5.5, 2.2, 5.5); D.updateMatrix(); sk.push(D.matrix.clone())
       for (let k = 0; k < 20; k++) { const a = k * 2.4 + rn(), droop = 0.35 + (k / 19) * 1.75, len = 1.7 + rn() * 0.5; D.position.set(x + Math.sin(a) * Math.sin(droop) * len * 0.5, y0 + h + 0.2 + Math.cos(droop) * len * 0.5, z + Math.cos(a) * Math.sin(droop) * len * 0.5); D.rotation.set(droop, a, 0, 'YXZ'); D.scale.set(1, len, 0.3); D.updateMatrix(); fr.push(D.matrix.clone()) }
     }
     // Tall dune grass and limestone on the open half, like the real corner.
     for (let i = 0; i < 34; i++) { const z = (397.6 + rn() * 2.9) * U, half = (400.9 - z / U) / 4.6 * 2.9 * U, x = -88.35 * U + (rn() - 0.5) * 2 * half * 0.85, y0 = surfaceAt(x, z), sc = 0.7 + rn() * 0.9; if (Math.hypot(x + 88.2 * U, z - 399.95 * U) < 3.5 || x / U < tipEdge(z / U) + 0.4 || z / U > 400.4) continue
       for (let j = 0; j < 9; j++) { const a = j * 0.7, t = j ? 0.25 + rn() * 0.35 : 0; D.position.set(x + Math.sin(a) * t * 0.5 * sc, y0 + 0.6 * sc, z + Math.cos(a) * t * 0.5 * sc); D.rotation.set(t, a, 0, 'YXZ'); D.scale.set(sc, 1.25 * sc, sc); D.updateMatrix(); gr.push(D.matrix.clone()) } }
     { const gm = new THREE.InstancedMesh(new THREE.ConeGeometry(0.09, 1, 4), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1 }), gr.length), cc = new THREE.Color(); gr.forEach((m, n) => { gm.setMatrixAt(n, m); gm.setColorAt(n, cc.set(['#b59a62', '#9c8a55', '#c2a86e', '#7f8a4c'][Math.floor(n / 9) % 4])) }); gm.frustumCulled = false; scene.add(gm)
-      const km = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshStandardMaterial({ color: '#6f5a40', roughness: 1, flatShading: true }), sk.length); sk.forEach((m, n) => km.setMatrixAt(n, m)); km.frustumCulled = false; scene.add(km)
+      const km = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshStandardMaterial({ color: '#6f5a40', roughness: 1, flatShading: true }), sk.length); sk.forEach((m, n) => km.setMatrixAt(n, m)); km.frustumCulled = false; km.castShadow = true; scene.add(km)
       for (const [rx, rz, rs] of [[-87.6, 398.9, 0.7], [-87.3, 399.0, 0.45], [-89.3, 398.2, 0.5]]) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: '#8d8a80', roughness: 1, flatShading: true })); r.scale.set(rs * 1.5, rs * 0.6, rs); r.position.set(rx * U, surfaceAt(rx * U, rz * U) + rs * 0.25, rz * U); r.rotation.y = rx; r.castShadow = true; scene.add(r) } }
     const tm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.2, 1, 7), new THREE.MeshStandardMaterial({ color: '#7d6c54', roughness: 1 }), tr.length); tr.forEach((m, n) => tm.setMatrixAt(n, m)); tm.castShadow = true; tm.frustumCulled = false; scene.add(tm)
-    const fm = new THREE.InstancedMesh(new THREE.ConeGeometry(0.8, 1, 6), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true, side: THREE.DoubleSide }), fr.length); const col = new THREE.Color(); fr.forEach((m, n) => { fm.setMatrixAt(n, m); fm.setColorAt(n, col.set(['#5f8c4a', '#527f42', '#6c9652', '#7a7a48'][n % 4])) }); fm.castShadow = true; fm.frustumCulled = false; scene.add(fm) }
+    const fm = new THREE.InstancedMesh(new THREE.ConeGeometry(0.8, 1, 6), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true, side: THREE.DoubleSide }), fr.length); const col = new THREE.Color(); fr.forEach((m, n) => { fm.setMatrixAt(n, m); fm.setColorAt(n, col.set(['#5f8c4a', '#527f42', '#6c9652', '#7a7a48'][n % 4])) }); fm.castShadow = false; fm.frustumCulled = false; scene.add(fm) } // thin fronds make shadows that shimmer: the crowns cast instead
 
   // --- The back of Bumpkin' (the Square K's west end): a tan shed, a condenser, meters, rooftop units, an orange bollard, and a live oak on the verge.
   { const wx = -371.0, tan = new THREE.MeshStandardMaterial({ color: '#cdbf9c', roughness: 0.9 }), roofM = new THREE.MeshStandardMaterial({ color: '#b8ab8a', roughness: 0.9 }), grey = new THREE.MeshStandardMaterial({ color: '#9a9ea1', roughness: 0.6, metalness: 0.3 }), white = new THREE.MeshStandardMaterial({ color: '#e8e8e4', roughness: 0.6 }), orange = new THREE.MeshStandardMaterial({ color: '#e8641b', roughness: 0.7 })
@@ -1934,7 +1939,7 @@ function rideBeds(dt, live) {
     const sp = Math.hypot(P.vel.x, P.vel.y)
     if (sp > 1.5) { S.hit = Math.max(S.hit, 0.25); audio.crash(0.12); if (live) { game.armor = Math.max(1, game.armor - 0.6 * (on - P.curbWheels)); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') } }
   }
-  if (on) P.vel.multiplyScalar(Math.exp(-dt * 0.8 * on))
+  if (on) P.vel.multiplyScalar(Math.exp(-dt * 0.22 * on)) // grass and mulch drag a little, not a lot
   P.curbWheels = on
 }
 
@@ -2092,7 +2097,11 @@ function updateCamera(dt) {
   if (S.hit > 0) { camera.position.add(new V3((Math.random() - 0.5) * S.hit * 0.3, (Math.random() - 0.5) * S.hit * 0.3, 0)); S.hit = Math.max(0, S.hit - dt * 3) }
   camera.lookAt(camLook)
   camera.fov += (fov - camera.fov) * (1 - Math.exp(-3 * dt)); camera.updateProjectionMatrix()
-  sun.position.copy(carP).add(sunDir.clone().multiplyScalar(200)); sun.target.position.copy(carP)
+  // Move the shadow camera only in whole shadow-map texels, so shadow edges don't crawl and flicker as the car moves.
+  { const tex = 110 / sun.shadow.mapSize.x, rt = _sr.crossVectors(_up, sunDir).normalize(), upv = _su.crossVectors(sunDir, rt).normalize()
+    const a = Math.round(carP.dot(rt) / tex) * tex, b = Math.round(carP.dot(upv) / tex) * tex, c = carP.dot(sunDir)
+    _sp.set(0, 0, 0).addScaledVector(rt, a).addScaledVector(upv, b).addScaledVector(sunDir, c)
+    sun.position.copy(_sp).addScaledVector(sunDir, 200); sun.target.position.copy(_sp) }
 }
 
 // --- audio: a big V8 burble, horn, crunches ---------------------------------------

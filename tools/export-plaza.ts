@@ -68,7 +68,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
   for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k)
   if (!g.getAttribute('normal')) g.computeVertexNormals()
   g.rotateY(rotation); g.translate(x, y, z)
-  if (layer === 'ground') g.translate(0, (groundK++ % 7) * .0002, 0) // overlapping paving never shares a plane: no flicker
+  if (layer === 'ground') g.translate(0, (groundK++ % 13) * 0, 0) // overlapping paving never shares a plane: no flicker
   let fascia: number[] | null = null
   if (wb && !loving && layer === 'roof' && inHood(x, z)) {
     g.computeBoundingBox(); const b = g.boundingBox!, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2
@@ -89,6 +89,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
 const DT = { cx: -93.25, cz: 364.09, t: Math.atan2(.968, -.249), x0: 6.0, x1: 7.6, clear: .8 } // open right through to the north end: pillars hold it up
 let cutting = false
 const box = (layer: Layer, color: string, x: number, y: number, z: number, w: number, h: number, d: number, turn = 0, glow?: string | null) => {
+  if (layer === 'ground' && color === '#6e7472') y -= .007 // the Square K's parking strip sat exactly level with the pump apron and flickered through it
   // Megabucks' drive-thru: a lane cut clean through the strip's north end, roofed over above car height.
   if (!cutting && layer !== 'ground' && Math.abs(turn - DT.t) < 1e-3) {
     const c = Math.cos(DT.t), sn = Math.sin(DT.t), dx = x - DT.cx, dz = z - DT.cz, lx = dx * c - dz * sn, lz = dx * sn + dz * c
@@ -215,7 +216,7 @@ const inStation = (x: number, z: number) => {
   }
   return hit
 }
-box('ground', '#80868a', -88.1, .0475, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
+box('ground', '#80868a', -88.1, .0435, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
 // Palms on the grass at the very tip, where the welcome sign stands.
 for (const [px, pz, sd] of [[-88.3, 398.1, 11], [-87.3, 399.0, 12], [-86.2, 397.4, 15], [-85.6, 396.4, 16]]) plants.palm(px, pz, sd, false)
 
@@ -276,7 +277,7 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 }
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
 // You have to come in past the gas station.
-curbRun(-102.7, 345.9, -101.99, 348.95); curbRun(-101.37, 351.6, -100.5, 355.3); // gap for the picnic tables
+curbRun(-102.7, 345.9, -101.99, 348.95); curbRun(-100.74, 354.3, -100.5, 355.3); // a driveway in from A1A S between the island and here // gap for the picnic tables
 curbRun(-100.5, 355.3, -92.15, 392.0, -1); curbRun(-92.15, 392.0, -90.65, 398.6, -1) // one straight curb, parallel to the road, all the way to the tip // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
 // Road closed across A1A S too, at the same two places.
 wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot's corner barrier
@@ -291,7 +292,13 @@ wallRun(-71.1, 338.95, -68.7, 339.65)
 box('ground', '#80868a', -84.4, .02, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8) // the first sits just under the station pad where they overlap
 
 // The neighborhood street's last stretch, out to A1A S.
-box('ground', '#737b7c', -93.1, .041, 389.3 + HS[1], 4.6, .03, 1.55)
+{ // the street's last stretch: the same width and colour as the street, ramping down onto the highway
+  const z0 = 403.15, z1 = 404.05, P = [[-95.8, .0768], [-94.7, .0768], [-93.0, .0436]], v: number[] = []
+  for (let i = 0; i + 1 < P.length; i++) { const [ax, ay] = P[i], [bx, by] = P[i + 1]
+    v.push(ax, ay, z0, ax, ay, z1, bx, by, z0, bx, by, z0, ax, ay, z1, bx, by, z1)
+    v.push(ax, ay, z1, ax, ay - .05, z1, bx, by, z1, bx, by, z1, ax, ay - .05, z1, bx, by - .05, z1)
+    v.push(ax, ay, z0, bx, by, z0, ax, ay - .05, z0, bx, by, z0, bx, by - .05, z0, ax, ay - .05, z0) }
+  const g = new BufferGeometry(); g.setAttribute('position', new BufferAttribute(new Float32Array(v), 3)); g.computeVertexNormals(); add('ground', g, '#878c8e', 0, 0, 0) }
 // The streets and neighbors around it, from the town's OSM data.
 const X0 = -110, X1 = -64, Zs = 328, Zn = 402
 const near = (x: number, z: number) => x > X0 && x < X1 && z > Zs && z < Zn
@@ -346,7 +353,11 @@ add('ground', ribbon(A1A_S.filter(([, z]) => z > 345).map(([x, z]) => [x + 1.75,
 // No hook round the tip: A1A Beach Blvd runs on south and meets A1A S in front of the surf shop.
 { const C = [[-84.1, 403.6], [-84.8, 405.6], [-85.6, 407.8], [-86.6, 410], [-87.9, 412.2], [-89.3, 414.2]]
   add('ground', ribbon(C, 1.125, .046, .3), '#737b7c', 0, 0, 0)
-  for (let i = 0; i + 1 < C.length; i++) roads.push([...C[i], ...C[i + 1], 1.5]) }
+  for (let i = 0; i + 1 < C.length; i++) roads.push([...C[i], ...C[i + 1], 1.5])
+  // ...and the wedge between the two roads is paved: one wide junction, no sliver of grass.
+  const v: number[] = [], y = .0432, W = (z: number) => -92.68 + (z - 400) * .228 + 1.2
+  for (let i = 0; i + 1 < C.length; i++) { const [ex, ez] = C[i], [fx, fz] = C[i + 1], a = [W(ez), y, ez], b = [ex - .9, y, ez], c = [W(fz), y, fz], d = [Math.max(W(fz), fx - .9), y, fz]; v.push(...a, ...c, ...b, ...b, ...c, ...d) }
+  const g = new BufferGeometry(); g.setAttribute('position', new BufferAttribute(new Float32Array(v), 3)); g.computeVertexNormals(); add('ground', g, '#737b7c', 0, 0, 0) }
 const houses: number[][] = []
 const paints = ['#e9dcc0', '#d7c7a6', '#cfd8d2', '#e6d2b8', '#c9d3d8', '#e2c9a0']
 PONCE_HOUSES.forEach(([x, z, w, d, deg, storeys], i) => {
