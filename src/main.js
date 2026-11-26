@@ -427,7 +427,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
   }
   // A wall of oaks round the neighborhood and PCN Bank, instead of barriers.
   { let sd = 21; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
-    const inYard = (x, z) => (x > -123 * U && x < -91 * U && z > 353.9 * U && z < 406.1 * U) || (x > -108.5 * U && x < -86 * U && z > 405 * U && z < 432.5 * U)
+    const inYard = (x, z) => (x > -124.6 * U && x < -91 * U && z > 353.9 * U && z < 406.1 * U) || (x > -108.5 * U && x < -86 * U && z > 405 * U && z < 432.5 * U)
     for (const [ax, az, bx, bz] of DATA.treeRuns || []) { const len = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len, tz = (bz - az) / len; let nx = tz, nz = -tx; if (inYard((ax + bx) / 2 + nx * 3, (az + bz) / 2 + nz * 3)) { nx = -nx; nz = -nz }
       const n = Math.ceil(len / 3.4)
       for (let j = 0; j < n; j++) for (const row of [0, 1, 2, 3]) { const d = (j + 0.3 + row * 0.5 + rn() * 0.3) / n * len, off = 2.0 + row * 3.4 + rn() * 1.4, // four rows: woods going off into the distance
@@ -724,6 +724,8 @@ regions.push(mkRegion([[-101.5, 405.4], [-88.6, 405.4], [-88.6, 414.6], [-101.5,
 boxes.push({ c: new V2(-96.1 * U, 410.05 * U), a: new V2(1, 0), hx: 1.75 * U, hz: 1.75 * U })
 for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2]]) circles.push([ox * U, oz * U, 0.5])
 // The whole neighborhood, from the street at the south end to the new one at the north end: drive anywhere but the houses and woods.
+// Where the north street meets A1A S: overlaps both so the car can turn in and out.
+{ const A = (z) => -106.34 + (z - 340) * 0.2275; regions.push(mkRegion([[A(354.6) - 4.5, 354.6], [A(354.6) + 0.6, 354.6], [A(357.4) + 0.6, 357.4], [A(357.4) - 4.5, 357.4]].map(([x, z]) => [x * U, z * U]))) }
 regions.push(mkRegion([[-122.6, 354.3], [-106.34 + 14.3 * 0.2275 - 1.6, 354.3], [-106.34 + 66 * 0.2275 - 1.6, 406], [-122.6, 406]].map(([x, z]) => [x * U, z * U])))
 // The lot PCN Bank shares with the Winn-Trixie, south of the neighborhood.
 regions.push(mkRegion([[-108.1, 403.0], [-91.4, 403.0], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => [x * U, z * U]))) // overlaps the street, so you can cut through the fence gap
@@ -1629,26 +1631,26 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
   { const A1A = (z) => -106.34 + (z - 340) * 0.2275, groups = {}, col = new THREE.Color()
     const put = (key, geo, color, x, y, z, ry = 0) => { geo.rotateY(ry); geo.translate(x, y, z); const c = col.set(color), n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b } geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); (groups[key] ||= []).push(geo.index ? geo.toNonIndexed() : geo) }
     const sidings = ['#e9d8b4', '#bcd6d9', '#f1e3c4', '#c9d9bf', '#e7c9b8', '#d8d2e6', '#f3efe6', '#cfe0ea'], roofs = ['#6d6a66', '#8a5a44', '#5d6b73', '#7a6e5c']
-    const house = (cx, cz, face, k) => { // face: the yaw the front door looks toward
-      const W = 2.3 * U, D = 1.9 * U, H = 5.6, c = Math.cos(face), sn = Math.sin(face), at = (lx, lz) => [cx * U + lx * c + lz * sn, cz * U - lx * sn + lz * c]
+    const house = (cx, cz, face, k, sz = 1) => { // face: the yaw the front door looks toward; sz > 1 is one of the big houses in back
+      const W = 2.3 * U * sz, D = 1.9 * U * Math.min(sz, 1.3), H = sz > 1 ? 7.2 : 5.6, c = Math.cos(face), sn = Math.sin(face), at = (lx, lz) => [cx * U + lx * c + lz * sn, cz * U - lx * sn + lz * c]
       const box = (key, w, h, d, color, lx, y, lz) => { const [x, z] = at(lx, lz); put(key, new THREE.BoxGeometry(w, h, d), color, x, y, z, face) }
       box('wall', W, H, D, sidings[k % sidings.length], 0, H / 2, 0)
       { const [x, z] = at(0, 0); const r = new THREE.ConeGeometry(Math.hypot(W, D) / 2 * 1.08, 2.6, 4); r.rotateY(Math.PI / 4); r.scale(W / Math.hypot(W, D) * 1.45, 1, D / Math.hypot(W, D) * 1.45); put('roof', r, roofs[k % roofs.length], x, H + 1.3, z, face) }
       box('trim', W + 0.3, 0.25, D + 0.3, '#f4f1ea', 0, H, 0)
-      for (const lx of [-2.6, 2.6]) for (const y of [1.6, 4.1]) { box('glass', 1.3, 1.25, 0.06, '#33454f', lx, y, D / 2 + 0.03); box('trim', 1.55, 0.12, 0.1, '#f4f1ea', lx, y - 0.7, D / 2 + 0.05) }
-      box('glass', 1.3, 1.25, 0.06, '#33454f', 0, 4.1, D / 2 + 0.03)
+      for (const lx of sz > 1 ? [-4.6, -2.3, 2.3, 4.6] : [-2.6, 2.6]) for (const y of [1.6, H - 1.5]) { box('glass', 1.3, 1.25, 0.06, '#33454f', lx, y, D / 2 + 0.03); box('trim', 1.55, 0.12, 0.1, '#f4f1ea', lx, y - 0.7, D / 2 + 0.05) }
+      box('glass', 1.3, 1.25, 0.06, '#33454f', 0, H - 1.5, D / 2 + 0.03)
       box('trim', 1.1, 2.2, 0.08, ['#7a2e2e', '#2e4a6e', '#2f5a3c', '#3a3a3a'][k % 4], 0, 1.1, D / 2 + 0.04) // door
       box('trim', 3.2, 0.18, 1.6, '#f4f1ea', 0, 2.75, D / 2 + 0.8); for (const lx of [-1.4, 1.4]) box('trim', 0.16, 2.7, 0.16, '#f4f1ea', lx, 1.35, D / 2 + 1.5) // porch
-      box('pave', 2.6, 0.04, 3.4 * U - D / 2 - 2, '#a9a79e', W / 2 - 1.8, 0.07, D / 2 + (3.4 * U - D / 2 - 2) / 2) // driveway to the street
+      { const L = Math.max(2.5, 3.4 * U - D / 2 - 2); box('pave', 2.6, 0.04, L, '#a9a79e', W / 2 - 1.8, 0.07, D / 2 + L / 2) } // driveway to the street
       const [bx, bz] = at(0, 0); boxes.push({ c: new V2(bx, bz), a: new V2(c, -sn), hx: W / 2 + 0.3, hz: D / 2 + 0.3 }) }
     let k = 0
-    for (let z = 358.6; z < 389; z += 3.25) {
+    for (let z = 358.6; z < 389; z += (z < 380 ? 3.25 : 3.25)) {
       const mid = A1A(z) - 12.6
-      house(mid - 2.05, z, Math.PI / 2, k++)   // west side of the middle street, facing it
-      house(mid + 2.05, z, -Math.PI / 2, k++)  // east side
-      house(-119.65, z, -Math.PI / 2, k++)     // along the far west street, facing it
+      const tilt = Math.atan(0.2275), nx = Math.cos(tilt) * 2.35, nz = -Math.sin(tilt) * 2.35 // the street runs on the highway's slant, so the houses square up to it
+      house(mid - nx, z - nz, Math.PI / 2 + tilt, k++)   // west side of the middle street, facing it
+      house(mid + nx, z + nz, -Math.PI / 2 + tilt, k++)  // east side
     }
-    for (const x of [-114.0, -118.0]) house(x, 358.3, 0, k++)              // along the north street, facing it
+    for (let z = 360.0; z < 389; z += 5.4) house(-119.2, z, -Math.PI / 2, k++, 1.5) // the big houses in back, along the far west street, with yards between
     for (const key in groups) { const g = BufferGeometryUtils.mergeGeometries(groups[key]); g.computeVertexNormals(); const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: key === 'glass' ? 0.2 : 0.85, metalness: key === 'glass' ? 0.3 : 0 })); m.castShadow = key !== 'pave'; m.receiveShadow = true; scene.add(m) }
     // Woods: between the two rows of backyards, and between the east houses and the highway.
     const D = new THREE.Object3D(), leaf = [], trunk = []; let sd = 87; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647

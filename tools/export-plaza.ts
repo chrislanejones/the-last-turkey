@@ -41,6 +41,8 @@ const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.
 const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
 /** PCN Bank steps south to make room for the street. */
 const BANK_MOVE = [0.5, 9.2]
+/** The west end of the street turns north here into the loop: the two back houses in the way and the corner's trees go. */
+const loopCut = (x: number, z: number, layer: string) => (layer !== 'ground' && x > -101 && x < -94.5 && z > 389.4 && z < 394.6) || (layer !== 'ground' && x < -120.2 && z > 391 && z < 398.2) || ((layer === 'foliage' || layer === 'wood') && x < -117.6 && x > -126 && z > 390 && z < 406.2)
 const hoodCut = (x: number, z: number) => z > 391.5 && x > -102.6 // the part that would land on PCN Bank
 const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb', '#dcc7b1', '#8fb5a6', '#e7c9d1']
 /** The neighborhood west of A1A S that comes straight from the map's own west-blocks builder. */
@@ -263,7 +265,7 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-105.4, 353.9], [-123.0, 353.9], [-123.0, 406.1], [-108.5, 406.1], [-108.5, 432.5], [-88.9, 432.5], [-81.6, 432.5]] // down A1A S, round the neighborhood and the Winn-Trixie lot, and across the road past it
+  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-105.4, 353.9], [-124.8, 353.9], [-124.8, 406.1], [-108.5, 406.1], [-108.5, 432.5], [-88.9, 432.5], [-81.6, 432.5]] // down A1A S, round the neighborhood and the Winn-Trixie lot, and across the road past it
   const W = W0
   ;(DATA as any).treeRuns = []
   for (let i = 0; i + 1 < W.length; i++) {
@@ -392,8 +394,9 @@ const A1A = (z: number) => -106.34 + (z - 340) * .2275
 box('ground', '#878c8e', -103.8, .0612, 400.3, .85, .03, 5.7)
 // The rest of the neighborhood: a street back out to A1A S at the north end, one along the far west side joining them,
 // and a middle street between, parallel to the highway.
-for (const R of [[[A1A(356) - 1.3, 356], [-121.7, 356]], [[-121.7, 355.25], [-121.7, 404.9]], [[A1A(356) - 12.6, 356.7], [A1A(404) - 12.6, 403.4]]] as number[][][]) {
-  add('ground', ribbon(R, .78, .0605, 0), '#878c8e', 0, 0, 0); roads.push([...R[0], ...R[1], 1.56]) }
+const arc = (cx: number, cz: number, r: number, a0: number, a1: number) => Array.from({ length: 9 }, (_, i) => { const a = a0 + (a1 - a0) * i / 8; return [cx + Math.cos(a) * r, cz + Math.sin(a) * r] })
+for (const R of [[[A1A(356) - 1.3, 356], [-119.2, 356]], [[-121.7, 358.5], [-121.7, 401.7]], arc(-119.2, 358.5, 2.5, -Math.PI / 2, -Math.PI), arc(-119.2, 401.7, 2.5, Math.PI, Math.PI / 2), [[A1A(356) - 12.6, 356.7], [A1A(404) - 12.6, 403.4]]] as number[][][]) {
+  add('ground', ribbon(R, .78, .0605, 0), '#878c8e', 0, 0, 0); for (let i = 0; i + 1 < R.length; i++) roads.push([...R[i], ...R[i + 1], 1.56]) }
 // Between the two mouths, the woods along A1A S are the barrier.
 { const a = [A1A(358.2) - 2.0, 358.2], b = [A1A(397.5) - 2.0, 397.5], len = Math.hypot(b[0] - a[0], b[1] - a[1]), turn = Math.atan2(b[0] - a[0], b[1] - a[1]); DATA.walls.push([(a[0] + b[0]) / 2 * UNIT, (a[1] + b[1]) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2) * UNIT]) }
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
@@ -421,7 +424,7 @@ const bags = ['#a57a4a', '#d8332c', '#f2c521', '#46a04f', '#e8742c', '#f4f2ea']
 // (the game builds them, so they can be knocked over and their bags spill)
 ;(DATA as any).shopCarts = crowd.map((p, i) => { const h = p.heading; return [(p.x + .2 * Math.sin(h)) * UNIT, (p.z + .2 * Math.cos(h)) * UNIT, h, i] })
 
-DATA.homes = DATA.homes.filter(([x, z]) => !hoodCut(x / UNIT, z / UNIT)).map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
+DATA.homes = DATA.homes.filter(([x, z]) => !hoodCut(x / UNIT, z / UNIT) && !loopCut(x / UNIT + HS[0], z / UNIT + HS[1], 'architecture')).map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
 DATA.drives = DATA.drives.map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
 fs.writeFileSync('src/plaza-data.json', JSON.stringify({ unit: UNIT, plaza: PLAZA.map(([x, z]) => [x * UNIT, z * UNIT]), station: STATION.map(([x, z]) => [x * UNIT, z * UNIT]), ...DATA }, (_k, v) => typeof v === 'number' ? Math.round(v * 1000) / 1000 : v))
 const Z0 = Zs, Z1 = 420
@@ -435,13 +438,16 @@ const keep = (g: BufferGeometry) => {
     const rose = [[-105.3, 395.86], [-106.85, 389.11], [-108.68, 381.96], [-110.02, 377.49], [-111.21, 372.37]]
     if (g.userData.layer === 'ground' && Math.abs(cz - 389.2) > 1.3 && rose.some((a, i) => i + 1 < rose.length && segDist(cx, cz, a[0], a[1], rose[i + 1][0], rose[i + 1][1]) < .8)) return false
     if (!inHood(cx, cz) || hoodCut(cx, cz)) return false
+    if (loopCut(cx + HS[0], cz + HS[1], g.userData.layer)) return false
     if (g.userData.layer !== 'architecture' && g.userData.layer !== 'roof' && g.userData.layer !== 'ground' && cz > 390.2 && cx > -104.2) return false // no half-trees left over where the bank's block was cut away
     g.translate(HS[0], 0, HS[1]); return true
   }
-  if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -123.5 && cz > 353.5 && cz < 397.5 && cx < -106.34 + (cz - 340) * .2275 - 1.2) return false // cleared for the new neighborhood blocks
+  if (loopCut(cx, cz, g.userData.layer)) return false
+  if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -125.3 && cz > 353.5 && cz < 397.5 && cx < -106.34 + (cz - 340) * .2275 - 1.2) return false // cleared for the new neighborhood blocks
   if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -101 && cx < -92.8 && cz > 395.5 && cz < 404.8) return false // the old bank lot's trees don't come along (or stay in the street)
   if (g.userData.layer !== 'ground' && g.userData.layer !== 'foliage' && g.userData.layer !== 'wood' && cx > -108 && cx < -86.5 && cz > 414.8 && cz < 433) return false // the map's own supermarket-plaza bits (its sign and a wall) under the new Winn-Trixie lot
   if (cx > -99.5 && cx < -94.2 && cz > 396.9 && cz < 403.4) g.translate(BANK_MOVE[0], 0, BANK_MOVE[1])
+  if (cx > -126 && cx < -100 && cz > 353 && cz < 407) return true // the new neighborhood's streets
   return cz > Z0 - 1 && cz < Z1 + 1 && cx > X0 - 1 && cx < X1 + 1
 }
 const scene = new Scene()
