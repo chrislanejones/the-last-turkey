@@ -1498,7 +1498,7 @@ const lotIslands = []
   { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const tipEdge = (z) => -92.15 + (z - 392) * 0.2278; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (let zi = 0; zi < 4; zi++) for (let xi = 0; xi < 7; xi++) { const z = (396.1 + zi * 0.5 + (rn() - 0.5) * 0.3) * U, half = (400.6 - z / U) / 4.6 * 2.9, x = -88.35 * U + ((xi - 3) / 3 * 2.6 + (rn() - 0.5) * 0.35) * U
       if (Math.abs(x / U + 88.35) > half - 0.25 || x / U < tipEdge(z / U) + 0.45) continue
-      const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone())
+      const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone()); circles.push([x, z, 0.32]) // solid trunks
       D.position.set(x, y0 + h - 0.35, z); D.rotation.set(0, 0, 0); D.scale.set(5.5, 2.2, 5.5); D.updateMatrix(); sk.push(D.matrix.clone())
       for (let k = 0; k < 20; k++) { const a = k * 2.4 + rn(), droop = 0.35 + (k / 19) * 1.75, len = 1.7 + rn() * 0.5; D.position.set(x + Math.sin(a) * Math.sin(droop) * len * 0.5, y0 + h + 0.2 + Math.cos(droop) * len * 0.5, z + Math.cos(a) * Math.sin(droop) * len * 0.5); D.rotation.set(droop, a, 0, 'YXZ'); D.scale.set(1, len, 0.3); D.updateMatrix(); fr.push(D.matrix.clone()) }
     }
