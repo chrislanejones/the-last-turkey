@@ -268,7 +268,7 @@ wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
 wallRun(-71.1, 338.95, -68.7, 339.65)
 // The station is shut off from A1A S, and the tip with the welcome sign is fenced: the only way in is from A1A Beach Blvd.
-curbRun(-92.5, 383.5, -92.2, 392.0); curbRun(-92.2, 392.0, -89.9, 395.6); curbRun(-89.9, 395.6, -88.7, 399.6); curbRun(-88.7, 399.6, -85.4, 399.5); curbRun(-85.4, 399.5, -85.7, 395.6)
+curbRun(-92.5, 383.5, -92.2, 392.0); curbRun(-92.2, 392.0, -89.9, 395.6); curbRun(-89.9, 395.6, -88.7, 399.6); curbRun(-88.7, 399.6, -87.3, 399.55) // just a hook round the town sign: the boulevard side of the tip is open
 // Driveway aprons across the grass at both openings.
 box('ground', '#80868a', -84.4, .02, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8) // the first sits just under the station pad where they overlap
 
