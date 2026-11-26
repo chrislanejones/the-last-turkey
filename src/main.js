@@ -35,7 +35,7 @@ const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street, round the tip past the welcome sign, into the gas station from A1A Beach Blvd,
 // up the back of the Square K and the bank, through the OOPS Store's boxes, out onto the boulevard and in at the plaza entrance.
-const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-91.7, 405.2), u2(-90.7, 408.5), u2(-89.9, 412.2), u2(-88.7, 414.4), u2(-87.5, 412.6), u2(-86.5, 410.0), u2(-85.5, 407.6), u2(-84.6, 405.2), u2(-83.8, 402.4), u2(-83.4, 399.6), u2(-83.5, 397.6), u2(-83.9, 395.6), u2(-84.9, 394.0), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
+const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-91.7, 405.2), u2(-90.7, 408.5), u2(-89.9, 412.2), u2(-88.7, 414.4), u2(-87.5, 412.6), u2(-86.5, 410.0), u2(-85.5, 407.6), u2(-85.0, 405.2), u2(-85.45, 402.9), u2(-84.9, 401.4), u2(-83.4, 399.6), u2(-83.5, 397.6), u2(-83.9, 395.6), u2(-84.9, 394.0), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -888,14 +888,14 @@ function rivalInput(dt) {
   if (game.ai === 'evade') { game.aiT -= dt; if (game.aiT <= 0 || R.pos.distanceTo(game.target) < 6) game.ai = 'seek' }
   // Every so often, when the Galaxie is close, he turns and goes for it instead.
   game.attackCool -= dt
-  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 27 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
+  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 28 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
     game.attackCool = 5 + Math.random() * 5
     if (Math.random() < 0.6) { game.ai = 'attack'; game.aiT = 2.4 }
   }
   if (game.ai === 'attack') { game.aiT -= dt; game.target.copy(P.pos).addScaledVector(P.vel, 0.35); if (game.aiT <= 0) game.ai = 'seek' }
   if (game.ai === 'seek') {
     // Out of the station and up the lot, one waypoint at a time; then the door.
-    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 27 && R.pos.y < PATH[game.pathI].y))) game.pathI++
+    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 28 && R.pos.y < PATH[game.pathI].y))) game.pathI++
     game.target.copy(game.pathI < PATH.length ? PATH[game.pathI] : DOOR)
   }
   const to = game.target.clone().sub(R.pos), dist = to.length()
@@ -1673,7 +1673,7 @@ const lotIslands = []
     x.font = '700 30px sans-serif'; x.fillText('FOR SAINT PONCE', 256, 296)
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
     const face = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 }), wireM = new THREE.MeshStandardMaterial({ color: '#7d8186', metalness: 0.6, roughness: 0.4 })
-    for (const [sx, sz, yaw, lawn] of [[-86.3, 396.6, 1.2, 1], [-86.0, 398.4, 1.45, 1], [-86.2, 400.3, 1.3, 1], [-86.9, 402.6, 1.0, 1], [-83.55, 401.3, 1.6, 0]]) {
+    for (const [sx, sz, yaw, lawn] of [[-86.3, 396.6, 1.2, 1], [-86.0, 398.4, 1.45, 1], [-86.2, 400.3, 1.3, 1], [-86.9, 402.6, 1.0, 1], [-85.62, 402.9, 1.25, 1]]) {
       const m = new THREE.Group(); for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.56), face); f.position.set(0, 0.17, s2 * 0.012); if (s2 < 0) f.rotation.y = Math.PI; f.castShadow = true; m.add(f) }
       for (const lx of [-0.3, 0.3]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.9, 4), wireM); w.position.set(lx, -0.1, 0); m.add(w) }
       scene.add(m); const X = sx * U, Z = sz * U
