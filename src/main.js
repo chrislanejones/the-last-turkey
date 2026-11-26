@@ -1685,7 +1685,7 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
 
   // --- The Winn-Trixie end of the lot has gone to seed: potholes, weeds in the cracks, litter, a car on blocks,
   // a mattress, a NO LOITERING sign everyone ignores, and a sagging chain-link fence along the side facing the houses.
-  { let sd = 77; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647, inLot = (x, z) => x > -107.6 && x < -92 && z > 406.2 && z < 431.5 && !(x < -101 && z > 415.5 && z < 425.5)
+  { let sd = 77; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647, inLot = (x, z) => x > -107.6 && x < -92 && z > 416.2 && z < 431.5 && !(x < -101 && z > 415.5 && z < 425.5) // only the Winn-Trixie end: PCN Bank's end stays tidy
     const hole = decalTex(128, 128, (x) => { const g2 = x.createRadialGradient(64, 64, 8, 64, 64, 60); g2.addColorStop(0, 'rgba(18,16,14,.95)'); g2.addColorStop(0.55, 'rgba(40,36,32,.8)'); g2.addColorStop(1, 'rgba(40,36,32,0)'); x.fillStyle = g2; x.beginPath(); for (let k = 0; k < 14; k++) { const a = k / 14 * 6.28, r = 40 + Math.random() * 22; x.lineTo(64 + Math.cos(a) * r, 64 + Math.sin(a) * r) } x.fill() }, 0)
     const crack = decalTex(256, 256, (x) => { x.strokeStyle = 'rgba(15,14,12,.85)'; x.lineWidth = 3; for (let k = 0; k < 7; k++) { x.beginPath(); let px = 128, py = 128; x.moveTo(px, py); for (let j = 0; j < 9; j++) { px += (Math.random() - 0.5) * 50; py += (Math.random() - 0.5) * 50; x.lineTo(px, py) } x.stroke() } }, 0)
     const stain = decalTex(128, 128, (x) => { const g2 = x.createRadialGradient(64, 64, 4, 64, 64, 62); g2.addColorStop(0, 'rgba(20,16,12,.55)'); g2.addColorStop(1, 'rgba(20,16,12,0)'); x.fillStyle = g2; x.fillRect(0, 0, 128, 128) }, 0)
