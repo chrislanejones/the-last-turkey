@@ -4,6 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { buildGalaxie, buildSUV, CAR, SUV } from './car.js'
+import { makeCarParts } from '/home/claude/3d-world/st-aug-anastasia-beach/world/car-kit'
 import { dressStation, PED_BED } from './station.js'
 import BILLBOARD from './billboard-img.js'
 import SHERIFF_IMG from './sheriff-img.js'
@@ -722,7 +723,7 @@ regions.push(mkRegion([[-101.5, 405.4], [-88.6, 405.4], [-88.6, 414.6], [-101.5,
 boxes.push({ c: new V2(-96.1 * U, 410.05 * U), a: new V2(1, 0), hx: 1.75 * U, hz: 1.75 * U })
 for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2]]) circles.push([ox * U, oz * U, 0.5])
 // The lot PCN Bank shares with the Winn-Trixie, south of the neighborhood.
-regions.push(mkRegion([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => [x * U, z * U])))
+regions.push(mkRegion([[-108.1, 403.0], [-91.4, 403.0], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => [x * U, z * U]))) // overlaps the street, so you can cut through the fence gap
 // Melvin's Island's lot, south of the tip: drive right up to the shop front.
 regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 432.1], [-85.6, 432.1]].map(([x, z]) => [x * U, z * U]))) // ...and on south past it, level with the end of the Winn-Trixie lot
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
@@ -1557,11 +1558,6 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
   // --- The back of Bumpkin' (the Square K's west end): a tan shed, a condenser, meters, rooftop units, an orange bollard, and a live oak on the verge.
   { const wx = -371.0, tan = new THREE.MeshStandardMaterial({ color: '#cdbf9c', roughness: 0.9 }), roofM = new THREE.MeshStandardMaterial({ color: '#b8ab8a', roughness: 0.9 }), grey = new THREE.MeshStandardMaterial({ color: '#9a9ea1', roughness: 0.6, metalness: 0.3 }), white = new THREE.MeshStandardMaterial({ color: '#e8e8e4', roughness: 0.6 }), orange = new THREE.MeshStandardMaterial({ color: '#e8641b', roughness: 0.7 })
     const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, GY + y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m }
-    add(new THREE.BoxGeometry(1.3, 1.9, 2.6), tan, wx - 0.67, 0.95, 1572.0)
-    { const r = add(new THREE.CylinderGeometry(0.9, 0.9, 2.7, 3, 1), roofM, wx - 0.67, 2.2, 1572.0); r.rotation.x = Math.PI / 2; r.scale.set(0.82, 1, 0.65) }
-    for (let i = 0; i < 5; i++) add(new THREE.BoxGeometry(0.02, 0.03, 2.6), roofM, wx - 1.33, 0.3 + i * 0.35, 1572.0)
-    boxes.push({ c: new V2(wx - 0.67, 1572.0), a: new V2(1, 0), hx: 0.7, hz: 1.35 })
-    add(new THREE.BoxGeometry(0.35, 0.6, 0.8), white, wx - 0.2, 0.45, 1574.4); add(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 12), grey, wx - 0.385, 0.45, 1574.4).rotation.z = Math.PI / 2
     add(new THREE.BoxGeometry(0.14, 0.5, 0.36), grey, wx - 0.08, 1.5, 1569.8); add(new THREE.BoxGeometry(0.14, 0.34, 0.26), grey, wx - 0.08, 1.45, 1570.3); add(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 5), grey, wx - 0.05, 2.4, 1569.8)
     void 0 // (the orange bollards are gone)
     for (const [rx, rz, rs] of [[-368.5, 1571.5, 1], [-365.2, 1574.5, 1.2], [-362.2, 1571.8, 0.9]]) { add(new THREE.BoxGeometry(1.5 * rs, 0.9 * rs, 1.2 * rs), grey, rx, 3.75 + 0.45 * rs, rz); add(new THREE.CylinderGeometry(0.35 * rs, 0.35 * rs, 0.06, 10), new THREE.MeshStandardMaterial({ color: '#3a3d40' }), rx, 3.76 + 0.9 * rs, rz) }
@@ -1626,23 +1622,28 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
       const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), mulchM); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-tz, tx)); m.position.set((ax + bx) / 2 * U + nx * ins * 1.15, GY + 0.02, (az + bz) / 2 * U + nz * ins * 1.15); m.receiveShadow = true; scene.add(m) }
     const im = new THREE.InstancedMesh(blob, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), ms.length), c = new THREE.Color(); ms.forEach((m, n) => { im.setMatrixAt(n, m); im.setColorAt(n, c.set(['#3b6b30', '#4c7d38', '#335f2c'][n % 3])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
 
-  // --- A few more cars parked in the main lot, north and south ends. Hit one and it budges a little — and dents the Galaxie.
-  { const cols = ['#2f4f6f', '#b8b3a6', '#7a1f1f', '#3d3d3d', '#d9d4c6', '#4a6b3a', '#1f3554', '#8a8a86']
-    const taken = (x, z) => DATA.cars.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 3.2)
-    let n = 0, sd = 31; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+  // --- A few more cars parked in the main lot, north and south ends: the same mix of makes the town already has.
+  // Hit one and it slides a little the way you pushed it (never up), and dents the Galaxie.
+  const kitMats = {}, kitCar = (seed, family) => { const g = new THREE.Group(), inner = new THREE.Group(); g.add(inner)
+    for (const part of makeCarParts(seed, undefined, family).parts) { const key = part.color + part.finish
+      const mat = kitMats[key] ||= part.finish === 'glass' ? new THREE.MeshStandardMaterial({ color: part.color, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.75 }) : new THREE.MeshStandardMaterial({ color: part.color, roughness: part.finish === 'rubber' ? 0.9 : part.finish === 'chrome' ? 0.25 : 0.5, metalness: part.finish === 'chrome' ? 0.7 : 0.1 })
+      const m = new THREE.Mesh(part.geometry, mat); m.position.y = 0.06; m.castShadow = true; inner.add(m) }
+    inner.scale.setScalar(U); const bb = new THREE.Box3().setFromObject(inner), half = bb.getSize(new V3()).multiplyScalar(0.5); inner.position.y = -half.y - bb.min.y
+    return { g, half } }
+  const slideCar = (g, half, X, Z, yaw) => { scene.add(g); crates.push({ m: g, parked: true, heavy: true, half: half.clone(), r: Math.max(half.x, half.z), home: { pos: new V3(X, surfaceAt(X, Z) + half.y, Z), yaw }, vel: new V3(), spin: new V3(), awake: false }) }
+  { const taken = (x, z) => DATA.cars.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 3.2)
+    let sd = 31; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     const spots = []; for (const rx of [-354.2, -339.0, -323.8]) for (const side of [-1, 1]) for (let k = 0; k < 17; k++) spots.push([rx + side * 2.7, 1431 + (k + 0.5) * 3.1855, side])
     spots.sort(() => rn() - 0.5)
     const north = [], south = []
-    for (const [x, z, side] of spots) { if (taken(x, z) || [...north, ...south].some(([a, b]) => Math.hypot(a - x, b - z) < 3)) continue; const list = z < 1459 ? north : south; if (list.length < 4) list.push([x, z, side]) }
-    for (const [x, z, side] of [...north, ...south]) { const v = buildSUV(cols[n++ % cols.length]), m = v.car, drop = []
-      m.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; if (o.parent === v.body && o.position.y > 1.9) drop.push(o); if (o.material && o.material.color && o.material.color.getHex() === 0x8a5a33) o.material = v.M.paint }) // plain cars: no woodgrain, nothing on the roof
-      for (const o of drop) o.parent.remove(o); scene.add(m)
-      crates.push({ m, parked: true, heavy: true, half: new V3(1.0, 0.8, 2.3), r: 2.0, home: { pos: new V3(x, surfaceAt(x, z) - 0.0, z), yaw: side > 0 ? -Math.PI / 2 : Math.PI / 2 }, vel: new V3(), spin: new V3(), awake: false, lie: 0 }) } }
+    for (const [x, z, side] of spots) { if (taken(x, z) || [...north, ...south].some(([a, b]) => Math.hypot(a - x, b - z) < 3)) continue; const list = z < 1459 ? north : south; if (list.length < 3) list.push([x, z, side]) }
+    const families = [0, 2, 3, 6, 7, 8]
+    ;[...north, ...south].forEach(([x, z, side], n) => { const { g, half } = kitCar(4100 + n * 37, families[n % families.length]); slideCar(g, half, x, z, side > 0 ? -Math.PI / 2 : Math.PI / 2) }) }
 
   // --- Two old Galaxies left to rot in the Winn-Trixie lot, sun-faded paint, and a few tired parking lines.
   { for (const [x, z, yaw, col] of [[-99.6, 414.4, 1.62, '#7d8f93'], [-95.2, 420.6, -1.45, '#a8916a']]) { const v = buildGalaxie(col), m = v.car; m.traverse((o) => { if (o.isMesh) { o.castShadow = true; if (o.material && o.material.color && !o.material.map) { o.material = o.material.clone(); o.material.roughness = Math.min(1, (o.material.roughness ?? 0.5) + 0.35); o.material.metalness = 0 } } })
-      if (v.tails) v.tails.forEach((t, i) => { if (i % 2) t.visible = false }); scene.add(m); const X = x * U, Z = z * U
-      crates.push({ m, parked: true, heavy: true, half: new V3(1.0, 0.7, 2.7), r: 2.2, home: { pos: new V3(X, surfaceAt(X, Z), Z), yaw }, vel: new V3(), spin: new V3(), awake: false }) }
+      if (v.tails) v.tails.forEach((t, i) => { if (i % 2) t.visible = false }); const g = new THREE.Group(); g.add(m); m.position.y = -0.7
+      slideCar(g, new V3(1.0, 0.7, 2.7), x * U, z * U, yaw) }
     const line = decalTex(32, 512, (x, w, h) => { x.fillStyle = '#ece6d2'; x.fillRect(6, 0, 20, h) }, 0.55)
     for (const [cx, z0, n] of [[-99.6, 410.6, 7], [-95.2, 416.0, 6]]) for (let k = 0; k <= n; k++) decal(line, cx * U, (z0 + k * 0.78) * U, 0.28, 5.0, Math.PI / 2) }
 
@@ -2030,7 +2031,7 @@ function pushCrates(car) {
     c.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 9)
     if (c.heavy && c.m.position.distanceTo(c.home.pos) > 1.3) { c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); car.vel.multiplyScalar(-0.25); continue } // on its leash: it only shoves so far, then it's a wall
     if (c.parked && car === P && (game.parkHitT ?? 0) <= 0 && speed > 3) { game.parkHitT = 0.6; game.armor = Math.max(1, game.armor - Math.min(9, 1.5 + speed * 0.45)); hurt(2); flash('DENT!'); S.hit = Math.max(S.hit, 0.6); audio.crash(Math.min(1, speed / 12)); $('armorBar').classList.remove('flashbar'); void $('armorBar').offsetWidth; $('armorBar').classList.add('flashbar') }
-    if (c.heavy) { c.vel.multiplyScalar(0.1); c.vel.y = 0; p.x = c.m.position.x; p.z = c.m.position.z; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
+    if (c.heavy) { c.vel.multiplyScalar(c.parked ? 0.06 : 0.1); c.vel.y = 0; p.x = c.m.position.x; p.z = c.m.position.z; c.spin.set(0, (Math.random() - 0.5) * 1.2, 0); car.vel.multiplyScalar(0.55) } // a loaded dumpster only scoots and swings a little
     if (!c.awake && speed > 2 && game.t - (c.lastHit ?? -9) > 0.25) { c.lastHit = game.t; c.can ? audio.clang(Math.min(1, 0.4 + speed / 18)) : audio.thud(Math.min(1, 0.35 + speed / 20)) }
     if (c.vote && car === R && !game.georgeDown && game.state !== 'cutscene') { game.georgeDown = true; $('bubble2').textContent = 'HIT HIM HARDER! HE JUST RAN OVER THE SIGN FOR GEORGE — NOOO, VOTE GEORGE!'; $('bubble2').classList.add('show'); game.b2T = 3.6 }
     if (c.can && !c.spilled) { c.spilled = true; spillDonuts(c) }

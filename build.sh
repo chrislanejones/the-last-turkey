@@ -6,5 +6,5 @@ rm -f pub/assets/*.js
 for f in plaza.glb chrislanejones.glb CLJDriving.fbx golf-woman.glb; do
   n=$(echo $f | tr '.' '-'); printf 'export default "%s"\n' "$(base64 -w0 dist/assets/$f)" > pub/assets/$n.js
 done
-npx esbuild src/main.js --bundle --format=esm --minify --target=es2022 --loader:.json=json --outfile=pub/main.js --log-level=warning
+npx esbuild src/main.js --alias:three=/home/claude/galaxie/node_modules/three --bundle --format=esm --minify --target=es2022 --loader:.json=json --outfile=pub/main.js --log-level=warning
 du -sh pub
