@@ -238,8 +238,18 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
     x.fillStyle = '#c9b48a'; x.fillRect(90, 110, 110, 80); x.fillStyle = '#4f7a99'; x.fillRect(98, 118, 94, 64); x.fillStyle = '#e0c060'; x.beginPath(); x.arc(160, 140, 12, 0, 7); x.fill() // a beach picture
     x.fillStyle = 'rgba(255,255,255,0.10)'; x.beginPath(); x.moveTo(0, 0); x.lineTo(160, 0); x.lineTo(0, 260); x.fill()             // a sheen on the glass
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
-    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.3), new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: '#c8c8c8' }))
-    win.position.set(cat.position.x, cat.position.y + 0.63, cat.position.z - 0.06); win.rotation.y = cat.rotation.y; scene.add(win) }
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.55), new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: '#c8c8c8' }))
+    win.position.set(cat.position.x + 0.08, cat.position.y + 0.74, cat.position.z - 0.06); win.rotation.y = cat.rotation.y; scene.add(win)
+    // ...and the glass in front of her: a shallow box window with white trim, so she sits inside, behind the pane.
+    const bay = new THREE.Group(); bay.position.set(cat.position.x + 0.08, cat.position.y + 0.74, cat.position.z - 0.06); bay.rotation.y = cat.rotation.y; scene.add(bay)
+    const trim = new THREE.MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7 }), D = 0.42, W = 1.5, H = 1.55
+    const sheen = (() => { const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const y = c2.getContext('2d'); const gr = y.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.05)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.0)'); gr.addColorStop(0.75, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0.03)'); y.fillStyle = gr; y.fillRect(0, 0, 128, 128); const tt = new THREE.CanvasTexture(c2); return tt })()
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: sheen, color: '#dfe9f2', transparent: true, opacity: 0.55, depthWrite: false })); glass.position.z = D; bay.add(glass)
+    const piece = (w, h, d, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), trim); b.position.set(x, y, z); b.castShadow = true; bay.add(b) }
+    piece(0.08, H + 0.16, D + 0.04, -W / 2 - 0.04, 0, D / 2); piece(0.08, H + 0.16, D + 0.04, W / 2 + 0.04, 0, D / 2)   // sides
+    piece(W + 0.16, 0.08, D + 0.04, 0, H / 2 + 0.04, D / 2); piece(W + 0.3, 0.07, D + 0.16, 0, -H / 2 - 0.035, D / 2 + 0.05) // head and sill
+    piece(W, 0.05, 0.05, 0, 0.02, D); piece(0.04, H, 0.04, 0, 0, D)                                                    // the sash bars
+    cat.position.z += 0.04 }
   catTail = tail; catHead = head
 }
 
