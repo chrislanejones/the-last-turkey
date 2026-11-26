@@ -157,14 +157,40 @@ export function dressStation(scene, U, apronY) {
     for (const [dz, len] of [[-4.2, 5.6], [6.75, 1.0]]) box(hedge, east + 0.7, lot + 0.4, bz + dz, 0.9, 0.8, len)
     box(hedge, bx, lot + 0.4, south + 0.7, W - 1.5, 0.8, 0.9)
     for (const dz of [0.6, 1.5, 2.9, 3.8]) cyl(yellow, east + 1.5, lot + 0.45, bz + dz, 0.09, 0.9)
-    // Drive-thru canopy on the south side, towards the Square K and Bumpkin.
-    const cz2 = bz + D / 2 + 2.3
-    box(stucco, bx, lot + 3.3, cz2, W, 0.45, 4.6)
-    box(trim, bx, lot + 3.56, cz2, W + 0.2, 0.1, 4.8, false)
-    for (const ex of [-1, 1]) box(stucco, bx + ex * 4.7, lot + 1.55, cz2 + 1.9, 0.5, 3.1, 0.5)
-    plane(label('DRIVE-THRU Mo-Fee-ATM', { w: 512, h: 80, bg: '#f1eee6', fg: navy, font: 'bold 40px Oswald, Impact, sans-serif' }), east + 0.03, lot + 3.3, cz2, 4.6, 0.42, Math.PI / 2)
-    box(M('#c8302b'), bx, lot + 1.0, cz2 - 1.2, 0.7, 1.9, 0.7); box(M('#d9d5c8'), bx, lot + 0.1, cz2 - 1.2, 5.6, 0.2, 1.4, false)
-    for (const ex of [-1, 1]) { box(M('#d9b21f'), bx + ex * 3.1, lot + 0.11, cz2 - 1.2, 0.7, 0.22, 1.42, false); box(M('#d9b21f'), bx + ex * 4.7, lot + 0.11, cz2 + 1.9, 1.5, 0.22, 0.9, false); cyl(M('#6b6f72'), bx + ex * 2.3, lot + 0.65, cz2 - 1.2, 0.07, 1.1) }
+    // Drive-thru canopy on the south side, towards the Square K and Bumpkin: a proper drive-up with two teller lanes.
+    const cz2 = bz + D / 2 + 2.3, top = lot + 3.3
+    box(stucco, bx, top + 0.1, cz2, W, 0.65, 4.6)                                                // the canopy, deeper fascia
+    box(M('#14306b'), bx, top - 0.04, cz2 + 2.31, W, 0.14, 0.03, false)                         // navy stripe front and back
+    box(M('#14306b'), bx, top - 0.04, cz2 - 2.31, W, 0.14, 0.03, false)
+    box(trim, bx, top + 0.46, cz2, W + 0.2, 0.08, 4.8, false)
+    box(M('#e9e5da'), bx, top - 0.235, cz2, W - 0.2, 0.02, 4.4, false)                          // soffit
+    const downM = M('#fff6dd', { emissive: '#fff1c8', emissiveIntensity: 1.2 })
+    for (const lx of [-3.6, -1.2, 1.2, 3.6]) for (const lz of [-0.3, 1.0]) cyl(downM, bx + lx, top - 0.25, cz2 + lz, 0.16, 0.03, 16) // downlights over the lanes
+    // Columns: square, stucco, on a stone base with a cap.
+    for (const ex of [-1, 1]) { box(stucco, bx + ex * 4.7, lot + 1.55, cz2 + 1.9, 0.5, 3.1, 0.5); box(M('#a99b82'), bx + ex * 4.7, lot + 0.35, cz2 + 1.9, 0.62, 0.7, 0.62); box(trim, bx + ex * 4.7, top - 0.32, cz2 + 1.9, 0.62, 0.1, 0.62, false) }
+    plane(label('DRIVE-THRU Mo-Fee-ATM', { w: 512, h: 80, bg: '#f1eee6', fg: navy, font: 'bold 40px Oswald, Impact, sans-serif' }), east + 0.03, top + 0.2, cz2, 4.6, 0.42, Math.PI / 2)
+    // Clearance bar hanging at the lane entrance.
+    plane(label("CLEARANCE 9'-0\"", { w: 512, h: 64, bg: '#f2c21b', fg: '#111', font: 'bold 40px Oswald, Impact, sans-serif' }), east - 0.2, top - 0.6, cz2 + 0.6, 2.2, 0.28, Math.PI / 2)
+    for (const dz of [-0.4, 1.6]) cyl(M('#555a5e'), east - 0.2, top - 0.42, cz2 + dz, 0.012, 0.36, 4)
+    // The island: curbed, yellow-nosed, with two pneumatic-tube teller stations and the ATM at the end.
+    box(M('#d9d5c8'), bx, lot + 0.1, cz2 - 1.2, 5.6, 0.2, 1.4, false)
+    for (const ex of [-1, 1]) { box(M('#d9b21f'), bx + ex * 3.1, lot + 0.11, cz2 - 1.2, 0.7, 0.22, 1.42, false); box(M('#d9b21f'), bx + ex * 4.7, lot + 0.11, cz2 + 1.9, 1.5, 0.22, 0.9, false) }
+    const steelM = M('#9da3a8', { metalness: 0.6, roughness: 0.35 }), darkM = M('#24282b', { roughness: 0.4 })
+    for (const tx of [-1.6, 0.6]) { const x = bx + tx, z = cz2 - 1.2
+      box(steelM, x, lot + 0.85, z + 0.2, 0.7, 1.3, 0.5)                                         // the teller unit
+      box(darkM, x, lot + 1.15, z + 0.46, 0.36, 0.26, 0.02, false)                                // video screen
+      box(M('#5fb0e8', { emissive: '#2a6fa8', emissiveIntensity: 0.8 }), x, lot + 1.15, z + 0.47, 0.3, 0.2, 0.01, false)
+      box(darkM, x + 0.18, lot + 0.82, z + 0.46, 0.22, 0.3, 0.03, false)                          // tube door
+      cyl(M('#c8302b'), x + 0.18, lot + 0.82, z + 0.48, 0.07, 0.24, 10).rotation.z = Math.PI / 2 // the carrier
+      box(M('#2f9a46', { emissive: '#1f8a36', emissiveIntensity: 0.6 }), x - 0.2, lot + 1.38, z + 0.46, 0.1, 0.06, 0.01, false) // OPEN light
+      cyl(steelM, x, lot + 2.4, z + 0.2, 0.05, 1.8, 8) }                                          // the tube up into the canopy
+    { const x = bx + 2.3, z = cz2 - 1.2; box(M('#c8302b'), x, lot + 1.0, z + 0.05, 0.7, 1.9, 0.7)
+      box(darkM, x, lot + 1.3, z + 0.41, 0.4, 0.3, 0.02, false); box(M('#7fd0a0', { emissive: '#2a8a5a', emissiveIntensity: 0.7 }), x, lot + 1.3, z + 0.42, 0.34, 0.24, 0.01, false)
+      plane(label('ATM', { w: 128, h: 48, bg: '#c8302b', fg: '#fff', font: 'bold 36px Oswald, Impact, sans-serif' }), x, lot + 1.78, z + 0.41, 0.5, 0.18) }
+    // Lane signals over each lane: green arrow open, red X closed.
+    for (const [lz, open] of [[0.25, true], [-2.0, false]]) { box(darkM, bx + 3.9, top - 0.38, cz2 + lz, 0.12, 0.26, 0.26, false)
+      plane(label(open ? '↓' : '✕', { w: 64, h: 64, bg: '#111', fg: open ? '#3fe06a' : '#ff3b30', font: 'bold 52px Arial, sans-serif' }), bx + 3.97, top - 0.38, cz2 + lz, 0.22, 0.22, Math.PI / 2, { emissive: open ? '#1f8a36' : '#a0201a', emissiveIntensity: 0.6 }) }
+    for (const ex of [-1, 1]) cyl(M('#6b6f72'), bx + ex * 2.3 - 0.5, lot + 0.65, cz2 - 1.2, 0.07, 1.1)
   }
   
   // Megabucks Coffee: the end unit of the west strip, next to publick. The strip's frame is

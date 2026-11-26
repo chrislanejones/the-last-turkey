@@ -47,7 +47,7 @@ const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
 // --- renderer, scene, sky ---------------------------------------------------------
-const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('shot') })
+const renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('shot') })
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 renderer.setSize(innerWidth, innerHeight)
 renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -225,31 +225,36 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
   const nose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), pink); nose.position.set(0, 0.48, 0.18); cat.add(nose)
   const tail = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 12, Math.PI * 1.1), dark); tail.position.set(0.12, 0.08, -0.05); tail.rotation.set(Math.PI / 2, 0, 0.6); cat.add(tail)
   cat.position.set(-471.04 + HD[0] * U, 1.08, 1581.33 + HD[1] * U); cat.rotation.y = 0.017; scene.add(cat); window.__cat = cat // on the sill of the front window, watching the street
-  // You can see into the room behind her: a painted interior set into the window — back wall, a desk with a lamp on, a chair, a picture.
-  { const c = document.createElement('canvas'); c.width = 512; c.height = 512; const x = c.getContext('2d')
-    const wall = x.createLinearGradient(0, 0, 0, 512); wall.addColorStop(0, '#5a4a3a'); wall.addColorStop(1, '#3a2f26'); x.fillStyle = wall; x.fillRect(0, 0, 512, 512)
-    x.fillStyle = '#2c231b'; x.fillRect(0, 380, 512, 132)                                             // floor
-    x.fillStyle = '#6b4a2e'; x.fillRect(250, 280, 220, 22); x.fillRect(262, 302, 14, 90); x.fillRect(446, 302, 14, 90) // desk
-    x.fillStyle = '#4a3020'; x.fillRect(300, 302, 120, 40)                                            // drawer
-    x.fillStyle = '#222'; x.fillRect(395, 236, 10, 44); x.beginPath(); x.moveTo(370, 236); x.lineTo(430, 236); x.lineTo(415, 200); x.lineTo(385, 200); x.closePath(); x.fillStyle = '#e8d6a8'; x.fill() // lamp
-    const glow = x.createRadialGradient(400, 240, 10, 400, 260, 200); glow.addColorStop(0, 'rgba(255,214,150,0.75)'); glow.addColorStop(1, 'rgba(255,214,150,0)'); x.fillStyle = glow; x.fillRect(150, 60, 362, 360)
-    x.fillStyle = '#2a2a2e'; x.fillRect(290, 250, 70, 32); x.fillStyle = '#8fb3d9'; x.fillRect(294, 254, 62, 24)    // a laptop, lid up
-    x.fillStyle = '#3b2a1e'; x.fillRect(180, 300, 70, 12); x.fillRect(182, 230, 12, 140); x.fillRect(236, 312, 10, 60) // chair
-    x.fillStyle = '#c9b48a'; x.fillRect(90, 110, 110, 80); x.fillStyle = '#4f7a99'; x.fillRect(98, 118, 94, 64); x.fillStyle = '#e0c060'; x.beginPath(); x.arc(160, 140, 12, 0, 7); x.fill() // a beach picture
-    x.fillStyle = 'rgba(255,255,255,0.10)'; x.beginPath(); x.moveTo(0, 0); x.lineTo(160, 0); x.lineTo(0, 260); x.fill()             // a sheen on the glass
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
-    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.55), new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: '#c8c8c8' }))
-    win.position.set(cat.position.x + 0.08, cat.position.y + 0.74, cat.position.z - 0.06); win.rotation.y = cat.rotation.y; scene.add(win)
-    // ...and the glass in front of her: a shallow box window with white trim, so she sits inside, behind the pane.
-    const bay = new THREE.Group(); bay.position.set(cat.position.x + 0.08, cat.position.y + 0.74, cat.position.z - 0.06); bay.rotation.y = cat.rotation.y; scene.add(bay)
-    const trim = new THREE.MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7 }), D = 0.42, W = 1.5, H = 1.55
-    const sheen = (() => { const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const y = c2.getContext('2d'); const gr = y.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.05)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.0)'); gr.addColorStop(0.75, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0.03)'); y.fillStyle = gr; y.fillRect(0, 0, 128, 128); const tt = new THREE.CanvasTexture(c2); return tt })()
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: sheen, color: '#dfe9f2', transparent: true, opacity: 0.55, depthWrite: false })); glass.position.z = D; bay.add(glass)
-    const piece = (w, h, d, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), trim); b.position.set(x, y, z); b.castShadow = true; bay.add(b) }
-    piece(0.08, H + 0.16, D + 0.04, -W / 2 - 0.04, 0, D / 2); piece(0.08, H + 0.16, D + 0.04, W / 2 + 0.04, 0, D / 2)   // sides
-    piece(W + 0.16, 0.08, D + 0.04, 0, H / 2 + 0.04, D / 2); piece(W + 0.3, 0.07, D + 0.16, 0, -H / 2 - 0.035, D / 2 + 0.05) // head and sill
-    piece(W, 0.05, 0.05, 0, 0.02, D); piece(0.04, H, 0.04, 0, 0, D)                                                    // the sash bars
-    cat.position.z += 0.04 }
+  // She sits INSIDE the house, behind the front window: the window is a portal into a real little room.
+  // 1) the window pane marks the stencil where it's visible, 2) resets depth there, 3) the room and the cat draw only there.
+  { const wallZ = cat.position.z - 0.06, wx = cat.position.x + 0.08, wy0 = cat.position.y + 0.74, wy = wy0 + 0.08, W = 1.3, H = 1.52, yaw = cat.rotation.y
+    const portalM = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp })
+    const portal = new THREE.Mesh(new THREE.PlaneGeometry(W, H), portalM); portal.position.set(wx, wy, wallZ + 0.012); portal.rotation.y = yaw; portal.renderOrder = 10; scene.add(portal)
+    const resetM = new THREE.MeshBasicMaterial({ colorWrite: false, depthFunc: THREE.AlwaysDepth, stencilWrite: true, stencilRef: 1, stencilFunc: THREE.EqualStencilFunc })
+    resetM.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <logdepthbuf_fragment>', 'gl_FragDepth = 1.0;') }
+    const reset = portal.clone(); reset.material = resetM; reset.renderOrder = 11; scene.add(reset)
+    const inside = (m) => { m.stencilWrite = true; m.stencilRef = 1; m.stencilFunc = THREE.EqualStencilFunc; m.stencilZPass = THREE.KeepStencilOp; return m }
+    const room = new THREE.Group(); room.position.set(wx, wy, wallZ); room.rotation.y = yaw; scene.add(room)
+    const part = (geo, color, x, y, z, basic = true) => { const m = new THREE.Mesh(geo, inside(basic ? new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }) : new THREE.MeshLambertMaterial({ color }))); m.position.set(x, y, z); m.renderOrder = 12; room.add(m); return m }
+    part(new THREE.PlaneGeometry(4.2, 3.0), '#6e5a46', 0, 0.2, -3.2)                                    // back wall, warm in the lamplight
+    for (const e of [-1, 1]) part(new THREE.PlaneGeometry(3.2, 3.0), '#5e4c3b', e * 2.1, 0.2, -1.6).rotation.y = Math.PI / 2 // side walls
+    part(new THREE.PlaneGeometry(4.2, 3.2), '#4d3f32', 0, 1.7, -1.6).rotation.x = Math.PI / 2           // ceiling
+    part(new THREE.PlaneGeometry(4.2, 3.2), '#3a2e24', 0, -1.25, -1.6).rotation.x = -Math.PI / 2           // floor
+    part(new THREE.BoxGeometry(1.5, 0.06, 0.7), '#7a5434', 0.55, -0.45, -2.3, false); for (const dx of [-0.15, 1.25]) part(new THREE.BoxGeometry(0.06, 0.8, 0.6), '#5a3c24', dx, -0.85, -2.3, false) // desk
+    part(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 6), '#222222', 1.0, -0.2, -2.45); const shade = part(new THREE.CylinderGeometry(0.12, 0.2, 0.22, 12), '#ffe2a8', 1.0, 0.05, -2.45) // lamp
+    const glowC = document.createElement('canvas'); glowC.width = glowC.height = 128; { const x = glowC.getContext('2d'), gr = x.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(255,214,150,0.8)'); gr.addColorStop(1, 'rgba(255,214,150,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128) }
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), inside(new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(glowC), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); glow.position.set(1.0, 0.0, -2.9); glow.renderOrder = 13; room.add(glow)
+    part(new THREE.BoxGeometry(0.5, 0.03, 0.34), '#2a2a2e', 0.4, -0.41, -2.3); const scr = part(new THREE.PlaneGeometry(0.46, 0.3), '#8fb3d9', 0.4, -0.26, -2.46); scr.rotation.x = -0.2 // laptop
+    part(new THREE.BoxGeometry(0.5, 0.06, 0.5), '#3b2a1e', 0.5, -0.8, -1.75, false); part(new THREE.BoxGeometry(0.5, 0.7, 0.06), '#3b2a1e', 0.5, -0.45, -1.52, false) // chair
+    part(new THREE.PlaneGeometry(0.6, 0.45), '#c9b48a', -1.1, 0.35, -3.18); part(new THREE.PlaneGeometry(0.5, 0.36), '#4f7a99', -1.1, 0.35, -3.17) // a beach picture
+    part(new THREE.BoxGeometry(W + 0.2, 0.06, 0.4), '#efe9dc', 0, -H / 2 - 0.03, -0.2)                // the inside sill she sits on
+    // Move her in, onto the inside sill, and draw her only through the window.
+    cat.position.z = wallZ - 0.22; cat.position.y = wy0 - 0.68
+    cat.traverse((o) => { if (o.isMesh) { o.material = inside(o.material.clone()); o.renderOrder = 14 } })
+    // The glass: a faint reflection laid over the opening.
+    const sheen = (() => { const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const y = c2.getContext('2d'); const gr = y.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, 'rgba(255,255,255,0.28)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.04)'); gr.addColorStop(0.7, 'rgba(255,255,255,0.0)'); gr.addColorStop(0.8, 'rgba(255,255,255,0.14)'); gr.addColorStop(1, 'rgba(255,255,255,0.02)'); y.fillStyle = gr; y.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c2) })()
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: sheen, transparent: true, depthWrite: false })); glass.position.set(wx, wy, wallZ + 0.014); glass.rotation.y = yaw; scene.add(glass)
+    const bar = new THREE.MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7 }); for (const [w, h, x, y] of [[W, 0.05, 0, 0.03], [0.04, H, 0, 0]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), bar); b.position.set(x, y, 0.02); const g2 = new THREE.Group(); g2.position.set(wx, wy, wallZ); g2.rotation.y = yaw; g2.add(b); scene.add(g2) } }
   catTail = tail; catHead = head
 }
 
@@ -1671,6 +1676,48 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
       const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const sg = new THREE.Group(), SX = -96.5 * U, SZ = 430.6 * U; sg.position.set(SX, surfaceAt(SX, SZ), SZ); sg.rotation.set(0, 0.2, 0.12); scene.add(sg)
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 6), new THREE.MeshStandardMaterial({ color: '#888', metalness: 0.5 })); pole.position.y = 1.2; sg.add(pole)
       for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.68), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); f.position.set(0, 2.0, s2 * 0.03); if (s2 < 0) f.rotation.y = Math.PI; sg.add(f) } }
+    // The low back corner by the woods has flooded: brown standing water with tyres, bags, a cart and cans floating in it.
+    { const x0 = -107.6, x1 = -98.0, z0 = 427.2, z1 = 431.9, sh = new THREE.Shape(); let sd3 = 13; const r3 = () => (sd3 = (sd3 * 16807) % 2147483647) / 2147483647
+      for (let k = 0; k < 28; k++) { const a = k / 28 * Math.PI * 2, rx = (x1 - x0) / 2 * (0.86 + r3() * 0.14), rz = (z1 - z0) / 2 * (0.82 + r3() * 0.18), px = ((x0 + x1) / 2 + Math.cos(a) * rx) * U, pz = -((z0 + z1) / 2 + Math.sin(a) * rz) * U; k ? sh.lineTo(px, pz) : sh.moveTo(px, pz) }
+      const waterM = new THREE.MeshStandardMaterial({ color: '#5a5236', roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.92, envMapIntensity: 0.25, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
+      const water = new THREE.Mesh(new THREE.ShapeGeometry(sh, 2).rotateX(-Math.PI / 2), waterM); water.position.y = GY + 0.05; water.receiveShadow = true; scene.add(water)
+      const muck = new THREE.Mesh(new THREE.ShapeGeometry(sh, 2).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#3a3324', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); muck.scale.set(1.04, 1, 1.06); muck.position.set(-(x0 + x1) / 2 * U * 0.04, GY + 0.03, -(z0 + z1) / 2 * U * 0.06); scene.add(muck)
+      window.__flood = { x0: x0 * U, x1: x1 * U, z0: z0 * U, z1: z1 * U }
+      const tyreM = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.85 }), bagM = new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.35 }), bagW = new THREE.MeshStandardMaterial({ color: '#d8d6cc', roughness: 0.5 }), canM = new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.5 }), foamM = new THREE.MeshStandardMaterial({ color: '#ece8dc', roughness: 0.9 })
+      for (let i = 0; i < 30; i++) { const x = (x0 + 0.6 + r3() * (x1 - x0 - 1.2)) * U, z = (z0 + 0.5 + r3() * (z1 - z0 - 1.0)) * U, k = i % 6
+        const m = k < 2 ? new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.12, 8, 18), tyreM) : k < 4 ? new THREE.Mesh(blob, k === 2 ? bagM : bagW) : k === 4 ? new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.12, 8), canM) : new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.22), foamM)
+        if (k < 2) { m.rotation.set(Math.PI / 2 + (r3() - 0.5) * 0.5, 0, r3()); m.position.set(x, GY + 0.08, z) } else if (k < 4) { m.scale.set(0.32, 0.18, 0.28); m.position.set(x, GY + 0.1, z) } else { m.rotation.set(Math.PI / 2, r3() * 6, 0); m.position.set(x, GY + 0.07, z) }
+        m.userData.bob = r3() * 6; m.castShadow = true; scene.add(m); (window.__floaters ||= []).push(m) }
+      // A half-sunk cart tipped on its side, and a tyre leaning against a post.
+      { const c = new THREE.Group(), w2 = new THREE.MeshStandardMaterial({ color: '#8a7a62', roughness: 0.8, metalness: 0.3 }); for (const y of [0, 0.25, 0.5]) for (const zz of [-0.45, 0.45]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.56, 5), w2); r.rotation.z = Math.PI / 2; r.position.set(0, y, zz); c.add(r) } for (let i = -3; i <= 3; i++) for (const xx of [-0.28, 0.28]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.5, 5), w2); r.position.set(xx, 0.25, i * 0.15); c.add(r) }
+        c.position.set(-101.8 * U, GY - 0.05, 429.6 * U); c.rotation.set(0, 0.7, 1.4); scene.add(c) } }
+    // Seven busted shopping carts strewn about the lot: wheels missing, baskets bent, a couple on their sides — and a man sitting in one.
+    { const wireM = new THREE.MeshStandardMaterial({ color: '#b3b8bc', roughness: 0.45, metalness: 0.6 }), rustM = new THREE.MeshStandardMaterial({ color: '#8a6a4a', roughness: 0.9 }), handleM = new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.6 }), tyreM = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 })
+      const coat = new THREE.MeshStandardMaterial({ color: '#4a5a6a', roughness: 0.95 }), jeans = new THREE.MeshStandardMaterial({ color: '#2f3b52', roughness: 0.9 }), skin = new THREE.MeshStandardMaterial({ color: '#c49272', roughness: 0.8 }), cap = new THREE.MeshStandardMaterial({ color: '#2d6b3a', roughness: 0.9 })
+      const rod = (len) => new THREE.CylinderGeometry(0.013, 0.013, len, 5)
+      const cart = (seed, withMan) => { const g = new THREE.Group(), add = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; g.add(o); return o }
+        const bend = (seed % 3) * 0.08
+        for (const y of [0.0, 0.25, 0.5]) { add(rod(0.95), seed % 2 ? rustM : wireM, -0.28, y, 0, Math.PI / 2); add(rod(0.95), wireM, 0.28 - (y > 0.3 ? bend : 0), y, 0, Math.PI / 2); add(rod(0.56), wireM, 0, y, 0.47, 0, Math.PI / 2); add(rod(0.56), wireM, 0, y, -0.47, 0, Math.PI / 2) }
+        for (let i = -3; i <= 3; i++) { add(rod(0.5), wireM, -0.28, 0.25, i * 0.15, 0, 0); add(rod(0.5), wireM, 0.28 - bend * 0.5, 0.25, i * 0.15, 0, bend) }
+        for (let i = -2; i <= 2; i++) add(rod(0.5), wireM, i * 0.12, 0.25, 0.47)
+        add(new THREE.CylinderGeometry(0.024, 0.024, 0.62, 8), handleM, 0, 0.6, -0.6, 0, Math.PI / 2 + (seed % 2 ? 0.25 : 0))
+        for (const [k, x, z] of [[0, -0.23, -0.4], [1, 0.23, -0.4], [2, -0.21, 0.4], [3, 0.21, 0.4]]) { add(rod(0.5), wireM, x, -0.25, z); if ((seed + k) % 3) add(new THREE.CylinderGeometry(0.065, 0.065, 0.04, 10), tyreM, x, -0.49, z, 0, Math.PI / 2) }
+        add(new THREE.BoxGeometry(0.5, 0.012, 0.84), wireM, 0, -0.33, 0)
+        if (withMan) { const m = new THREE.Group(); m.position.set(0, 0.08, -0.12); g.add(m) // sitting in the basket, legs hooked over the front
+          const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.55, 10), coat); torso.position.y = 0.32; torso.rotation.x = -0.25; m.add(torso)
+          const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), skin); head.position.set(0, 0.7, -0.06); m.add(head)
+          const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.07, 12), cap); hat.position.set(0, 0.8, -0.06); m.add(hat); const brim = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.12), cap); brim.position.set(0, 0.77, 0.08); m.add(brim)
+          for (const e of [-1, 1]) { const th = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.5, 8), jeans); th.rotation.x = Math.PI / 2 - 0.2; th.position.set(e * 0.1, 0.12, 0.3); m.add(th)
+            const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8), jeans); shin.position.set(e * 0.1, -0.12, 0.6); m.add(shin)
+            const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.2), tyreM); shoe.position.set(e * 0.1, -0.35, 0.65); m.add(shoe)
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), coat); arm.position.set(e * 0.25, 0.35, 0.05); arm.rotation.z = e * 0.5; m.add(arm) }
+          const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.24, 8), new THREE.MeshStandardMaterial({ color: '#8a6a3a', roughness: 0.4 })); bottle.position.set(0.36, 0.2, 0.1); m.add(bottle) }
+        return g }
+      const spots = [[-99.2, 411.8, 0.4, 0], [-96.6, 418.4, 2.2, 1], [-93.8, 413.6, 1.1, 0], [-99.8, 427.6, -0.6, 2], [-95.4, 424.9, 2.9, 0], [-92.9, 429.4, 0.8, 1], [-97.6, 421.2, 1.7, 0]]
+      spots.forEach(([x, z, yaw, side], i) => { const m = cart(i, i === 6); scene.add(m); const X = x * U, Z = z * U
+        if (side) { m.rotation.z = side === 1 ? Math.PI / 2 : -Math.PI / 2 }  // lying on its side
+        crates.push({ m, half: new V3(0.3, side ? 0.3 : 0.5, 0.48), r: 0.5, heavy: i === 6, home: { pos: new V3(X, surfaceAt(X, Z) + (side ? 0.3 : 0.5), Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
+        if (side) crates[crates.length - 1].home.roll = m.rotation.z }) }
     // Six dumpsters lined up along the store's blank side wall, one of them with a man living in it.
     { const green = new THREE.MeshStandardMaterial({ color: '#2f5a3c', roughness: 0.8 }), blue = new THREE.MeshStandardMaterial({ color: '#2a4f7a', roughness: 0.8 }), lidM = new THREE.MeshStandardMaterial({ color: '#1d1f20', roughness: 0.6 }), bagM = new THREE.MeshStandardMaterial({ color: '#17181a', roughness: 0.45 }), whl = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.7 })
       const skin = new THREE.MeshStandardMaterial({ color: '#b98a66', roughness: 0.8 }), beanie = new THREE.MeshStandardMaterial({ color: '#b5541e', roughness: 0.9 }), coat = new THREE.MeshStandardMaterial({ color: '#5b5a3c', roughness: 0.95 }), beard = new THREE.MeshStandardMaterial({ color: '#8a8478', roughness: 1 })
@@ -1707,7 +1754,12 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
           const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, len, 6), postM); rail.rotation.set(0, yaw, Math.PI / 2, 'YXZ'); rail.position.set(cx, y + H, cz); scene.add(rail)
           boxes.push({ c: new V2(cx, cz), a: new V2(tx, tz), hx: len / 2, hz: 0.12 }) } }
       // Along the street side, from the houses to the bank (open in front of the bank), then down the side by the houses.
-      run(-108.0, 405.9, -99.4, 405.9, 7, 4); run(-108.0, 405.9, -108.0, 421.0, 9, -1) }
+      run(-108.0, 405.9, -99.4, 405.9, 7, 4); run(-108.0, 405.9, -108.0, 421.0, 9, -1)
+      // ...and NO LOITERING signs zip-tied all along it, every which way.
+      const nl = (() => { const c2 = document.createElement('canvas'); c2.width = 192; c2.height = 128; const y = c2.getContext('2d'); y.fillStyle = '#f4f2ea'; y.fillRect(0, 0, 192, 128); y.strokeStyle = '#c0141a'; y.lineWidth = 8; y.strokeRect(4, 4, 184, 120); y.fillStyle = '#c0141a'; y.textAlign = 'center'; y.font = '900 40px Anton, Impact, sans-serif'; y.fillText('NO', 96, 52); y.fillText('LOITERING', 96, 96, 176); const tt = new THREE.CanvasTexture(c2); tt.colorSpace = THREE.SRGBColorSpace; return tt })()
+      const nlM = new THREE.MeshStandardMaterial({ map: nl, roughness: 0.7, side: THREE.DoubleSide }), nlG = new THREE.PlaneGeometry(0.6, 0.4)
+      let sd2 = 9; const r2 = () => (sd2 = (sd2 * 16807) % 2147483647) / 2147483647
+      for (let i = 0; i < 22; i++) { const m = new THREE.Mesh(nlG, nlM), y = GY + 0.7 + r2() * 0.9; if (i < 13) { const x = (-107.7 + (8.2 * i / 12) + (r2() - 0.5) * 0.15) * U; if (Math.abs(x / U + 102.4) < 0.7) continue; m.position.set(x, y, 405.9 * U + 0.03 * (i % 2 ? 1 : -1)) } else { m.position.set(-108.0 * U + 0.03, y, (406.5 + (14 * (i - 13) / 8)) * U); m.rotation.y = Math.PI / 2 } m.rotation.z = (r2() - 0.5) * 0.5; scene.add(m) } }
   }
 
   // --- Winn-Trixie, sharing a lot with PCN Bank: a long tan box with a red banner apologizing for the turkeys.
@@ -1895,7 +1947,7 @@ for (const c of crates) if (c.home) { c.gy = surfaceAt(c.home.pos.x, c.home.pos.
 for (const c of crates) if (c.home && !c.home.grounded) { c.home.grounded = true; const d = surfaceAt(c.home.pos.x, c.home.pos.z) - GY; if (Math.abs(d) > 0.02 && Math.abs(d) < 0.4) c.home.pos.y += d }
 function resetCrates() { for (const k of balloons) { k.popped = false; k.b.visible = true; k.tether.visible = true }
  for (const c of crates) c.topple = null; if (pylonProp) { pylonProp.faceMat.map = pylonProp.lit; pylonProp.faceMat.emissiveMap = pylonProp.lit; pylonProp.faceMat.emissiveIntensity = 0.25; pylonProp.faceMat.needsUpdate = true; pylonProp.sparkT = 0 }
-  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; if (c.lenses) for (const l of c.lenses) l.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, 0)); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
+  for (const c of crates) { if (c.donut || c.fork || c.bird) { c.m.visible = false; c.awake = false; continue } if (c.forks) c.forks.visible = true; if (c.lenses) for (const l of c.lenses) l.visible = true; c.spilled = false; c.fell = false; c.m.position.copy(c.home.pos); c.m.quaternion.setFromEuler(_e.set(0, c.home.yaw, c.home.roll || 0, 'YXZ')); c.vel.set(0, 0, 0); c.spin.set(0, 0, 0); c.awake = false } }
 resetCrates()
 const nxGuess = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l } }
 function pushCrates(car) {
@@ -2110,7 +2162,8 @@ function update(dt) {
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
   rideBeds(dt, live)
-  // Ploughing through a bush or hedge drags the car a little.
+  // Ploughing through a bush or hedge drags the car a little; wading the flood drags it more.
+  { const f = window.__flood; if (f && P.pos.x > f.x0 && P.pos.x < f.x1 && P.pos.y > f.z0 && P.pos.y < f.z1) { P.vel.multiplyScalar(Math.exp(-dt * 1.1)); if (P.vel.length() > 3 && Math.random() < 0.4) burst(new V2(P.pos.x, P.pos.y), 2, false, true, '#8a8466') } }
   for (const [bx, bz, br] of bushes) if (Math.abs(P.pos.x - bx) < br + 1.2 && Math.abs(P.pos.y - bz) < br + 1.2 && Math.hypot(P.pos.x - bx, P.pos.y - bz) < br + 1.0) { P.vel.multiplyScalar(Math.exp(-dt * 1.6)); break }
   // Through the drive-thru: the barista hands over two pumpkin spice lattes to throw.
   { const t = Math.atan2(0.968, -0.249), wx = (-93.25 + 6.5 * Math.cos(t) - 0.3 * Math.sin(t)) * U, wz = (364.09 - 6.5 * Math.sin(t) - 0.3 * Math.cos(t)) * U
