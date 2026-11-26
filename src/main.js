@@ -1666,7 +1666,25 @@ const lotIslands = []
     if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } }
 
   sprayTag([['CHRISTY HOMES AND I WERE IN THE', 118], ['BACK OF THE JEEP LAST NIGHT', 270]], ['#ff4fb0', '#e0218a', '#7a2bd6', 'rgba(190,40,140,0.85)'], new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0), 19, 3.56) // the big blank wall facing A1A S
-  sprayTag([['UNIONS FOR DANIEL', 192]], ['#ffe14a', '#ff8a1c', '#d12a1a', 'rgba(255,120,20,0.85)'], new V3(-80 * U, GY + 2.2, 373.05 * U), new V3(-1, 0, 0), 9.4, 1.76) // round the corner from the OOPS Store, under PIZZAZZ
+  // A union poster pasted on the wall under PIZZAZZ: old-school labor print, red and black on cream, a raised fist.
+  { const c = document.createElement('canvas'); c.width = 768; c.height = 1024; const x = c.getContext('2d')
+    x.fillStyle = '#efe4c8'; x.fillRect(0, 0, 768, 1024)
+    x.fillStyle = '#b3201c'; x.beginPath(); for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; x.moveTo(384, 430); x.arc(384, 430, 900, a, a + Math.PI / 24) } x.fill()
+    x.fillStyle = '#efe4c8'; x.beginPath(); x.arc(384, 430, 200, 0, 7); x.fill()
+    x.fillStyle = '#1b1b1b' // the raised fist
+    x.fillRect(330, 470, 110, 260); x.beginPath(); x.roundRect(284, 300, 200, 190, 40); x.fill()
+    x.fillStyle = '#efe4c8'; for (let k = 0; k < 3; k++) x.fillRect(300 + k * 50 + 44, 318, 6, 100); x.fillRect(296, 410, 150, 6)
+    x.fillStyle = '#1b1b1b'; x.fillRect(0, 0, 768, 150); x.fillRect(0, 800, 768, 224)
+    x.fillStyle = '#efe4c8'; x.textAlign = 'center'; x.textBaseline = 'middle'
+    x.font = '900 112px Anton, Impact, sans-serif'; x.fillText('UNIONS', 384, 82, 700)
+    x.font = '900 120px Anton, Impact, sans-serif'; x.fillText('FOR DANIEL', 384, 880, 720)
+    x.fillStyle = '#d6a72a'; x.font = '700 34px Georgia, serif'; x.fillText('SOLIDARITY · SAINT PONCE LOCAL 1964', 384, 965, 720)
+    for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(80,60,30,${Math.random() * 0.12})`; x.fillRect(Math.random() * 768, Math.random() * 1024, 2 + Math.random() * 4, 2) } // aged paper
+    x.strokeStyle = 'rgba(0,0,0,0.25)'; x.lineWidth = 6; x.strokeRect(3, 3, 762, 1018)
+const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 2.6), new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 }))
+    const rc = new THREE.Raycaster(new V3(-80 * U, GY + 1.9, 373.05 * U), new V3(-1, 0, 0)), h = rc.intersectObject(world.scene, true)[0]
+    if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.03); m.rotation.y = Math.atan2(n.x, n.z); m.rotation.z = 0.015; scene.add(m) } }
 
   // --- VOTE GEORGE yard signs on the town sign's lawn; one leans out over the boulevard where Brad cuts the corner.
   { const c = document.createElement('canvas'); c.width = 512; c.height = 320; const x = c.getContext('2d')
