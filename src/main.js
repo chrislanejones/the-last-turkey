@@ -93,10 +93,10 @@ const skyDome = makeSky(); skyDome.renderOrder = -2; scene.add(skyDome)
 const pmrem = new THREE.PMREMGenerator(renderer)
 const envScene = new THREE.Scene(); envScene.add(makeSky())
 scene.environment = pmrem.fromScene(envScene, 0, 0.1, 20000).texture
-scene.environmentIntensity = 0.55
+scene.environmentIntensity = 0.32
 scene.fog = new THREE.Fog(HORIZON.clone(), 180, 620) // matched to the sky's horizon haze
 
-scene.add(new THREE.HemisphereLight('#a9c9ef', '#8a7756', 0.85)) // blue sky above, warm sandy bounce below
+scene.add(new THREE.HemisphereLight('#c3d3e6', '#8a7756', 0.95)) // blue sky above, warm sandy bounce below
 const sun = new THREE.DirectionalLight('#ffd7a3', 4.2) // warm, golden afternoon sun
 sun.castShadow = true
 sun.shadow.mapSize.set(matchMedia('(pointer:coarse)').matches ? 2048 : 4096, matchMedia('(pointer:coarse)').matches ? 2048 : 4096) // crisper shadow edges on desktop
@@ -224,7 +224,22 @@ const FORT = { x: -69.4, z: 347.0 } // in the east tree line by the parade end, 
   { const spine = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.36, 0.02), dark); spine.position.set(0, 0.22, -0.17); cat.add(spine) }
   const nose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), pink); nose.position.set(0, 0.48, 0.18); cat.add(nose)
   const tail = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 12, Math.PI * 1.1), dark); tail.position.set(0.12, 0.08, -0.05); tail.rotation.set(Math.PI / 2, 0, 0.6); cat.add(tail)
-  cat.position.set(-471.04, 1.08, 1581.33); cat.rotation.y = 0.017; scene.add(cat); window.__cat = cat // on the sill of the front window, watching the street
+  cat.position.set(-471.04 + HD[0] * U, 1.08, 1581.33 + HD[1] * U); cat.rotation.y = 0.017; scene.add(cat); window.__cat = cat // on the sill of the front window, watching the street
+  // You can see into the room behind her: a painted interior set into the window — back wall, a desk with a lamp on, a chair, a picture.
+  { const c = document.createElement('canvas'); c.width = 512; c.height = 512; const x = c.getContext('2d')
+    const wall = x.createLinearGradient(0, 0, 0, 512); wall.addColorStop(0, '#5a4a3a'); wall.addColorStop(1, '#3a2f26'); x.fillStyle = wall; x.fillRect(0, 0, 512, 512)
+    x.fillStyle = '#2c231b'; x.fillRect(0, 380, 512, 132)                                             // floor
+    x.fillStyle = '#6b4a2e'; x.fillRect(250, 280, 220, 22); x.fillRect(262, 302, 14, 90); x.fillRect(446, 302, 14, 90) // desk
+    x.fillStyle = '#4a3020'; x.fillRect(300, 302, 120, 40)                                            // drawer
+    x.fillStyle = '#222'; x.fillRect(395, 236, 10, 44); x.beginPath(); x.moveTo(370, 236); x.lineTo(430, 236); x.lineTo(415, 200); x.lineTo(385, 200); x.closePath(); x.fillStyle = '#e8d6a8'; x.fill() // lamp
+    const glow = x.createRadialGradient(400, 240, 10, 400, 260, 200); glow.addColorStop(0, 'rgba(255,214,150,0.75)'); glow.addColorStop(1, 'rgba(255,214,150,0)'); x.fillStyle = glow; x.fillRect(150, 60, 362, 360)
+    x.fillStyle = '#2a2a2e'; x.fillRect(290, 250, 70, 32); x.fillStyle = '#8fb3d9'; x.fillRect(294, 254, 62, 24)    // a laptop, lid up
+    x.fillStyle = '#3b2a1e'; x.fillRect(180, 300, 70, 12); x.fillRect(182, 230, 12, 140); x.fillRect(236, 312, 10, 60) // chair
+    x.fillStyle = '#c9b48a'; x.fillRect(90, 110, 110, 80); x.fillStyle = '#4f7a99'; x.fillRect(98, 118, 94, 64); x.fillStyle = '#e0c060'; x.beginPath(); x.arc(160, 140, 12, 0, 7); x.fill() // a beach picture
+    x.fillStyle = 'rgba(255,255,255,0.10)'; x.beginPath(); x.moveTo(0, 0); x.lineTo(160, 0); x.lineTo(0, 260); x.fill()             // a sheen on the glass
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.3), new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: '#c8c8c8' }))
+    win.position.set(cat.position.x, cat.position.y + 0.63, cat.position.z - 0.06); win.rotation.y = cat.rotation.y; scene.add(win) }
   catTail = tail; catHead = head
 }
 
@@ -473,7 +488,7 @@ const markerMat = new THREE.MeshBasicMaterial({ color: '#ffd23a', transparent: t
 }
 
 // --- the cars -----------------------------------------------------------------
-const { car, body, wheels, steering } = buildGalaxie('#8e1018')
+const { car, body, wheels, steering, M: carM, tails, hoodSkin } = buildGalaxie('#8e1018')
 scene.add(car)
 const backSeatTurkey = makeTurkey(); backSeatTurkey.scale.setScalar(0.95); backSeatTurkey.position.set(0, 0.7, -1.05); backSeatTurkey.visible = false; body.add(backSeatTurkey)
 
@@ -1320,7 +1335,7 @@ float fbm(vec2 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a
 if (!location.search.includes('nolot')) for (const gm of groundMeshes) for (const mat of [].concat(gm.material)) { mat.onBeforeCompile = paveShader; mat.needsUpdate = true }
 const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); const h = groundRay.intersectObjects(groundMeshes, false).find((h) => h.point.y < 0.8); return h ? h.point.y : GY }
 
-const lotIslands = []
+const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one drags the car a little
 // --- "Welcome to Saint Ponce Beach": the carved sign on the grass at the town's south tip, among boulders and dune grass.
 {
   const cx = -88.2 * U, cz = 399.95 * U, gy = surfaceAt(cx, cz), G = new THREE.Group(); G.position.set(cx, gy, cz); G.scale.setScalar(1.25); scene.add(G) // the very tip, the palm grove behind it
@@ -1444,7 +1459,7 @@ const lotIslands = []
     const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(a - 0.17, h - 0.17, Math.max(0.1, r - 0.1), Math.max(0.05, r2 - 0.1)), 6).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.248; bark.receiveShadow = true; g.add(bark)
     if (a > 2 && rnd() > 0.35) { const tw = a * (0.3 + rnd() * 0.2), t = new THREE.Mesh(new THREE.ShapeGeometry(pad(tw, h - 0.5, 0.6, 0.6), 5).rotateX(-Math.PI / 2), turfM); t.position.set((rnd() > 0.5 ? 1 : -1) * (a - tw - 0.45), 0.256, 0); t.receiveShadow = true; g.add(t) }
     for (let i = 0; i < plants; i++) { const px = (plants === 1 ? 0 : -a + 0.9 + (2 * a - 1.8) * i / (plants - 1)) + (rnd() - 0.5) * 0.4, pz = (rnd() - 0.5) * (h - 0.6); if (Math.abs(px) < keepClear) continue
-      const k = rnd(); if (k > 0.3) { const b = new THREE.Mesh(blob, hedgeM[i % 2]); const sc = 0.42 + rnd() * 0.25; b.scale.set(sc * 1.25, sc * 0.9, sc * 1.1); b.position.set(px, 0.25 + sc * 0.6, pz); b.rotation.y = rnd() * 3; b.castShadow = true; g.add(b) }
+      const k = rnd(); if (k > 0.3) { const b = new THREE.Mesh(blob, hedgeM[i % 2]); const sc = 0.42 + rnd() * 0.25; b.scale.set(sc * 1.25, sc * 0.9, sc * 1.1); b.position.set(px, 0.25 + sc * 0.6, pz); b.rotation.y = rnd() * 3; b.castShadow = true; g.add(b); g.updateMatrixWorld(); const wpb = b.getWorldPosition(new V3()); bushes.push([wpb.x, wpb.z, sc * 1.3]) }
       else for (let j = 0; j < 9; j++) { const t = new THREE.Mesh(tuft, hedgeM[2]); const ta = j * 0.7, tr = j ? 0.5 : 0; t.rotation.set(Math.cos(ta) * tr, 0, -Math.sin(ta) * tr); t.position.set(px + Math.sin(ta) * tr * 0.45, 0.68, pz + Math.cos(ta) * tr * 0.45); t.castShadow = true; g.add(t) } }
     lotIslands.push({ x, z, hw: a + 0.05, hd: h + 0.05, c: 1, s: 0, h: 0.24 })
   }
@@ -1459,7 +1474,7 @@ const lotIslands = []
       for (let d = 6; d < len - 4; d += 11) { const cx = ax + tx * (d + 4.5) + nx * 1.7, cz = az + tz * (d + 4.5) + nz * 1.7; if (Math.hypot(cx - -306, cz - 1438) < 13) continue
         const g = new THREE.Group(); g.position.set(cx, surfaceAt(cx, cz), cz); g.rotation.y = rot; scene.add(g)
         const bark = new THREE.Mesh(new THREE.ShapeGeometry(pad(4.6, 1.0, 0.9, 0.9), 5).rotateX(-Math.PI / 2), mulchM); bark.position.y = 0.03; bark.material.polygonOffset = true; bark.material.polygonOffsetFactor = -2; bark.material.polygonOffsetUnits = -2; bark.receiveShadow = true; g.add(bark)
-        for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(blob, hedgeM[(i + e) % 2]); b.scale.set(0.8, 0.55, 0.62); b.position.set(-3.6 + i * 1.44, 0.4, 0); b.castShadow = true; g.add(b) } } } }
+        for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(blob, hedgeM[(i + e) % 2]); b.scale.set(0.8, 0.55, 0.62); b.position.set(-3.6 + i * 1.44, 0.4, 0); b.castShadow = true; g.add(b); g.updateMatrixWorld(); const wb = b.getWorldPosition(new V3()); bushes.push([wb.x, wb.z, 0.9]) } } } }
 
   // --- The old side entrance off A1A S (where the picnic tables are): a curbed island fills the gap in the wall,
   // with the little hip-roofed pump house, hedges, palms, a stop sign nobody can reach and a fire hydrant.
@@ -1585,7 +1600,7 @@ const lotIslands = []
     let sd = 5; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (const [[ax, az], [bx, bz]] of runs) { const len = Math.hypot(bx - ax, bz - az) * U, tx = (bx - ax) * U / len, tz = (bz - az) * U / len, nx = -tz, nz = tx, ins = nx > 0 ? 1 : -1
       for (let d = 0.8; d < len - 0.4; d += 1.25) { const x = ax * U + tx * d + nx * ins * 1.15, z = az * U + tz * d + nz * ins * 1.15, sc = 0.55 + rn() * 0.3
-        D.position.set(x, GY + sc * 0.6, z); D.rotation.set(0, rn() * 6, 0); D.scale.set(sc * 1.25, sc, sc * 1.15); D.updateMatrix(); ms.push(D.matrix.clone()) }
+        D.position.set(x, GY + sc * 0.6, z); D.rotation.set(0, rn() * 6, 0); D.scale.set(sc * 1.25, sc, sc * 1.15); D.updateMatrix(); ms.push(D.matrix.clone()); bushes.push([x, z, sc * 1.3]) }
       const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), mulchM); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-tz, tx)); m.position.set((ax + bx) / 2 * U + nx * ins * 1.15, GY + 0.02, (az + bz) / 2 * U + nz * ins * 1.15); m.receiveShadow = true; scene.add(m) }
     const im = new THREE.InstancedMesh(blob, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), ms.length), c = new THREE.Color(); ms.forEach((m, n) => { im.setMatrixAt(n, m); im.setColorAt(n, c.set(['#3b6b30', '#4c7d38', '#335f2c'][n % 3])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
 
@@ -1614,9 +1629,80 @@ const lotIslands = []
     spots.slice(0, 2).forEach(([x, z, t], i) => { const m = buggy(i * 3); scene.add(m); crates.push({ m, half: new V3(0.3, 0.5, 0.48), r: 0.5, home: { pos: new V3(x, GY + 0.5, z), yaw: t + 0.4 - i * 0.8 }, vel: new V3(), spin: new V3(), awake: false }) })
   }
 
+  // --- The Winn-Trixie end of the lot has gone to seed: potholes, weeds in the cracks, litter, a car on blocks,
+  // a mattress, a NO LOITERING sign everyone ignores, and a sagging chain-link fence along the side facing the houses.
+  { let sd = 77; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647, inLot = (x, z) => x > -107.6 && x < -92 && z > 406.2 && z < 431.5 && !(x < -101 && z > 415.5 && z < 425.5)
+    const hole = decalTex(128, 128, (x) => { const g2 = x.createRadialGradient(64, 64, 8, 64, 64, 60); g2.addColorStop(0, 'rgba(18,16,14,.95)'); g2.addColorStop(0.55, 'rgba(40,36,32,.8)'); g2.addColorStop(1, 'rgba(40,36,32,0)'); x.fillStyle = g2; x.beginPath(); for (let k = 0; k < 14; k++) { const a = k / 14 * 6.28, r = 40 + Math.random() * 22; x.lineTo(64 + Math.cos(a) * r, 64 + Math.sin(a) * r) } x.fill() }, 0)
+    const crack = decalTex(256, 256, (x) => { x.strokeStyle = 'rgba(15,14,12,.85)'; x.lineWidth = 3; for (let k = 0; k < 7; k++) { x.beginPath(); let px = 128, py = 128; x.moveTo(px, py); for (let j = 0; j < 9; j++) { px += (Math.random() - 0.5) * 50; py += (Math.random() - 0.5) * 50; x.lineTo(px, py) } x.stroke() } }, 0)
+    const stain = decalTex(128, 128, (x) => { const g2 = x.createRadialGradient(64, 64, 4, 64, 64, 62); g2.addColorStop(0, 'rgba(20,16,12,.55)'); g2.addColorStop(1, 'rgba(20,16,12,0)'); x.fillStyle = g2; x.fillRect(0, 0, 128, 128) }, 0)
+    const weedM = [new THREE.MeshStandardMaterial({ color: '#6f8a3a', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#8f9a4a', roughness: 1 })], blade = new THREE.ConeGeometry(0.05, 0.5, 4)
+    for (let i = 0; i < 70; i++) { const x = -107 + rn() * 15, z = 406.8 + rn() * 24.5; if (!inLot(x, z)) continue; const X = x * U, Z = z * U, k = rn()
+      if (k < 0.16) decal(hole, X, Z, 1 + rn() * 1.4, 0.8 + rn() * 1.1, rn() * 6, 0.024)
+      else if (k < 0.5) decal(crack, X, Z, 3 + rn() * 3, 3 + rn() * 3, rn() * 6, 0.022)
+      else if (k < 0.66) decal(stain, X, Z, 2 + rn() * 3, 1.5 + rn() * 2, rn() * 6, 0.021)
+      else { const y = surfaceAt(X, Z); for (let j = 0; j < 7; j++) { const b = new THREE.Mesh(blade, weedM[j % 2]), a = j * 0.9, t = j ? 0.3 + rn() * 0.4 : 0; b.position.set(X + Math.sin(a) * t * 0.2, y + 0.24, Z + Math.cos(a) * t * 0.2); b.rotation.set(t, a, 0, 'YXZ'); scene.add(b) } } }
+    // Litter: cups, flattened boxes, bags, a tyre or two.
+    const litM = [new THREE.MeshStandardMaterial({ color: '#e8e4da', roughness: 0.7 }), new THREE.MeshStandardMaterial({ color: '#a8845a', roughness: 1 }), new THREE.MeshStandardMaterial({ color: '#1b1c1e', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.6 })]
+    for (let i = 0; i < 40; i++) { const x = -107 + rn() * 15, z = 406.8 + rn() * 24.5; if (!inLot(x, z)) continue; const X = x * U, Z = z * U, y = surfaceAt(X, Z), k = Math.floor(rn() * 4)
+      const m = k === 0 ? new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.13, 8), litM[rn() > 0.5 ? 0 : 3]) : k === 1 ? new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.45), litM[1]) : k === 2 ? new THREE.Mesh(blob, litM[2]) : new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.11, 8, 16), litM[2])
+      if (k === 0) { m.rotation.z = Math.PI / 2; m.position.set(X, y + 0.05, Z) } else if (k === 2) { m.scale.set(0.3, 0.24, 0.28); m.position.set(X, y + 0.2, Z) } else if (k === 3) { m.rotation.x = Math.PI / 2; m.position.set(X, y + 0.11, Z) } else m.position.set(X, y + 0.02, Z)
+      m.rotation.y = rn() * 6; m.castShadow = true; scene.add(m) }
+    // A beater up on cinder blocks, no wheels, a blue tarp over the windshield.
+    { const X = -104.5 * U, Z = 409.2 * U, y = surfaceAt(X, Z), g = new THREE.Group(); g.position.set(X, y, Z); g.rotation.y = 0.3; scene.add(g)
+      const rust = new THREE.MeshStandardMaterial({ color: '#7a5a3e', roughness: 0.95 }), paintM = new THREE.MeshStandardMaterial({ color: '#7d8a8e', roughness: 0.8 }), blk = new THREE.MeshStandardMaterial({ color: '#9b9790', roughness: 1 })
+      const add = (geo, m, x, yy, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, yy, z); o.castShadow = true; g.add(o); return o }
+      add(new THREE.BoxGeometry(1.8, 0.6, 4.4), paintM, 0, 0.75, 0); add(new THREE.BoxGeometry(1.6, 0.5, 2.0), paintM, 0, 1.3, -0.3); add(new THREE.BoxGeometry(1.0, 0.62, 1.2), rust, 0.45, 0.76, 1.2)
+      add(new THREE.BoxGeometry(1.7, 0.45, 0.04), new THREE.MeshStandardMaterial({ color: '#2b6fc0', roughness: 0.8 }), 0, 1.35, 0.71).rotation.x = -0.4
+      for (const [x, z] of [[-0.7, 1.4], [0.7, 1.4], [-0.7, -1.4], [0.7, -1.4]]) add(new THREE.BoxGeometry(0.38, 0.45, 0.2), blk, x, 0.22, z)
+      boxes.push({ c: new V2(X, Z), a: new V2(Math.cos(0.3), -Math.sin(0.3)), hx: 0.95, hz: 2.25 }) }
+    // A mattress against the store wall, and the sign.
+    { const X = -102.4 * U, Z = 425.3 * U, m = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.0, 0.22), new THREE.MeshStandardMaterial({ color: '#d9cfb6', roughness: 1 })); m.position.set(X, surfaceAt(X, Z) + 0.95, Z); m.rotation.set(0.25, 0.4, 0.05); m.castShadow = true; scene.add(m)
+      const c = document.createElement('canvas'); c.width = 256; c.height = 192; const x = c.getContext('2d'); x.fillStyle = '#f4f2ea'; x.fillRect(0, 0, 256, 192); x.strokeStyle = '#c0141a'; x.lineWidth = 10; x.strokeRect(6, 6, 244, 180); x.fillStyle = '#c0141a'; x.textAlign = 'center'; x.font = '900 46px Anton, Impact, sans-serif'; x.fillText('NO', 128, 66); x.fillText('LOITERING', 128, 118, 230); x.fillStyle = '#222'; x.font = '700 20px sans-serif'; x.fillText('VIOLATORS WILL BE TOWED', 128, 160, 230)
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const sg = new THREE.Group(), SX = -96.5 * U, SZ = 430.6 * U; sg.position.set(SX, surfaceAt(SX, SZ), SZ); sg.rotation.set(0, 0.2, 0.12); scene.add(sg)
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 6), new THREE.MeshStandardMaterial({ color: '#888', metalness: 0.5 })); pole.position.y = 1.2; sg.add(pole)
+      for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.68), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); f.position.set(0, 2.0, s2 * 0.03); if (s2 < 0) f.rotation.y = Math.PI; sg.add(f) } }
+    // Six dumpsters lined up along the store's blank side wall, one of them with a man living in it.
+    { const green = new THREE.MeshStandardMaterial({ color: '#2f5a3c', roughness: 0.8 }), blue = new THREE.MeshStandardMaterial({ color: '#2a4f7a', roughness: 0.8 }), lidM = new THREE.MeshStandardMaterial({ color: '#1d1f20', roughness: 0.6 }), bagM = new THREE.MeshStandardMaterial({ color: '#17181a', roughness: 0.45 }), whl = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.7 })
+      const skin = new THREE.MeshStandardMaterial({ color: '#b98a66', roughness: 0.8 }), beanie = new THREE.MeshStandardMaterial({ color: '#b5541e', roughness: 0.9 }), coat = new THREE.MeshStandardMaterial({ color: '#5b5a3c', roughness: 0.95 }), beard = new THREE.MeshStandardMaterial({ color: '#8a8478', roughness: 1 })
+      for (let i = 0; i < 6; i++) { const X = (-107.9 + i * 0.6) * U, Z = 425.75 * U, open = i === 1 || i === 3 || i === 4, man = i === 3, g = new THREE.Group()
+        const body = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.25, 1.35), i % 3 === 2 ? blue : green); body.position.y = 0; body.castShadow = true; g.add(body)
+        for (const sx of [-0.53, 0.53]) { const lid = new THREE.Mesh(new THREE.BoxGeometry(1.03, 0.05, 1.4), lidM); lid.position.set(sx, 0.65, 0); if (open && sx > (man ? -1 : 0)) { lid.rotation.x = -1.9; lid.position.set(sx, 1.23, -0.75) } lid.castShadow = true; g.add(lid) }
+        for (const [wx, wz] of [[-0.9, -0.55], [0.9, -0.55], [-0.9, 0.55], [0.9, 0.55]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.06, 8), whl); w.rotation.z = Math.PI / 2; w.position.set(wx, -0.63, wz); g.add(w) }
+        if (open && !man) for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(blob, bagM); b.scale.set(0.34, 0.28, 0.32); b.position.set(-0.5 + k * 0.35, 0.68 + (k % 2) * 0.12, -0.2 + (k % 3) * 0.2); g.add(b) }
+        if (man) { const m = new THREE.Group(); m.position.set(0.05, 0.62, 0.15); g.add(m)
+          const sh = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), coat); sh.scale.set(1.25, 0.7, 0.8); m.add(sh)
+          const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), skin); head.position.y = 0.34; m.add(head)
+          const hat = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), beanie); hat.position.y = 0.37; m.add(hat)
+          const bd = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), beard); bd.scale.set(1, 0.9, 0.7); bd.position.set(0, 0.25, 0.07); m.add(bd)
+          for (const e of [-1, 1]) { const ey = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), new THREE.MeshBasicMaterial({ color: '#111' })); ey.position.set(e * 0.05, 0.37, 0.125); m.add(ey) }
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.6, 8), coat); arm.rotation.set(1.3, 0, 0.4); arm.position.set(0.32, 0.05, 0.32); m.add(arm)
+          const hand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), skin); hand.position.set(0.42, 0.06, 0.5); m.add(hand)
+          const can = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.12, 8), new THREE.MeshStandardMaterial({ color: '#c0392b', roughness: 0.5 })); can.position.set(0.42, 0.14, 0.5); m.add(can)
+          window.__hobo = m }
+        g.traverse((o) => { if (o.isMesh) o.castShadow = true }); scene.add(g)
+        crates.push({ m: g, half: new V3(1.05, 0.72, 0.68), r: 1.1, heavy: true, home: { pos: new V3(X, GY + 0.72, Z), yaw: (i % 2 ? 0.05 : -0.04) }, vel: new V3(), spin: new V3(), awake: false }) } }
+    // Chain-link fence along the north edge, between the lot and the houses: sagging, a few slats missing, a post leaning.
+    { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const x = c.getContext('2d'); x.strokeStyle = '#b9bcbe'; x.lineWidth = 3
+      for (let i = -128; i < 256; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 128, 128); x.stroke(); x.beginPath(); x.moveTo(i + 128, 0); x.lineTo(i, 128); x.stroke() }
+      const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace
+      const meshM = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, metalness: 0.5, roughness: 0.5 }), postM = new THREE.MeshStandardMaterial({ color: '#9a9ea2', metalness: 0.6, roughness: 0.45 })
+      const H = 1.9
+      const run = (ax, az, bx, bz, n, gap) => { ax *= U; az *= U; bx *= U; bz *= U; const len0 = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len0, tz = (bz - az) / len0, yaw = Math.atan2(-tz, tx)
+        for (let i = 0; i <= n; i++) { const px = ax + (bx - ax) * i / n, pz = az + (bz - az) * i / n, post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, H + 0.1, 6), postM); post.position.set(px, surfaceAt(px, pz) + (H + 0.1) / 2, pz); post.rotation.x = i === 3 ? 0.2 : 0; post.castShadow = true; scene.add(post)
+          if (i === n || i === gap) continue
+          const len = len0 / n, cx = px + tx * len / 2, cz = pz + tz * len / 2, y = surfaceAt(cx, cz)
+          const pt = t.clone(); pt.repeat.set(len / 0.35, H / 0.35); pt.needsUpdate = true
+          const g = new THREE.PlaneGeometry(len, H, 6, 1); const pa = g.attributes.position; for (let k = 0; k < pa.count; k++) { const u = pa.getX(k) / len + 0.5; pa.setZ(k, Math.sin(u * Math.PI) * (i % 3 === 1 ? 0.18 : 0.06)) }
+          const m = new THREE.Mesh(g, meshM.clone()); m.material.map = pt; m.position.set(cx, y + H / 2, cz); m.rotation.y = yaw; scene.add(m)
+          const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, len, 6), postM); rail.rotation.set(0, yaw, Math.PI / 2, 'YXZ'); rail.position.set(cx, y + H, cz); scene.add(rail)
+          boxes.push({ c: new V2(cx, cz), a: new V2(tx, tz), hx: len / 2, hz: 0.12 }) } }
+      // Along the street side, from the houses to the bank (open in front of the bank), then down the side by the houses.
+      run(-108.0, 405.9, -99.4, 405.9, 7, 4); run(-108.0, 405.9, -108.0, 421.0, 9, -1) }
+  }
+
   // --- Winn-Trixie, sharing a lot with PCN Bank: a long tan box with a red banner apologizing for the turkeys.
   { const fx = -104.6, cz = 420.5, L = 9.0 * U, D = 3.4 * U, H = 6.4, y = GY
-    const lotM = new THREE.MeshStandardMaterial({ color: '#5d6466', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); lotM.onBeforeCompile = paveShader
+    const lotM = new THREE.MeshStandardMaterial({ color: '#8d9192', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); lotM.onBeforeCompile = paveShader
     const shp = new THREE.Shape([[-108.1, 405.6], [-91.0, 405.6], [-87.1, 432.1], [-108.1, 432.1]].map(([x, z]) => new THREE.Vector2(x * U, -z * U)))
     const lot = new THREE.Mesh(new THREE.ShapeGeometry(shp).rotateX(-Math.PI / 2), lotM); lot.position.y = y - 0.012; lot.receiveShadow = true; scene.add(lot)
     const shp2 = new THREE.Shape([[-87.3, 416.4], [-80.35, 416.4], [-80.35, 432.1], [-83.9, 432.1]].map(([x, z]) => new THREE.Vector2(x * U, -z * U)))
@@ -2014,6 +2100,8 @@ function update(dt) {
   const live = s === 'chase' || s === 'claim'
   const bumped = P.step(dt, live || s === 'free' ? playerInput() : NONE)
   rideBeds(dt, live)
+  // Ploughing through a bush or hedge drags the car a little.
+  for (const [bx, bz, br] of bushes) if (Math.abs(P.pos.x - bx) < br + 1.2 && Math.abs(P.pos.y - bz) < br + 1.2 && Math.hypot(P.pos.x - bx, P.pos.y - bz) < br + 1.0) { P.vel.multiplyScalar(Math.exp(-dt * 1.6)); break }
   // Through the drive-thru: the barista hands over two pumpkin spice lattes to throw.
   { const t = Math.atan2(0.968, -0.249), wx = (-93.25 + 6.5 * Math.cos(t) - 0.3 * Math.sin(t)) * U, wz = (364.09 - 6.5 * Math.sin(t) - 0.3 * Math.cos(t)) * U
     if (!game.gotLattes && (s === 'chase' || s === 'claim') && Math.hypot(P.pos.x - wx, P.pos.y - wz) < 3.2) {
@@ -2112,15 +2200,33 @@ function placeCars(t) {
   markerMat.opacity = 0.22 + Math.sin(t * 4) * 0.08
 }
 
+// --- body damage: the hood buckles and the taillights break as the Galaxie takes hits ---------------------
+const brokenTail = new THREE.MeshStandardMaterial({ color: '#2a0607', roughness: 0.9 })
+let dmgShown = -1
+function showDamage() {
+  const d = THREE.MathUtils.clamp((100 - game.armor) / 75, 0, 1), step = Math.round(d * 20) / 20
+  if (step === dmgShown) return
+  const worse = step > dmgShown; dmgShown = step
+  hoodSkin.visible = step > 0.04
+  const p = hoodSkin.geometry.attributes.position, rest = hoodSkin.geometry.userData.rest
+  for (let i = 0; i < p.count; i++) { const x = rest[i * 3], y = rest[i * 3 + 1], z = rest[i * 3 + 2], f = THREE.MathUtils.smoothstep(z, 1.4, 2.6)
+    const fold = Math.exp(-(((z - 2.0) / 0.16) ** 2)) * (0.6 + 0.4 * Math.cos(x * 3.1)), ripple = Math.sin(x * 9 + z * 5) * Math.sin(z * 11) * f
+    p.setXYZ(i, x, y + step * (0.16 * fold + 0.035 * ripple - 0.09 * f * f) - 0.004, z - step * 0.12 * f * f) }
+  p.needsUpdate = true; hoodSkin.geometry.computeVertexNormals()
+  tails.forEach((t, i) => { const broke = step >= [0.2, 0.4, 0.6, 0.8][[2, 1, 3, 0][i]]
+    if (broke && t.material !== brokenTail && worse && game.state !== 'intro') { const w = t.getWorldPosition(new V3()); burst(new V2(w.x, w.z), 4, true, false, '#ff2a1a') }
+    t.material = broke ? brokenTail : carM.taillight; t.scale.set(broke ? 0.85 : 1, 1, broke ? 0.85 : 1) })
+}
+
 // --- skid marks, sparks and smoke --------------------------------------------------
-const SKIDS = 500
+const SKIDS = 2400
 const skidGeo = new THREE.PlaneGeometry(0.22, 0.5); skidGeo.rotateX(-Math.PI / 2)
-const skidMesh = new THREE.InstancedMesh(skidGeo, new THREE.MeshBasicMaterial({ color: '#111', transparent: true, opacity: 0.5, depthWrite: false }), SKIDS)
+const skidMesh = new THREE.InstancedMesh(skidGeo, new THREE.MeshBasicMaterial({ color: '#0d0d0d', transparent: true, opacity: 0.62, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), SKIDS)
 skidMesh.count = 0; skidMesh.frustumCulled = false; scene.add(skidMesh)
 let skidIdx = 0
 const skidM = new THREE.Matrix4(), skidQ = new THREE.Quaternion(), skidP = new V3(), one = new V3(1, 1, 1), UP = new V3(0, 1, 0)
-function laySkid() {
-  for (const w of wheels.filter((w) => !w.front)) {
+function laySkid(all) {
+  for (const w of wheels.filter((w) => all || !w.front)) {
     w.group.getWorldPosition(skidP); skidP.y = (P.gy ?? GY) + 0.035
     skidQ.setFromAxisAngle(UP, P.heading)
     skidM.compose(skidP, skidQ, one); skidMesh.setMatrixAt(skidIdx++ % SKIDS, skidM)
@@ -2422,7 +2528,11 @@ function frame() {
   blinkT -= dt
   const blink = blinkT < 0.12 ? 1 : 0; if (blinkT < 0) blinkT = 2 + Math.random() * 3
   for (const b of blinkMeshes) for (const i of b.idx) b.m.morphTargetInfluences[i] = blink
-  if (P.skid > 0.4 && t - lastSkid > 0.035 && game.state !== 'intro') { laySkid(); lastSkid = t }
+  // Rubber goes down when you slide, handbrake, brake hard or spin the tyres off the line.
+  const dF = Math.abs(P.fwd) - Math.abs(P.lastFwd ?? P.fwd); P.lastFwd = P.fwd
+  const hardStop = Math.abs(P.fwd) > 4 && dF < -0.3, launch = Math.abs(P.fwd) > 0.5 && Math.abs(P.fwd) < 9 && dF > 0.2
+  if ((P.skid > 0.22 || hardStop || launch) && t - lastSkid > 0.022 && game.state !== 'intro') { laySkid(P.skid > 0.6 || hardStop); lastSkid = t }
+  showDamage()
   updatePuffs(dt)
   updateCamera(dt)
   audio.update(P.rpm, Math.max(0, playerInput().throttle))

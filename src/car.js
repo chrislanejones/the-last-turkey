@@ -128,7 +128,7 @@ export function buildGalaxie(paintColor) {
   const lift = Math.asin(0.1 / 0.47) // where a wheel arch meets the underside of the hood and trunk
   body.add(profile([[0.72, 0.46], [1.04, 0.46], { arc: [1.5, 0.36, 0.47, Math.PI - lift, lift, true] }, [2.6, 0.46], [2.68, 0.78], [2.58, 0.885], [1.6, 0.905], [0.72, 0.925]], 1.86, 0, M.paint, { bevel: 0.03 }))
   // Cowl and dash (its rear face is the dashboard).
-  body.add(profile([[0.36, 0.46], [0.76, 0.46], [0.76, 0.93], [0.52, 0.975], [0.36, 0.93], [0.31, 0.80]], 1.78, 0, M.dash, { bevel: 0.03 }))
+  body.add(profile([[0.36, 0.46], [0.70, 0.46], [0.70, 0.94], [0.52, 0.975], [0.36, 0.93], [0.31, 0.80]], 1.78, 0, M.dash, { bevel: 0.03 }))
   // Rear deck and trunk lid.
   body.add(profile([[-1.48, 0.83], [-1.48, 0.955], [-2.5, 0.955], [-L2 - 0.02, 0.88], [-L2 - 0.03, 0.46], [-1.96, 0.46], { arc: [-1.5, 0.36, 0.47, Math.PI - lift, 1.528, true] }], 1.84, 0, M.paint, { bevel: 0.03 }))
   // Floor carpet and inner door panels.
@@ -201,9 +201,10 @@ export function buildGalaxie(paintColor) {
   const orn = rbox(0.03, 0.05, 0.24, 0.012, M.chrome, 0, 0.925, 2.42); orn.rotation.x = 0.12; body.add(orn)
 
   // Tail: round taillights, bumper, chrome trunk trim, plate.
+  const tails = []
   for (const side of [1, -1]) for (const dx of [0.5, 0.76]) {
     const bez = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.018, 10, 28), M.chrome); bez.position.set(side * dx, 0.71, -L2 - 0.075); body.add(bez)
-    const t = cyl(0.08, 0.08, 0.03, M.taillight, 28); t.rotation.x = Math.PI / 2; t.position.set(side * dx, 0.71, -L2 - 0.07); body.add(t)
+    const t = cyl(0.08, 0.08, 0.03, M.taillight, 28); t.rotation.x = Math.PI / 2; t.position.set(side * dx, 0.71, -L2 - 0.07); body.add(t); tails.push(t)
   }
   body.add(rbox(1.9, 0.03, 0.03, 0.01, M.chrome, 0, 0.86, -L2 - 0.03))
   body.add(rbox(2.04, 0.15, 0.2, 0.06, M.chrome, 0, 0.43, -L2 - 0.06))
@@ -291,7 +292,13 @@ export function buildGalaxie(paintColor) {
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 6.2), new THREE.MeshBasicMaterial({ map: blob, transparent: true, depthWrite: false }))
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.renderOrder = 1; car.add(shadow)
 
-  return { car, body, wheels, steering, M }
+  // A finely divided skin over the hood: hidden until the car takes damage, then bent and buckled by the game.
+  const hg = new THREE.PlaneGeometry(1.84, 1.5, 24, 26); hg.rotateX(-Math.PI / 2)
+  { const p = hg.attributes.position; for (let i = 0; i < p.count; i++) { const z = 1.85 + p.getZ(i); p.setZ(i, z); p.setY(i, z < 1.6 ? 0.925 - (z - 0.72) * 0.0227 : 0.905 - (z - 1.6) * 0.0204) } hg.computeVertexNormals() }
+  hg.userData.rest = hg.attributes.position.array.slice()
+  const hoodSkin = new THREE.Mesh(hg, M.paint); hoodSkin.position.y = 0.052; hoodSkin.visible = false; hoodSkin.castShadow = true; body.add(hoodSkin)
+
+  return { car, body, wheels, steering, M, tails, hoodSkin }
 }
 
 // --- The rival's SUV: a boxy '70s wagon, every side window down so you can see the driver. ---
