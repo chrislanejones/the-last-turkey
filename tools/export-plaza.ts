@@ -35,6 +35,8 @@ let mode: 'layout' | 'final' = 'final'
 const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
 let wb = false, loving = false
+/** A1A S past the plaza, redrawn as one road: two lanes and a centre turn lane, set back from the plaza's curb. */
+const A1A_S: number[][] = [[-106.3, 340.0], [-105.15, 345.9], [-102.95, 355.3], [-94.95, 383.5], [-94.65, 392.0], [-92.35, 395.6], [-91.65, 398.4], [-91.0, 402.0], [-89.9, 406.0], [-89.3, 408.4], [-87.6, 415.0], [-86.9, 418.0]]
 /** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
 const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
 /** PCN Bank steps south to make room for the street. */
@@ -214,7 +216,7 @@ const inStation = (x: number, z: number) => {
 }
 box('ground', '#80868a', -88.1, .0475, 389.45, 8.2, .03, 16.1) // tops staggered a hair so overlapping paving doesn't flicker
 // Palms on the grass at the very tip, where the welcome sign stands.
-for (const [px, pz, sd] of [[-88.5, 398.5, 11], [-87.3, 399.2, 12], [-89.7, 399.1, 13], [-88.4, 400.1, 14], [-90.9, 396.2, 15], [-85.6, 396.4, 16]]) plants.palm(px, pz, sd, false)
+for (const [px, pz, sd] of [[-88.3, 398.1, 11], [-87.3, 399.0, 12], [-86.2, 397.4, 15], [-85.6, 396.4, 16]]) plants.palm(px, pz, sd, false)
 
 // Construction barriers wall the drivable wedge in: concrete with an orange cap, and barrels.
 const wallRun = (ax: number, az: number, bx: number, bz: number) => {
@@ -232,9 +234,9 @@ const wallRun = (ax: number, az: number, bx: number, bz: number) => {
   }
 }
 // A tall concrete curb with a sidewalk on the road side: enough to stop a car, without the construction look.
-const curbRun = (ax: number, az: number, bx: number, bz: number) => {
+const curbRun = (ax: number, az: number, bx: number, bz: number, force = 0) => {
   const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
-  const o = -side((ax + bx) / 2, (az + bz) / 2, turn), at = (d: number) => [(ax + bx) / 2 + Math.cos(turn) * o * d, (az + bz) / 2 - Math.sin(turn) * o * d]
+  const o = force || -side((ax + bx) / 2, (az + bz) / 2, turn), at = (d: number) => [(ax + bx) / 2 + Math.cos(turn) * o * d, (az + bz) / 2 - Math.sin(turn) * o * d]
   const [cx, cz] = at(.1), [sx, sz] = at(.45)
   DATA.walls.push([cx * UNIT, cz * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT])
   box('architecture', '#bdbab0', cx, .1, cz, .14, .15, len + .1, turn)
@@ -256,8 +258,17 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-95.34, 390.15], [-93.5, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-91.3, 406.1], [-90.2, 410.5], [-88.4, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
-  for (let i = 0; i + 1 < W.length; i++) wallRun(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1])
+  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.2, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-96.75, 390.15], [-93.9, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-101.5, 406.1], [-101.5, 414.6], [-89.0, 414.6], [-88.4, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
+  const W = W0
+  ;(DATA as any).treeRuns = []
+  for (let i = 0; i + 1 < W.length; i++) {
+    const [ax, az] = W[i], [bx, bz] = W[i + 1]
+    if (i < 7 || i > 11) { wallRun(ax, az, bx, bz); continue }
+    // Round the neighborhood and the bank it's a wall of trees: the game plants them, this is only what you bump into.
+    const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
+    DATA.walls.push([(ax + bx) / 2 * UNIT, (az + bz) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT])
+    ;(DATA as any).treeRuns.push([ax * UNIT, az * UNIT, bx * UNIT, bz * UNIT])
+  }
 }
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
 // You have to come in past the gas station.
@@ -270,21 +281,63 @@ wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
 wallRun(-71.1, 338.95, -68.7, 339.65)
 // The station is shut off from A1A S, and the tip with the welcome sign is fenced: the only way in is from A1A Beach Blvd.
-curbRun(-92.5, 383.5, -92.2, 392.0); curbRun(-92.2, 392.0, -89.9, 395.6); curbRun(-89.9, 395.6, -88.7, 399.6); curbRun(-88.7, 399.6, -87.3, 399.55) // just a hook round the town sign: the boulevard side of the tip is open
+curbRun(-92.5, 383.5, -92.2, 392.0, -1); curbRun(-92.2, 392.0, -89.9, 395.6, -1); curbRun(-89.9, 395.6, -89.2, 398.4, -1) // the boulevard side of the tip is open
 // Driveway aprons across the grass at both openings.
 box('ground', '#80868a', -84.4, .02, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8) // the first sits just under the station pad where they overlap
 
+// The neighborhood street's last stretch, out to A1A S.
+box('ground', '#737b7c', -94.0, .041, 389.3 + HS[1], 2.8, .03, 1.55)
 // The streets and neighbors around it, from the town's OSM data.
 const X0 = -110, X1 = -64, Zs = 328, Zn = 402
 const near = (x: number, z: number) => x > X0 && x < X1 && z > Zs && z < Zn
 const roads: number[][] = []
-for (const r of PONCE_ROADS) for (let i = 0; i + 1 < r.p.length; i++) {
-  const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2
-  if (!(near(mx, mz) || (mz >= Zn && mz < 419 && mx > -95 && mx < -78)) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz)) continue
-  const len = Math.hypot(bx - ax, bz - az)
-  box('ground', '#737b7c', mx, .029 + (roads.length % 4) * .003, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
-  roads.push([ax, az, bx, bz, r.w])
+// Each road is one smooth ribbon (mitred at the bends, skirted at the edges) instead of overlapping boxes, so no notches or flicker.
+const ribbon = (pts: number[][], half: number, y: number, ext: number) => {
+  const n = pts.length, dir = (a: number[], b: number[]) => { const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1; return [dx / l, dz / l] }
+  const P = pts.map((p) => p.slice()), d0 = dir(P[0], P[1]), d1 = dir(P[n - 2], P[n - 1])
+  P[0] = [P[0][0] - d0[0] * ext, P[0][1] - d0[1] * ext]; P[n - 1] = [P[n - 1][0] + d1[0] * ext, P[n - 1][1] + d1[1] * ext]
+  const L: number[][] = [], R: number[][] = []
+  for (let i = 0; i < n; i++) {
+    const a = i > 0 ? dir(P[i - 1], P[i]) : null, b = i < n - 1 ? dir(P[i], P[i + 1]) : null
+    const na = a ? [a[1], -a[0]] : null, nb = b ? [b[1], -b[0]] : null
+    let m = na && nb ? [na[0] + nb[0], na[1] + nb[1]] : (na || nb)!, ml = Math.hypot(m[0], m[1]) || 1; m = [m[0] / ml, m[1] / ml]
+    const k = half / Math.max(.45, m[0] * (na || nb)![0] + m[1] * (na || nb)![1])
+    L.push([P[i][0] + m[0] * k, P[i][1] + m[1] * k]); R.push([P[i][0] - m[0] * k, P[i][1] - m[1] * k])
+  }
+  const v: number[] = [], tri = (A: number[], B: number[], C: number[], up: number[]) => {
+    const ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2], wx = C[0] - A[0], wy = C[1] - A[1], wz = C[2] - A[2]
+    const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx
+    if (nx * up[0] + ny * up[1] + nz * up[2] < 0) v.push(...A, ...C, ...B); else v.push(...A, ...B, ...C)
+  }
+  const y0 = y - .03
+  for (let i = 0; i + 1 < n; i++) {
+    const a = [L[i][0], y, L[i][1]], b = [R[i][0], y, R[i][1]], c = [L[i + 1][0], y, L[i + 1][1]], d = [R[i + 1][0], y, R[i + 1][1]]
+    tri(a, b, c, [0, 1, 0]); tri(b, d, c, [0, 1, 0])
+    for (const [p, q, s] of [[L[i], L[i + 1], 1], [R[i], R[i + 1], -1]] as [number[], number[], number][]) {
+      const dd = dir(p, q), out = [dd[1] * s, 0, -dd[0] * s], A = [p[0], y, p[1]], B = [q[0], y, q[1]], C = [p[0], y0, p[1]], D = [q[0], y0, q[1]]
+      tri(A, B, C, out); tri(B, D, C, out)
+    }
+  }
+  const g = new BufferGeometry(); g.setAttribute('position', new BufferAttribute(new Float32Array(v), 3)); g.computeVertexNormals(); return g
 }
+let chainN = 0
+for (const r of PONCE_ROADS) {
+  let cur: number[][] | null = null
+  const flush = () => { if (cur && cur.length > 1) add('ground', ribbon(cur, r.w * .75, .044 + (chainN++ % 4) * .003, r.w / 2), '#737b7c', 0, 0, 0); cur = null }
+  const pt = (p: number[]) => p
+  for (let i = 0; i + 1 < r.p.length; i++) {
+    const [ax, az] = pt(r.p[i]), [bx, bz] = pt(r.p[i + 1]), mx = (ax + bx) / 2, mz = (az + bz) / 2
+    if (!(near(mx, mz) || (mz >= Zn && mz < 419 && mx > -95 && mx < -78)) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz) || (r.w === 1.2 && mz > 336 && mz < 407 && mx < -86) || (r.w === 1 && mz > 394 && mx < -82.5 && mx > -91) || (r.w === 1.5 && mz > 405.8 && mx < -84.5)) { flush(); continue } // A1A S is redrawn; no slip roads round the tip
+    if (!cur) cur = [[ax, az]]
+    cur.push([bx, bz])
+    roads.push([ax, az, bx, bz, r.w])
+  }
+  flush()
+}
+add('ground', ribbon(A1A_S, 1.5, .044, .4), '#737b7c', 0, 0, 0)
+for (let i = 0; i + 1 < A1A_S.length; i++) roads.push([...A1A_S[i], ...A1A_S[i + 1], 2.0])
+// Asphalt right up to the plaza's curb: no grass strip between the road and the sidewalk.
+add('ground', ribbon(A1A_S.filter(([, z]) => z > 345 && z < 399).map(([x, z]) => [x + 2.0, z]), .6, .040, 0), '#737b7c', 0, 0, 0)
 const houses: number[][] = []
 const paints = ['#e9dcc0', '#d7c7a6', '#cfd8d2', '#e6d2b8', '#c9d3d8', '#e2c9a0']
 PONCE_HOUSES.forEach(([x, z, w, d, deg, storeys], i) => {
@@ -366,8 +419,10 @@ const keep = (g: BufferGeometry) => {
     const rose = [[-105.3, 395.86], [-106.85, 389.11], [-108.68, 381.96], [-110.02, 377.49], [-111.21, 372.37]]
     if (g.userData.layer === 'ground' && Math.abs(cz - 389.2) > 1.3 && rose.some((a, i) => i + 1 < rose.length && segDist(cx, cz, a[0], a[1], rose[i + 1][0], rose[i + 1][1]) < .8)) return false
     if (!inHood(cx, cz) || hoodCut(cx, cz)) return false
+    if (g.userData.layer !== 'architecture' && g.userData.layer !== 'roof' && g.userData.layer !== 'ground' && cz > 390.2 && cx > -104.2) return false // no half-trees left over where the bank's block was cut away
     g.translate(HS[0], 0, HS[1]); return true
   }
+  if ((g.userData.layer === 'foliage' || g.userData.layer === 'wood') && cx > -101 && cx < -92.8 && cz > 395.5 && cz < 404.8) return false // the old bank lot's trees don't come along (or stay in the street)
   if (cx > -99.5 && cx < -94.2 && cz > 396.9 && cz < 403.4) g.translate(BANK_MOVE[0], 0, BANK_MOVE[1])
   return cz > Z0 - 1 && cz < Z1 + 1 && cx > X0 - 1 && cx < X1 + 1
 }

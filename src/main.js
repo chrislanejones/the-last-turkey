@@ -42,7 +42,8 @@ const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p
 const WAYPOINTS = [u2(-79.4, 349.5), u2(-77.5, 343.8), u2(-88.4, 357), u2(-84.8, 366), u2(-81.2, 358)]
 
 // A1A S along the west side (both carriageways and the median), blocked at the same two places.
-const ROAD_W = [[-85.5, 416.6], [-87.3, 410.5], [-88.4, 406], [-89.2, 403.1], [-89.9, 400.5], [-90.7, 397.4], [-90.96, 395.5], [-92.44, 390.15], [-95.5, 378.85], [-99.18, 365.1], [-101.31, 357.12], [-104.07, 346.83], [-105.6, 341]]
+// A1A S is one road now (two lanes and a centre turn lane); this line runs 1.1 east of its centre, so the drivable band (to 2.9 west of it) covers the whole road.
+const ROAD_W = [[-106.3, 340.0], [-105.15, 345.9], [-102.95, 355.3], [-94.95, 383.5], [-94.65, 392.0], [-92.35, 395.6], [-91.65, 398.4], [-91.0, 402.0], [-89.9, 406.0], [-89.3, 408.4], [-87.6, 415.0], [-86.9, 418.0]].map(([x, z]) => [x + 1.1, z])
 const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
@@ -369,7 +370,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
-      const tz = az + (bz - az) * t; if (side < 0 && tz > 396.8 && tz < 413.2) continue // the neighborhood and PCN Bank front the road here
+      const tz = az + (bz - az) * t; if (side < 0 && tz > 396.8 && tz < 415.0) continue // the neighborhood and PCN Bank front the road here
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       if (side > 0 && Math.abs(tz - GATE.z) < 1.25) px += 2.3 * U // set back behind the neighborhood's gate
       if (side > 0 && tz > 406.0 && tz < 418) px += 6.5 * U // round the back of the shops south of the tip
@@ -385,6 +386,16 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
       if (row === 0 && k % 3 === 0) inst(scrubI, px - side * sc * 0.9, 0.45, pz + (r(23) - 0.5) * 3, 1.1, 0.6, 1.1, r(24) * 6, 0, 3)
     }
   }
+  // A wall of oaks round the neighborhood and PCN Bank, instead of barriers.
+  { let sd = 21; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    const inYard = (x, z) => (x > -121.1 * U && x < -91 * U && z > 397.2 * U && z < 406.1 * U) || (x > -101.5 * U && x < -88 * U && z > 405 * U && z < 414.6 * U)
+    for (const [ax, az, bx, bz] of DATA.treeRuns || []) { const len = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len, tz = (bz - az) / len; let nx = tz, nz = -tx; if (inYard((ax + bx) / 2 + nx * 3, (az + bz) / 2 + nz * 3)) { nx = -nx; nz = -nz }
+      const n = Math.ceil(len / 3.4)
+      for (let j = 0; j < n; j++) for (const row of [0, 1]) { const d = (j + 0.3 + row * 0.5 + rn() * 0.3) / n * len, off = 2.0 + row * 3.2 + rn(), px = ax + tx * d + nx * off, pz = az + tz * d + nz * off, sc = 2.3 + rn() * 1.5 + row, hgt = sc * (1.25 + rn() * 0.5) + row * 1.6, ci = Math.floor(rn() * 5)
+        inst(trunkI, px, hgt * 0.5, pz, 0.22 + sc * 0.06, hgt, 0.22 + sc * 0.06, rn() * 6, (rn() - 0.5) * 0.25)
+        inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, rn() * 6, 0, ci)
+        for (let c = 0; c < 3; c++) { const a = rn() * 6.28, dd = sc * (0.6 + rn() * 0.35); inst(leafI, px + Math.cos(a) * dd, hgt - sc * (0.05 + rn() * 0.3), pz + Math.sin(a) * dd, sc * 0.72, sc * 0.5, sc * 0.72, a, 0, (ci + c + 1) % 5) }
+        inst(scrubI, px - nx * (off - 1.0) + (rn() - 0.5), sc * 0.3, pz - nz * (off - 1.0) + (rn() - 0.5), sc * 0.8, sc * 0.42, sc * 0.8, rn() * 6, 0, (ci + 2) % 5) } } }
   const mk = (list, g, mat, shadow) => { const im = new THREE.InstancedMesh(g, mat, list.length), col = new THREE.Color(); list.forEach(([m, c], n) => { im.setMatrixAt(n, m); im.setColorAt(n, col.set(greens[c])) }); im.castShadow = shadow; im.receiveShadow = true; im.frustumCulled = false; scene.add(im) }
   mk(leafI, geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), true)
   mk(scrubI, geo, new THREE.MeshStandardMaterial({ color: '#c9d6c0', roughness: 1, flatShading: true }), false)
@@ -660,6 +671,10 @@ boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
 regions.push(mkRegion([[-124.5, 382.6], [-95.0, 382.6], [-95.0, 391.5], [-124.5, 391.5]].map(([x, z]) => [(x + HD[0]) * U, (z + HD[1]) * U])))
 // The 280 Floridian lot, south of the street, open up to the barrier at the road block.
+// PCN Bank's corner, south of the street: open, with the bank itself solid.
+regions.push(mkRegion([[-101.5, 405.4], [-88.6, 405.4], [-88.6, 414.6], [-101.5, 414.6]].map(([x, z]) => [x * U, z * U])))
+boxes.push({ c: new V2(-96.1 * U, 410.05 * U), a: new V2(1, 0), hx: 1.75 * U, hz: 1.75 * U })
+for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2], [-93.6, 413.4], [-96.6, 414.2]]) circles.push([ox * U, oz * U, 0.5])
 // Melvin's Island's lot, south of the tip: drive right up to the shop front.
 regions.push(mkRegion([[-85.6, 407.4], [-80.35, 407.4], [-80.35, 416.6], [-85.6, 416.6]].map(([x, z]) => [x * U, z * U])))
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
@@ -1294,7 +1309,7 @@ const surfaceAt = (x, z) => { groundRay.set(new V3(x, 3, z), new V3(0, -1, 0)); 
 const lotIslands = []
 // --- "Welcome to Saint Ponce Beach": the carved sign on the grass at the town's south tip, among boulders and dune grass.
 {
-  const cx = -88.4 * U, cz = 400.75 * U, gy = surfaceAt(cx, cz), G = new THREE.Group(); G.position.set(cx, gy, cz); G.scale.setScalar(1.25); scene.add(G) // the very tip, the palm grove behind it
+  const cx = -88.2 * U, cz = 399.95 * U, gy = surfaceAt(cx, cz), G = new THREE.Group(); G.position.set(cx, gy, cz); G.scale.setScalar(1.25); scene.add(G) // the very tip, the palm grove behind it
   const c = document.createElement('canvas'); c.width = 1024; c.height = 400; const x = c.getContext('2d')
   // A driftwood plank with a ragged outline, a wave curling off its right end.
   x.beginPath(); x.moveTo(30, 210); x.lineTo(60, 170); x.lineTo(40, 140); x.lineTo(120, 120); x.lineTo(300, 128)
@@ -1341,7 +1356,7 @@ const lotIslands = []
   const segD = (px, pz, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (pz - a[1]) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t) }
   const pos = [], col = [], YEL = [0.78, 0.55, 0.06], WHT = [0.8, 0.78, 0.7], manholes = []
   chains.forEach((ch, ci) => {
-    const half = ch.w * 0.75, stripes = ch.w >= 4.9 ? [[-0.11, 0.1, YEL, 0], [0.11, 0.1, YEL, 0], [half - 0.45, 0.12, WHT, 0], [-half + 0.45, 0.12, WHT, 0]] : ch.w >= 4.0 ? [[0, 0.1, YEL, 1], [half - 0.4, 0.1, WHT, 0], [-half + 0.4, 0.1, WHT, 0]] : []
+    const half = ch.w * 0.75, stripes = ch.w >= 8 ? [[-1.85, 0.12, YEL, 0], [-1.6, 0.12, YEL, 1], [1.6, 0.12, YEL, 1], [1.85, 0.12, YEL, 0], [half - 0.45, 0.13, WHT, 0], [-half + 0.45, 0.13, WHT, 0]] : ch.w >= 4.9 ? [[-0.11, 0.1, YEL, 0], [0.11, 0.1, YEL, 0], [half - 0.45, 0.12, WHT, 0], [-half + 0.45, 0.12, WHT, 0]] : ch.w >= 4.0 ? [[0, 0.1, YEL, 1], [half - 0.4, 0.1, WHT, 0], [-half + 0.4, 0.1, WHT, 0]] : []
     let run = 0
     for (let i = 0; i + 1 < ch.p.length; i++) {
       const a = ch.p[i], b = ch.p[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue
@@ -1352,7 +1367,7 @@ const lotIslands = []
         let junction = false
         chains.forEach((o, oi) => { if (oi === ci || junction) return; for (let j = 0; j + 1 < o.p.length; j++) { const u = o.p[j], v = o.p[j + 1], l = Math.hypot(v[0] - u[0], v[1] - u[1]) || 1; if (Math.abs(((v[0] - u[0]) * tx + (v[1] - u[1]) * tz) / l) > 0.9) continue; if (segD(mxp, mzp, u, v) < o.w * 0.75 + half * 0.6) { junction = true; break } } })
         if (junction) continue
-        const y = surfaceAt(mxp, mzp) + 0.012
+        const y = surfaceAt(mxp, mzp) + 0.012; if (y > 0.25) continue // never across a sidewalk or the station pad
         if (ch.w >= 4.9 && Math.floor(run / 95) !== Math.floor((run - len / n) / 95)) manholes.push([mxp + nx * 1.6, mzp + nz * 1.6, y])
         for (const [o, w, c, dash] of stripes) {
           if (dash && Math.floor(run / 3) % 3 !== 0) continue
@@ -1464,15 +1479,15 @@ const lotIslands = []
   }
 
   // --- The sabal palm grove at the south tip, behind the welcome sign.
-  { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+  { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const tipEdge = (z) => z < 395.6 ? -92.2 + (z - 392) * 2.3 / 3.6 : -89.9 + (z - 395.6) * 0.25; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (let zi = 0; zi < 4; zi++) for (let xi = 0; xi < 7; xi++) { const z = (396.1 + zi * 0.5 + (rn() - 0.5) * 0.3) * U, half = (400.6 - z / U) / 4.6 * 2.9, x = -88.35 * U + ((xi - 3) / 3 * 2.6 + (rn() - 0.5) * 0.35) * U
-      if (Math.abs(x / U + 88.35) > half - 0.25) continue
+      if (Math.abs(x / U + 88.35) > half - 0.25 || x / U < tipEdge(z / U) + 0.45) continue
       const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone())
       D.position.set(x, y0 + h - 0.35, z); D.rotation.set(0, 0, 0); D.scale.set(1.7, 2.2, 1.7); D.updateMatrix(); sk.push(D.matrix.clone())
       for (let k = 0; k < 20; k++) { const a = k * 2.4 + rn(), droop = 0.35 + (k / 19) * 1.75, len = 1.7 + rn() * 0.5; D.position.set(x + Math.sin(a) * Math.sin(droop) * len * 0.5, y0 + h + 0.2 + Math.cos(droop) * len * 0.5, z + Math.cos(a) * Math.sin(droop) * len * 0.5); D.rotation.set(droop, a, 0, 'YXZ'); D.scale.set(1, len, 0.3); D.updateMatrix(); fr.push(D.matrix.clone()) }
     }
     // Tall dune grass and limestone on the open half, like the real corner.
-    for (let i = 0; i < 34; i++) { const z = (397.6 + rn() * 2.9) * U, half = (400.9 - z / U) / 4.6 * 2.9 * U, x = -88.35 * U + (rn() - 0.5) * 2 * half * 0.85, y0 = surfaceAt(x, z), sc = 0.7 + rn() * 0.9; if (Math.hypot(x + 88.4 * U, z - 400.75 * U) < 3) continue
+    for (let i = 0; i < 34; i++) { const z = (397.6 + rn() * 2.9) * U, half = (400.9 - z / U) / 4.6 * 2.9 * U, x = -88.35 * U + (rn() - 0.5) * 2 * half * 0.85, y0 = surfaceAt(x, z), sc = 0.7 + rn() * 0.9; if (Math.hypot(x + 88.2 * U, z - 399.95 * U) < 3.5 || x / U < tipEdge(z / U) + 0.4 || z / U > 400.4) continue
       for (let j = 0; j < 9; j++) { const a = j * 0.7, t = j ? 0.25 + rn() * 0.35 : 0; D.position.set(x + Math.sin(a) * t * 0.5 * sc, y0 + 0.6 * sc, z + Math.cos(a) * t * 0.5 * sc); D.rotation.set(t, a, 0, 'YXZ'); D.scale.set(sc, 1.25 * sc, sc); D.updateMatrix(); gr.push(D.matrix.clone()) } }
     { const gm = new THREE.InstancedMesh(new THREE.ConeGeometry(0.09, 1, 4), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1 }), gr.length), cc = new THREE.Color(); gr.forEach((m, n) => { gm.setMatrixAt(n, m); gm.setColorAt(n, cc.set(['#b59a62', '#9c8a55', '#c2a86e', '#7f8a4c'][Math.floor(n / 9) % 4])) }); gm.frustumCulled = false; scene.add(gm)
       const km = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshStandardMaterial({ color: '#6f5a40', roughness: 1, flatShading: true }), sk.length); sk.forEach((m, n) => km.setMatrixAt(n, m)); km.frustumCulled = false; scene.add(km)
@@ -1515,7 +1530,7 @@ const lotIslands = []
     for (const [ox, oz, sc] of [[-99.6, 408.0, 1.2], [-100.0, 412.2, 1.2], [-93.6, 413.4, 1.1], [-96.6, 414.2, 1.2]]) oak(ox * U, oz * U, sc)
     // Concrete utility poles with crossarms and a transformer now and then; sagging wires between them.
     const conc = new THREE.MeshStandardMaterial({ color: '#b3ada0', roughness: 0.9 }), dk = new THREE.MeshStandardMaterial({ color: '#4a4d50', roughness: 0.7 }), wire = new THREE.LineBasicMaterial({ color: '#1b1b1b' })
-    const line = ROAD_W.filter(([, z]) => z < 386).map(([x, z]) => [(x - 2.62) * U, z * U]), tops = []
+    const line = ROAD_W.filter(([, z]) => z < 386).map(([x, z]) => [(x - 3.4) * U, z * U]), tops = []
     line.forEach(([x, z], i) => { const y = surfaceAt(x, z), nxt = line[Math.min(i + 1, line.length - 1)], prv = line[Math.max(i - 1, 0)], ry = Math.atan2(nxt[0] - prv[0], nxt[1] - prv[1])
       circles.push([x, z, 0.3])
       const p = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.2, 10.5, 7), conc); p.position.set(x, y + 5.25, z); p.castShadow = true; scene.add(p)
@@ -1544,7 +1559,7 @@ const lotIslands = []
   }
 
   // --- A bumpy hedge in a mulch strip behind the tall curb along A1A S: the lot is shut from that side.
-  { const runs = [[[-100.5, 355.3], [-92.5, 383.5]], [[-92.5, 383.5], [-92.2, 392.0]], [[-92.2, 392.0], [-89.9, 395.6]]], D = new THREE.Object3D(), ms = [], strip = []
+  { const runs = [[[-100.5, 355.3], [-92.5, 383.5]], [[-92.5, 383.5], [-92.2, 392.0]], [[-92.2, 392.0], [-89.9, 395.6]], [[-89.9, 395.6], [-89.2, 398.4]]], D = new THREE.Object3D(), ms = [], strip = []
     let sd = 5; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (const [[ax, az], [bx, bz]] of runs) { const len = Math.hypot(bx - ax, bz - az) * U, tx = (bx - ax) * U / len, tz = (bz - az) * U / len, nx = -tz, nz = tx, ins = nx > 0 ? 1 : -1
       for (let d = 0.8; d < len - 0.4; d += 1.25) { const x = ax * U + tx * d + nx * ins * 1.15, z = az * U + tz * d + nz * ins * 1.15, sc = 0.55 + rn() * 0.3
