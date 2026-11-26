@@ -1639,15 +1639,46 @@ const lotIslands = []
 
   // --- Spray paint on the big blank west wall of the OOPS Store block.
   { const c = document.createElement('canvas'); c.width = 2048; c.height = 384; const x = c.getContext('2d')
-    x.lineJoin = 'round'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = 'italic 900 118px "Comic Sans MS", "Marker Felt", cursive'
-    const L1 = 'CHRISTY HOMES AND I WERE IN THE', L2 = 'BACK OF THE JEEP LAST NIGHT'
-    for (const [t, y] of [[L1, 110], [L2, 270]]) { x.strokeStyle = '#141018'; x.lineWidth = 22; x.strokeText(t, 1024, y, 1960); x.fillStyle = '#e8287a'; x.fillText(t, 1024, y, 1960) }
-    for (let i = 0; i < 40; i++) { const dx = 120 + Math.random() * 1800, g2 = x.createLinearGradient(0, 0, 0, 90); g2.addColorStop(0, 'rgba(232,40,122,.7)'); g2.addColorStop(1, 'rgba(232,40,122,0)'); x.fillStyle = g2; x.fillRect(dx, 150 + Math.random() * 180, 4, 30 + Math.random() * 60) }
+    // Hand-sprayed: every letter tilted and bounced on its own, a fat dark outline, a pink-to-purple fade, a white shine,
+    // soft overspray round the edges, and paint dripping down.
+    let sd = 42; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    const lines = [['CHRISTY HOMES AND I WERE IN THE', 118], ['BACK OF THE JEEP LAST NIGHT', 270]], drips = []
+    x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineCap = 'round'
+    for (const [text, y0] of lines) {
+      const font = (sz) => `italic 900 ${sz}px "Arial Black", Impact, sans-serif`; x.font = font(104)
+      let w = 0; const ws = [...text].map((ch) => { const v = ch === ' ' ? 34 : x.measureText(ch).width * 0.86; w += v; return v }), k = Math.min(1, 1960 / w)
+      let px = 1024 - w * k / 2
+      const glyphs = [...text].map((ch, i) => { const g = { ch, x: px + ws[i] * k / 2, y: y0 + (rn() - 0.5) * 16 + Math.sin(i * 0.7) * 5, r: (rn() - 0.5) * 0.22, sz: 104 * k * (0.9 + rn() * 0.22) }; px += ws[i] * k; return g })
+      for (const pass of ['spray', 'outline', 'fill', 'shine']) for (const g of glyphs) { if (g.ch === ' ') continue
+        x.save(); x.translate(g.x, g.y); x.rotate(g.r); x.transform(1, 0, -0.18, 1, 0, 0); x.font = font(g.sz); x.textAlign = 'center'
+        if (pass === 'spray') { x.shadowColor = 'rgba(190,40,140,0.85)'; x.shadowBlur = 26; x.fillStyle = 'rgba(190,40,140,0.35)'; x.fillText(g.ch, 0, 0) }
+        if (pass === 'outline') { x.strokeStyle = '#1a0c1e'; x.lineWidth = 20; x.strokeText(g.ch, 0, 0); x.strokeStyle = '#f7f2ff'; x.lineWidth = 9; x.strokeText(g.ch, 0, 0) }
+        if (pass === 'fill') { const gr = x.createLinearGradient(0, -g.sz / 2, 0, g.sz / 2); gr.addColorStop(0, '#ff4fb0'); gr.addColorStop(0.55, '#e0218a'); gr.addColorStop(1, '#7a2bd6'); x.fillStyle = gr; x.fillText(g.ch, 0, 0); if (rn() < 0.45) drips.push([g.x + (rn() - 0.5) * g.sz * 0.4, g.y + g.sz * 0.38, 18 + rn() * 70]) }
+        if (pass === 'shine') { x.globalAlpha = 0.55; x.fillStyle = '#fff'; x.fillRect(-g.sz * 0.25, -g.sz * 0.33, g.sz * 0.18, 4) }
+        x.restore() }
+    }
+    for (const [dx, dy, len] of drips) { const gr = x.createLinearGradient(0, dy, 0, dy + len); gr.addColorStop(0, '#d01e84'); gr.addColorStop(1, 'rgba(122,43,214,0.0)'); x.fillStyle = gr; x.fillRect(dx - 2.5, dy, 5, len); x.beginPath(); x.arc(dx, dy + len - 4, 4, 0, 7); x.globalAlpha = 0.6; x.fill(); x.globalAlpha = 1 }
+    for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(214,40,140,${0.08 + rn() * 0.25})`; const a = rn() * 6.28, r = 40 + rn() * 180; x.fillRect(1024 + Math.cos(a) * r * 5.2 * rn(), 190 + Math.sin(a) * r * 0.9 * rn(), 2, 2) }
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
     const m = new THREE.Mesh(new THREE.PlaneGeometry(19, 3.56), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
     // Find the strip's long blank back wall (it faces A1A S) and paint straight onto it.
     const rc = new THREE.Raycaster(new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0)), h = rc.intersectObject(world.scene, true)[0]
     if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } } // the big blank wall facing A1A S
+
+  // --- VOTE GEORGE yard signs on the town sign's lawn; one leans out over the boulevard where Brad cuts the corner.
+  { const c = document.createElement('canvas'); c.width = 512; c.height = 320; const x = c.getContext('2d')
+    x.fillStyle = '#1b3a8a'; x.fillRect(0, 0, 512, 320); x.fillStyle = '#c8202e'; x.fillRect(0, 250, 512, 70); x.fillStyle = '#fff'; x.fillRect(0, 242, 512, 8)
+    x.textAlign = 'center'; x.font = '900 70px Anton, Impact, sans-serif'; x.fillText('VOTE', 256, 92); x.font = '900 124px Anton, Impact, sans-serif'; x.fillText('GEORGE', 256, 218, 480)
+    for (const sx of [40, 472]) { x.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 11 : 26, a = -Math.PI / 2 + k * Math.PI / 5; x.lineTo(sx + Math.cos(a) * r, 64 + Math.sin(a) * r) } x.fill() }
+    x.font = '700 30px sans-serif'; x.fillText('FOR SAINT PONCE', 256, 296)
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+    const face = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 }), wireM = new THREE.MeshStandardMaterial({ color: '#7d8186', metalness: 0.6, roughness: 0.4 })
+    for (const [sx, sz, yaw, lawn] of [[-86.3, 396.6, 1.2, 1], [-86.0, 398.4, 1.45, 1], [-86.2, 400.3, 1.3, 1], [-86.9, 402.6, 1.0, 1], [-83.55, 401.3, 1.6, 0]]) {
+      const m = new THREE.Group(); for (const s2 of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.56), face); f.position.set(0, 0.17, s2 * 0.012); if (s2 < 0) f.rotation.y = Math.PI; f.castShadow = true; m.add(f) }
+      for (const lx of [-0.3, 0.3]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.9, 4), wireM); w.position.set(lx, -0.1, 0); m.add(w) }
+      scene.add(m); const X = sx * U, Z = sz * U
+      crates.push({ m, half: new V3(0.45, 0.46, 0.05), r: 0.45, home: { pos: new V3(X, surfaceAt(X, Z) + (lawn ? 0.21 : 0) + 0.45, Z), yaw }, vel: new V3(), spin: new V3(), awake: false })
+    } }
 
   // --- A sign on the sidewalk under the Christy billboard: knock it flat if you want.
   { const c = document.createElement('canvas'); c.width = 256; c.height = 320; const x = c.getContext('2d'); x.fillStyle = '#f6f6f2'; x.fillRect(0, 0, 256, 320); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 240, 304)
