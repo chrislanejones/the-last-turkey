@@ -409,7 +409,7 @@ export function dressStation(scene, U, apronY) {
   // Tan stucco, terracotta hip roofs, a corner clock tower with blue arched windows, red feather flags,
   // and two farmers guarding the door with pitchforks.
   {
-    const F = new THREE.Group(); F.position.set(-100.2 * U, 0.045 * U, 384.9 * U); F.rotation.y = 0.19; g.add(F)
+    const F = new THREE.Group(); F.position.set((-100.2 + 1.5) * U, 0.045 * U, (384.9 + 5.6) * U); F.rotation.y = 0.19; g.add(F)
     const W = 3.9 * U - 0.8, D = 2.7 * U - 0.8, H = 4.3
     const stucco = M('#e2bb7d', { roughness: 0.95 }), trim = M('#c99a5a'), tile = M('#b5532e', { roughness: 0.8 }), dk = M('#4a2a1c'), glass = M('#25343a', { roughness: 0.15, metalness: 0.4 })
     const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; F.add(m); return m }
@@ -496,7 +496,7 @@ export function dressStation(scene, U, apronY) {
   // 280 Floridian Ave: a one-storey stucco office in the same Tuscan dress, low terracotta hip roof,
   // dark window bands with a red brick sill, banded pilasters, mulch beds, a magnolia and tall palms.
   {
-    const O = new THREE.Group(); O.position.set(-97.8 * U, 0.045 * U, 393.0 * U); g.add(O)
+    const O = new THREE.Group(); O.position.set(-97.8 * U, 0.045 * U, 393.0 * U); O.visible = false // PCN Bank has this corner now; g.add(O)
     const W = 4.5 * U - 1.0, D = 3.7 * U - 1.0, H = 3.9
     const stucco = M('#e6c48c', { roughness: 0.95 }), base = M('#d9a24e'), band = M('#b04a2e'), tile = M('#b5532e', { roughness: 0.8 }), glass = M('#1f2c30', { roughness: 0.15, metalness: 0.4 }), cream = M('#f1e3c4')
     const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; O.add(m); return m }

@@ -35,6 +35,9 @@ let mode: 'layout' | 'final' = 'final'
 const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
 let wb = false, loving = false
+/** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
+const HS = [1.5, 5.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
+const hoodCut = (x: number, z: number) => z > 391.5 && x > -101.2 // the part that would land on PCN Bank
 const SIDING = ['#e6d3a3', '#9fc3c6', '#e9b79c', '#bfd0a4', '#f1dc97', '#b3bedb', '#dcc7b1', '#8fb5a6', '#e7c9d1']
 /** The neighborhood west of A1A S that comes straight from the map's own west-blocks builder. */
 const inHood = (x: number, z: number) => (x < -98.5 || (x < -96 && z > 391)) && x > -131 && z > 377 && z < 397
@@ -226,6 +229,17 @@ const wallRun = (ax: number, az: number, bx: number, bz: number) => {
     DATA.barrels.push([(x - Math.cos(turn) * out * 1.7) * UNIT, (z + Math.sin(turn) * out * 1.7) * UNIT]) // the game builds these, inside the wall, so cars can knock them over
   }
 }
+// A tall concrete curb with a sidewalk on the road side: enough to stop a car, without the construction look.
+const curbRun = (ax: number, az: number, bx: number, bz: number) => {
+  const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
+  const o = -side((ax + bx) / 2, (az + bz) / 2, turn), at = (d: number) => [(ax + bx) / 2 + Math.cos(turn) * o * d, (az + bz) / 2 - Math.sin(turn) * o * d]
+  const [cx, cz] = at(.1), [sx, sz] = at(.45)
+  DATA.walls.push([cx * UNIT, cz * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT])
+  box('architecture', '#bdbab0', cx, .1, cz, .14, .15, len + .1, turn)
+  box('architecture', '#d2cfc5', cx, .178, cz, .15, .012, len + .1, turn)
+  box('ground', '#c4c1b6', sx, .062, sz, .52, .03, len + .1, turn)
+  for (let d = .3; d < len; d += .45) { const x = ax + (bx - ax) * d / len + Math.cos(turn) * o * .45, z = az + (bz - az) * d / len - Math.sin(turn) * o * .45; box('ground', '#a9a69c', x, .0625, z, .52, .03, .012, turn) }
+}
 /** +1 or -1: which side of a wall run is inside the arena (barrels go there). */
 function side(cx: number, cz: number, turn: number) {
   const nx = Math.cos(turn), nz = -Math.sin(turn), inA = (x: number, z: number) => inPoly(x, z) || inStation(x, z)
@@ -234,25 +248,27 @@ function side(cx: number, cz: number, turn: number) {
 PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i + 1) % PLAZA.length]; wallRun(ax, az, bx, bz) })
 // The east edge, with a gap at the plaza's entrance from A1A Beach Blvd.
 
-wallRun(-89.9, 395.6, -85.7, 395.6) // straight across the station's south end
+// (the tip is curbed all round now; the station pad runs on to the palms)
 // The neighbors' street (Floridian Ave): a barrier at its west end. Rosewood St, the cross street, is left out.
 // A visible wall all the way round the west side: along the far edge of A1A S from the parade block,
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-124.5, 382.6], [-124.5, 391.5], [-100.6, 391.5], [-100.6, 396.4], [-94.0, 395.6]] // round the 280 Floridian lot, so it's drivable
+  const W: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.26, 357.12], [-102.13, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-95.88, 388.2], [-123, 388.2], [-123, 397.1], [-93.7, 397.1], [-92.8, 400.5], [-92.0, 404.2], [-82.4, 403.2]] // down A1A S, round the neighborhood, past PCN Bank, and across the road south of the tip
   for (let i = 0; i + 1 < W.length; i++) wallRun(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1])
 }
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
 // You have to come in past the gas station.
-wallRun(-102.7, 345.9, -101.99, 348.95); wallRun(-101.37, 351.6, -100.5, 355.3); // gap for the picnic tables
-wallRun(-100.5, 355.3, -92.5, 383.5) // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
+curbRun(-102.7, 345.9, -101.99, 348.95); curbRun(-101.37, 351.6, -100.5, 355.3); // gap for the picnic tables
+curbRun(-100.5, 355.3, -92.5, 383.5) // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
 // Road closed across A1A S too, at the same two places.
-wallRun(-94.0, 395.2, -89.9, 395.6); wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot's corner barrier
+wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot's corner barrier
 // East side of the station: open at the pumps' exit to A1A Beach Blvd.
 
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
-wallRun(-85.7, 395.6, -82.1, 395.4); wallRun(-71.1, 338.95, -68.7, 339.65)
+wallRun(-71.1, 338.95, -68.7, 339.65)
+// The station is shut off from A1A S, and the tip with the welcome sign is fenced: the only way in is from A1A Beach Blvd.
+curbRun(-92.5, 383.5, -92.2, 392.0); curbRun(-92.2, 392.0, -89.9, 395.6); curbRun(-89.9, 395.6, -88.7, 399.6); curbRun(-88.7, 399.6, -85.4, 399.5); curbRun(-85.4, 399.5, -85.7, 395.6)
 // Driveway aprons across the grass at both openings.
 box('ground', '#80868a', -84.4, .02, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8) // the first sits just under the station pad where they overlap
 
@@ -262,7 +278,7 @@ const near = (x: number, z: number) => x > X0 && x < X1 && z > Zs && z < Zn
 const roads: number[][] = []
 for (const r of PONCE_ROADS) for (let i = 0; i + 1 < r.p.length; i++) {
   const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2
-  if (!near(mx, mz) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz)) continue
+  if (!(near(mx, mz) || (mz >= Zn && mz < 419 && mx > -95 && mx < -78)) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz)) continue
   const len = Math.hypot(bx - ax, bz - az)
   box('ground', '#737b7c', mx, .029 + (roads.length % 4) * .003, mz, r.w * 1.5, .03, len + r.w, Math.atan2(bx - ax, bz - az))
   roads.push([ax, az, bx, bz, r.w])
@@ -280,7 +296,7 @@ PONCE_HOUSES.forEach(([x, z, w, d, deg, storeys], i) => {
 let planted = 0
 for (let x = X0 + 3; x < X1; x += 6.2) for (let z = Zs + 3; z < Zn; z += 6.6) {
   const s = Math.round(x * 17 + z * 5), px = x + (rand(s) - .5) * 2.6, pz = z + (rand(s + 9) - .5) * 2.6
-  if (inHood(px, pz) || homeAt(px, pz, .6) >= 0 || inPoly(px, pz, 1.2) || (px > -93.6 && px < -82.6 && pz > 380 && pz < 401.5) || houses.some(([hx, hz, r]) => Math.hypot(px - hx, pz - hz) < r)) continue
+  if ((inHood(px, pz) && pz > 386.5 && pz < 392.5) || inPoly(px, pz, 1.2) || (px > -93.6 && px < -82.6 && pz > 380 && pz < 401.5) || houses.some(([hx, hz, r]) => Math.hypot(px - hx, pz - hz) < r)) continue
   if (roads.some(([ax, az, bx, bz, w]) => segDist(px, pz, ax, az, bx, bz) < w + .7)) continue
   rand(s + 3) > .7 ? palm(px, pz, s, false) : tree(px, pz, s, .9 + rand(s + 4) * .5)
   planted++
@@ -295,7 +311,6 @@ buildWestBlocks(kit)
 wb = false
 // Footprints of the neighborhood's homes, so the game can let cars cut through the yards but not the houses.
 DATA.homes.push([FARMERS.x * UNIT, FARMERS.z * UNIT, FARMERS.hw * 2 * UNIT, FARMERS.hd * 2 * UNIT, FARMERS.t])
-DATA.homes.push([OFFICE280.x * UNIT, OFFICE280.z * UNIT, OFFICE280.hw * 2 * UNIT, OFFICE280.hd * 2 * UNIT, 0])
 
 // Shoppers on the walk along the grocery front and under the north arcade.
 const crowd: BeachPerson[] = []
@@ -335,8 +350,10 @@ crowd.forEach((p, i) => {
   if (i % 2) part('wood', bags[(i + 3) % bags.length], .03, .225, z0 - .04, .05, .05, .06)
 })
 
+DATA.homes = DATA.homes.filter(([x, z]) => !hoodCut(x / UNIT, z / UNIT)).map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
+DATA.drives = DATA.drives.map(([x, z, ...r]) => [x + HS[0] * UNIT, z + HS[1] * UNIT, ...r])
 fs.writeFileSync('src/plaza-data.json', JSON.stringify({ unit: UNIT, plaza: PLAZA.map(([x, z]) => [x * UNIT, z * UNIT]), station: STATION.map(([x, z]) => [x * UNIT, z * UNIT]), ...DATA }, (_k, v) => typeof v === 'number' ? Math.round(v * 1000) / 1000 : v))
-const Z0 = Zs, Z1 = Zn
+const Z0 = Zs, Z1 = 420
 
 // --- crop to about three blocks, merge per layer, write meters --------------------
 const keep = (g: BufferGeometry) => {
@@ -346,7 +363,8 @@ const keep = (g: BufferGeometry) => {
     // Rosewood St is not part of the game: drop its pavement either side of Floridian Ave.
     const rose = [[-105.3, 395.86], [-106.85, 389.11], [-108.68, 381.96], [-110.02, 377.49], [-111.21, 372.37]]
     if (g.userData.layer === 'ground' && Math.abs(cz - 389.2) > 1.3 && rose.some((a, i) => i + 1 < rose.length && segDist(cx, cz, a[0], a[1], rose[i + 1][0], rose[i + 1][1]) < .8)) return false
-    return inHood(cx, cz)
+    if (!inHood(cx, cz) || hoodCut(cx, cz)) return false
+    g.translate(HS[0], 0, HS[1]); return true
   }
   return cz > Z0 - 1 && cz < Z1 + 1 && cx > X0 - 1 && cx < X1 + 1
 }

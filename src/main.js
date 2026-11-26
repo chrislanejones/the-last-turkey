@@ -27,20 +27,22 @@ const PEDESTAL = gAt(4.9, 4.8 + 1.15)
 const ZONE_R = 6.5
 // The two drivers are next-door neighbors on Floridian Ave, west of Rosewood St: two of the map's
 // own houses. Both cars start nose-in on their driveways (the map's drives) and have to back out.
-const driveNear = (hx) => DATA.drives.filter((d) => d[1] / U < 388.5 && d[1] / U > 386).reduce((b, d) => (Math.abs(d[0] / U - hx) < Math.abs(b[0] / U - hx) ? d : b))
-const HOME = { me: driveNear(-115.34), them: driveNear(-118.84) }
+// The neighborhood's street meets A1A S at the tip now (moved +1.5, +5.6).
+const HD = [1.5, 5.6]
+const driveNear = (hx) => DATA.drives.filter((d) => d[1] / U < 388.5 + HD[1] && d[1] / U > 386 + HD[1]).reduce((b, d) => (Math.abs(d[0] / U - hx) < Math.abs(b[0] / U - hx) ? d : b))
+const HOME = { me: driveNear(-115.34 + HD[0]), them: driveNear(-118.84 + HD[0]) }
 const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
-// The wagon's way: down the street to A1A S, south past the wall to the station's tip, north up the
-// west side of the station and round the back of the Square K, through the gap by the bank, up the lot.
-const PATH = [u2(-113.5, 389.3), u2(-105, 389.2), u2(-97.5, 389.6), u2(-94.4, 390.4), u2(-93.6, 392.8), u2(-91.3, 394.0), u2(-90.7, 391.2), u2(-91.6, 386.5), u2(-91.5, 384.3), u2(-90.6, 383.5), u2(-86.4, 383.7), u2(-85.3, 380.6), u2(-84.8, 377.4), u2(-84.7, 375), u2(-84.75, 370.5), u2(-84.8, 364)]
+// The wagon's way: down the street, round the tip past the welcome sign, into the gas station from A1A Beach Blvd,
+// up the back of the Square K and the bank, through the OOPS Store's boxes, out onto the boulevard and in at the plaza entrance.
+const PATH = [u2(-112, 394.9), u2(-103.5, 394.8), u2(-96, 395.2), u2(-93.0, 395.7), u2(-91.9, 397.6), u2(-90.7, 400.2), u2(-89.3, 401.6), u2(-87.3, 402.0), u2(-85.6, 401.5), u2(-84.3, 400.0), u2(-83.5, 398.0), u2(-83.4, 394.8), u2(-84.3, 392.6), u2(-86.5, 392.7), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
 const WAYPOINTS = [u2(-79.4, 349.5), u2(-77.5, 343.8), u2(-88.4, 357), u2(-84.8, 366), u2(-81.2, 358)]
 
 // A1A S along the west side (both carriageways and the median), blocked at the same two places.
-const ROAD_W = [[-90.96, 395.5], [-92.44, 390.15], [-95.5, 378.85], [-99.18, 365.1], [-101.31, 357.12], [-104.07, 346.83], [-105.6, 341]]
+const ROAD_W = [[-85.5, 416.6], [-87.3, 410.5], [-88.4, 406], [-89.2, 403.1], [-89.9, 400.5], [-90.7, 397.4], [-90.96, 395.5], [-92.44, 390.15], [-95.5, 378.85], [-99.18, 365.1], [-101.31, 357.12], [-104.07, 346.83], [-105.6, 341]]
 const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
@@ -349,35 +351,11 @@ function parade(px, pz, ry, half, line2, nFloats) {
 const wavers = []
 parade(-69.9 * U, 339.3 * U, Math.atan2(-0.3, 0.954), 5.2, 'ROAD CLOSED · DETOUR', 1)
 parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T FIGURED OUT WHY WE DO THIS', 2)
-// Melvin's Island: the loud beach-junk superstore across A1A Beach Blvd from the gas station. Outside the wall; look, don't shop.
+// Melvin's Island: the map's own beach-junk superstore south of the tip gets its parody name over the door.
 {
-  const L = 27, Dp = 9, Hh = 6.6, fx = -80.3 * U, cz = 390.8 * U, g = new THREE.Group(); g.position.set(fx, 0.05, cz); scene.add(g)
-  const c = document.createElement('canvas'); c.width = 2048; c.height = 512; const x = c.getContext('2d')
-  x.fillStyle = '#3aa7d6'; x.fillRect(0, 0, 2048, 150)                                  // blue parapet
-  for (let i = 0; i < 12; i++) { const px = 60 + i * 168; if (i % 2) { x.fillStyle = ['#e8641b', '#f1c62f', '#d8322a'][i % 3]; x.beginPath(); x.ellipse(px + 40, 80, 16, 52, 0, 0, 7); x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 4; x.beginPath(); x.moveTo(px + 40, 34); x.lineTo(px + 40, 126); x.stroke() }
-    else { x.fillStyle = '#3fae5a'; x.fillRect(px, 36, 84, 88); x.strokeStyle = '#2c8443'; x.lineWidth = 3; for (let k = 44; k < 124; k += 10) { x.beginPath(); x.moveTo(px + 4, k); x.lineTo(px + 80, k); x.stroke() } } }
-  x.fillStyle = '#e04a23'; x.fillRect(0, 150, 2048, 34)                                 // orange-red eave
-  x.fillStyle = '#f2cf2e'; x.fillRect(0, 184, 2048, 328)                                // yellow frame
-  const panels = [['MELVIN’S ISLAND', '#1c2340', '#fff'], ['Life is fine.', '#1c2340', '#fff'], ['SALE', '#1c2340', '#fff'], ['FAUX', '#1c2340', '#fff'], null, ['SALE', '#1c2340', '#fff'], ['JOKELEY', '#1c2340', '#fff'], ['Sk8-ish', '#1c2340', '#fff']]
-  const art = [(X) => { x.fillStyle = '#9fd8ee'; x.fillRect(X, 262, 228, 150); x.fillStyle = '#efdcae'; x.fillRect(X, 412, 228, 76); x.fillStyle = '#f3c64a'; x.beginPath(); x.arc(X + 60, 320, 34, 0, 7); x.fill(); x.strokeStyle = '#6b4a2a'; x.lineWidth = 8; x.beginPath(); x.moveTo(X + 160, 470); x.quadraticCurveTo(X + 150, 380, X + 172, 320); x.stroke(); x.strokeStyle = '#2f8a48'; x.lineWidth = 7; for (let k = 0; k < 6; k++) { x.beginPath(); x.moveTo(X + 172, 320); x.quadraticCurveTo(X + 172 + Math.cos(k) * 40, 290, X + 172 + Math.cos(k * 1.1) * 70, 330 + Math.sin(k) * 20); x.stroke() } },
-    (X) => { x.fillStyle = '#2c6fb0'; x.fillRect(X, 262, 228, 226); for (let k = 0; k < 5; k++) { x.fillStyle = ['#e8641b', '#f1c62f', '#fff', '#3fae5a', '#d8322a'][k]; x.fillRect(X + 16 + k * 42, 300 + (k % 2) * 20, 30, 150) } },
-    (X, t = '50%', u = 'OFF') => { x.fillStyle = '#e8401f'; x.fillRect(X, 262, 228, 226); x.strokeStyle = '#fff'; x.lineWidth = 8; x.beginPath(); x.arc(X + 114, 375, 92, 0, 7); x.stroke(); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = '900 86px Anton, Impact, sans-serif'; x.fillText(t, X + 114, 392, 150); x.font = '900 38px Anton, Impact, sans-serif'; x.fillText(u, X + 114, 436, 150) }]
-  panels.forEach((pn, i) => { const X = 14 + i * 254; if (!pn) { x.fillStyle = '#3aa7d6'; x.fillRect(X, 150, 240, 362); x.fillStyle = '#e04a23'; x.beginPath(); x.moveTo(X, 300); x.lineTo(X + 120, 240); x.lineTo(X + 240, 300); x.fill(); x.fillStyle = '#17242c'; x.fillRect(X + 60, 310, 120, 202); x.fillStyle = '#f2cf2e'; x.font = 'italic 900 30px Georgia, serif'; x.textAlign = 'center'; x.fillText('Melvin’s', X + 120, 222); return }
-    x.fillStyle = pn[1]; x.fillRect(X, 196, 228, 60); x.fillStyle = pn[2]; x.textAlign = 'center'; x.font = i === 1 || i === 7 ? 'italic 40px "Comic Sans MS", cursive' : '900 44px Anton, Impact, sans-serif'; x.fillText(pn[0], X + 114, 242, 212)
-    if (i === 5) art[2](X, 'BUY 1', 'GET 1 TURKEY'); else art[i % 3](X) })
-  x.fillStyle = '#e8785a'; x.fillRect(0, 488, 2048, 24)
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8
-  const blue = new THREE.MeshStandardMaterial({ color: '#3aa7d6', roughness: 0.85 }), red = new THREE.MeshStandardMaterial({ color: '#e04a23', roughness: 0.8 })
-  const body = new THREE.Mesh(new THREE.BoxGeometry(Dp, Hh, L), blue); body.position.set(Dp / 2, Hh / 2, 0); body.castShadow = body.receiveShadow = true; g.add(body)
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(L, Hh), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 })); face.rotation.y = -Math.PI / 2; face.position.set(-0.03, Hh / 2, 0); g.add(face)
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, L + 0.8), red); eave.position.set(-0.5, Hh * 0.675, 0); eave.rotation.z = -0.25; eave.castShadow = true; g.add(eave)
-  const lot = new THREE.Mesh(new THREE.PlaneGeometry(9, L + 8), new THREE.MeshStandardMaterial({ color: '#4d5356', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); lot.rotation.x = -Math.PI / 2; lot.position.set(-4.5, 0.03, 0); lot.receiveShadow = true; g.add(lot)
-  for (let i = 0; i < 9; i++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.12), new THREE.MeshBasicMaterial({ color: '#d8d4c4', polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); st.rotation.x = -Math.PI / 2; st.position.set(-2.4, 0.04, -11.2 + i * 2.8); g.add(st) }
-  // Its roadside sign.
-  const sc = document.createElement('canvas'); sc.width = 512; sc.height = 256; const y = sc.getContext('2d'); y.fillStyle = '#f2cf2e'; y.fillRect(0, 0, 512, 256); y.fillStyle = '#d8322a'; y.fillRect(0, 150, 512, 106); y.fillStyle = '#1c2340'; y.textAlign = 'center'; y.font = '900 78px Anton, Impact, sans-serif'; y.fillText('MELVIN’S ISLAND', 256, 100, 480); y.fillStyle = '#fff'; y.font = '900 60px Anton, Impact, sans-serif'; y.fillText('FLASH SALE · ALWAYS', 256, 226, 480)
-  const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace; const sm = new THREE.MeshStandardMaterial({ map: st, roughness: 0.7 })
-  for (const sgn of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.2), sm); p.position.set(-7.6, 3.6, -L / 2 - 2 + sgn * 0.06); p.rotation.y = sgn > 0 ? 0 : Math.PI; g.add(p) }
-  for (const dx of [-1.6, 1.6]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.6, 6), red); post.position.set(-7.6 + dx, 1.3, -L / 2 - 2); g.add(post) }
+  const c = document.createElement('canvas'); c.width = 512; c.height = 160; const x = c.getContext('2d'); x.fillStyle = '#3aa7d6'; x.fillRect(0, 0, 512, 160); x.fillStyle = '#f2cf2e'; x.strokeStyle = '#1c2340'; x.lineWidth = 8; x.lineJoin = 'round'; x.textAlign = 'center'; x.font = 'italic 900 84px Georgia, serif'; x.strokeText('Melvin’s Island', 256, 106, 490); x.fillText('Melvin’s Island', 256, 106, 490)
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.12), new THREE.MeshStandardMaterial({ map: t, roughness: 0.8 })); m.rotation.y = -Math.PI / 2; m.position.set(-80.36 * U, 5.15, 412.62 * U); scene.add(m)
 }
 // The wooded east side of A1A Beach Blvd: a tree line behind the invisible wall.
 {
@@ -386,15 +364,15 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
   const leafI = [], trunkI = [], scrubI = [], M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), greens = ['#35602f', '#44743a', '#2b5230', '#557f3c', '#3c6a44']
   const inst = (list, x, y, z, sx, sy, sz, ry = 0, rz = 0, col = 0) => { M4.compose(new V3(x, y, z), Q.setFromEuler(E.set(0, ry, rz)), new V3(sx, sy, sz)); list.push([M4.clone(), col]) }
   let k = 0
-  for (const [pts, side] of [[[[-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
+  for (const [pts, side] of [[[[-84.2, 417], [-84.7, 412.4], [-84.5, 407], [-83.1, 403.5], [-81.7, 401], [-81.8, 398.6], [-82.2, 396], [-82.4, 387], [-81.2, 379.6], [-75.0, 358.7], [-68.6, 338.4], [-64.2, 324.5]], 1], [ROAD_W.map(([x, z]) => [x - 3.1, z]), -1]]) for (let i = 0; i + 1 < pts.length; i++) {
     const [ax, az] = pts[i], [bx, bz] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 1.1)
     for (let j = 0; j < n; j++, k++) for (const row of [0, 1]) {
       const r = (v) => { const q = Math.sin((k * 2 + row) * 12.9898 + v * 78.233) * 43758.5453; return q - Math.floor(q) }
       const t = (j + r(1)) / n, sc = 2.2 + r(2) * 1.6 + row
-      const tz = az + (bz - az) * t; if (side < 0 && tz > 386.3 && tz < 391.6) continue // leave the mouth of Floridian Ave open
+      const tz = az + (bz - az) * t; if (side < 0 && tz > 387.8 && tz < 403.4) continue // the neighborhood and PCN Bank front the road here
       let px = (ax + (bx - ax) * t + side * (0.75 + row * 0.9 + r(4) * 0.4)) * U; const pz = tz * U
       if (side > 0 && Math.abs(tz - GATE.z) < 1.25) px += 2.3 * U // set back behind the neighborhood's gate
-      if (side > 0 && tz > 387.0 && tz < 394.7) px += 3.6 * U // and behind the surf shop
+      if (side > 0 && tz > 406.0 && tz < 418) px += 6.5 * U // round the back of the shops south of the tip
       // Cleared around the sheriff's billboard so its pole and face stand clear of the bushes.
       if (side > 0 && Math.abs(tz - SHERIFF.z) < 1.9 && px / U > SHERIFF.x - 3.4 && px / U < SHERIFF.x + 1.2) continue
       if (side > 0 && Math.abs(tz - FORT.z) < 1.4 && Math.abs(px / U - FORT.x) < 1.6) continue
@@ -437,7 +415,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
 }
 const tableSpots = []
 // The pond south of Floridian Ave, grown to fill the open field up to the houses' back yards.
-const POND = { x0: -111.4, x1: -100.6, z0: 392.5, z1: 401.5 }
+const POND = { x0: -111.4 + HD[0], x1: -100.6 + HD[0], z0: 392.5 + HD[1], z1: 401.5 + HD[1] }
 {
   const cx = (POND.x0 + POND.x1) / 2 * U, cz = (POND.z0 + POND.z1) / 2 * U, w = (POND.x1 - POND.x0) * U, d = (POND.z1 - POND.z0) * U
   const sh = new THREE.Shape(); const r = 9; sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2)
@@ -600,7 +578,7 @@ const mkRegion = (pts) => {
 }
 // A1A Beach Blvd along the east side: one rectangle per stretch of its centerline, blocked at both
 // ends, with an invisible wall on the wooded side. Two driveways join it to the station and the plaza.
-const ROAD = [[-83.3, 395.5], [-83.5, 387], [-82.3, 379.75], [-76.1, 359], [-69.9, 339.3]]
+const ROAD = [[-85.2, 416.8], [-85.9, 414.4], [-85.6, 412.4], [-85.7, 410.5], [-85.8, 408.7], [-85.5, 407], [-85.0, 405.3], [-84.1, 403.5], [-83.2, 402.2], [-82.7, 400.9], [-82.8, 398.6], [-83.3, 395.5], [-83.5, 387], [-82.3, 379.75], [-76.1, 359], [-69.9, 339.3]]
 /** One rectangle per stretch of a road's centerline (south to north). hE / hW: how far it reaches east / west. */
 const roadStrip = (pts, hE, hW) => pts.slice(1).map((b, i) => {
   const a = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz), ux = dx / len, uz = dz / len
@@ -619,15 +597,15 @@ const along = (pts, z, off) => {
   const [a, b] = p.slice(-2); return a[0] + (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + off
 }
 const regions = []
-for (let z = 333; z < 397; z += 1) {
+for (let z = 333; z < 405; z += 1) {
   const z0 = z - 0.3, z1 = z + 1.3
   regions.push(mkRegion([[along(ROAD_W, z0, -2.9), z0], [along(ROAD, z0, 1.0), z0], [along(ROAD, z1, 1.0), z1], [along(ROAD_W, z1, -2.9), z1]].map(([x, zz]) => [x * U, zz * U])))
 }
 // Every barrier you can see: a thin solid box along it.
 // Floridian Ave, from A1A S to the barrier at its west end.
-regions.push(mkRegion([[-124.5, 387.95], [-93.2, 387.95], [-93.2, 391.3], [-124.5, 391.3]].map(([x, z]) => [x * U, z * U])))
+regions.push(mkRegion([[-124.5, 387.95], [-93.2, 387.95], [-93.2, 391.3], [-124.5, 391.3]].map(([x, z]) => [(x + HD[0]) * U, (z + HD[1]) * U])))
 // ...and the two neighbors' driveways, each reaching past the middle of the street.
-for (const d of [HOME.me, HOME.them]) { const x = d[0] / U; regions.push(mkRegion([[x - 0.46, 387.2], [x + 0.46, 387.2], [x + 0.46, 389.7], [x - 0.46, 389.7]].map(([x, z]) => [x * U, z * U]))) }
+for (const d of [HOME.me, HOME.them]) { const x = d[0] / U; regions.push(mkRegion([[x - 0.46, 387.2], [x + 0.46, 387.2], [x + 0.46, 389.7], [x - 0.46, 389.7]].map(([x, z]) => [x * U, (z + HD[1]) * U]))) }
 circles.push(...tableSpots)
 
 // A dropped 53-foot reefer trailer in front of the north strip: no tractor, landing gear down,
@@ -680,9 +658,9 @@ circles.push(...tableSpots)
 }
 boxes.push({ c: u2((POND.x0 + POND.x1) / 2, (POND.z0 + POND.z1) / 2), a: new V2(1, 0), hx: (POND.x1 - POND.x0) / 2 * U - 1, hz: (POND.z1 - POND.z0) / 2 * U - 1 }) // no swimming
 // The neighborhood: drive anywhere through the yards; the houses themselves are solid.
-regions.push(mkRegion([[-124.5, 382.6], [-95.6, 382.6], [-95.6, 391.5], [-124.5, 391.5]].map(([x, z]) => [x * U, z * U])))
+regions.push(mkRegion([[-124.5, 382.6], [-95.0, 382.6], [-95.0, 391.5], [-124.5, 391.5]].map(([x, z]) => [(x + HD[0]) * U, (z + HD[1]) * U])))
 // The 280 Floridian lot, south of the street, open up to the barrier at the road block.
-regions.push(mkRegion([[-100.75, 391.0], [-92.0, 391.0], [-92.0, 396.25], [-100.75, 396.25]].map(([x, z]) => [x * U, z * U])))
+// (the old 280 Floridian lot is PCN Bank's corner now)
 for (const [x, z, w, d, t] of DATA.homes) boxes.push({ c: new V2(x, z), a: new V2(Math.cos(t), -Math.sin(t)), hx: w / 2 + 0.3, hz: d / 2 + 0.3 })
 for (const [x, z, sx, sz, h] of DATA.walls) boxes.push({ c: new V2(x, z), a: new V2(sx, sz), hx: h, hz: 0.45, low: true })
 circles.push([-74.9 * U, 349.5 * U, 1.3]) // the plaza's pylon sign by its entrance
@@ -882,21 +860,21 @@ function rivalInput(dt) {
   if (!game.backedOut) {
     game.backT = (game.backT ?? 0) + dt
     const turned = Math.abs(wrap(R.heading - Math.PI / 2)) < 0.4
-    if (turned || game.backT > 6 || (game.backT > 1 && Math.abs(R.fwd) < 0.3 && R.pos.y > 389.5 * U)) game.backedOut = true
-    else return { throttle: R.fwd > -2.8 ? -1 : 0, steer: R.pos.y > 388.4 * U ? 1 : 0, handbrake: false } // straight back to the street, then swing
+    if (turned || game.backT > 6 || (game.backT > 1 && Math.abs(R.fwd) < 0.3 && R.pos.y > (389.5 + HD[1]) * U)) game.backedOut = true
+    else return { throttle: R.fwd > -2.8 ? -1 : 0, steer: R.pos.y > (388.4 + HD[1]) * U ? 1 : 0, handbrake: false } // straight back to the street, then swing
   }
   if (game.reverseT > 0) { game.reverseT -= dt; return { throttle: -1, steer: game.reverseSteer, handbrake: false } }
   if (game.ai === 'evade') { game.aiT -= dt; if (game.aiT <= 0 || R.pos.distanceTo(game.target) < 6) game.ai = 'seek' }
   // Every so often, when the Galaxie is close, he turns and goes for it instead.
   game.attackCool -= dt
-  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 13 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
+  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 24 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
     game.attackCool = 5 + Math.random() * 5
     if (Math.random() < 0.6) { game.ai = 'attack'; game.aiT = 2.4 }
   }
   if (game.ai === 'attack') { game.aiT -= dt; game.target.copy(P.pos).addScaledVector(P.vel, 0.35); if (game.aiT <= 0) game.ai = 'seek' }
   if (game.ai === 'seek') {
     // Out of the station and up the lot, one waypoint at a time; then the door.
-    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 13 && R.pos.y < PATH[game.pathI].y))) game.pathI++
+    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 24 && R.pos.y < PATH[game.pathI].y))) game.pathI++
     game.target.copy(game.pathI < PATH.length ? PATH[game.pathI] : DOOR)
   }
   const to = game.target.clone().sub(R.pos), dist = to.length()
@@ -1071,7 +1049,7 @@ const forkCrates = []
     x.strokeStyle = '#2a1a0c'; x.lineWidth = 3; x.beginPath(); x.moveTo(64, 140); x.lineTo(64, 200); x.moveTo(44, 160); x.lineTo(64, 140); x.lineTo(84, 160); x.stroke()
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
   const card = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.9 }), cardTop = new THREE.MeshStandardMaterial({ color: '#a77a48', roughness: 0.9 })
-  for (const [x, z, yaw] of [[-96.3, 387.2, 0.3], [-97.05, 386.5, -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
+  for (const [x, z, yaw] of [[-96.3 + HD[0], 387.2 + HD[1], 0.3], [-97.05 + HD[0], 386.5 + HD[1], -0.2]]) { // right on the line from the Farmers corner across to Bumpkin'
     const m = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.22, 0.62), [card, card, cardTop, cardTop, card, card]); b.castShadow = true; m.add(b)
     const inner = new THREE.Group(); m.add(inner)
     for (const [dx, dz, r] of [[-0.14, 0.1, 0.08], [0.12, -0.1, -0.1], [0.0, 0.14, 0.12]]) { const f = makeFork(); f.position.set(dx, 0.75, dz); f.rotation.set(r, dx * 3, -r); inner.add(f) }
@@ -1518,17 +1496,17 @@ const lotIslands = []
     const seam = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#7fae98'; x.fillRect(0, 0, 64, 64); x.fillStyle = '#5f8f7a'; for (let i = 0; i < 64; i += 16) x.fillRect(i, 0, 3, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 1); return t })()
     const roof = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4, 1), new THREE.MeshStandardMaterial({ map: seam, roughness: 0.5, metalness: 0.3, flatShading: true })); roof.rotation.y = Math.PI / 4; const rg = new THREE.Group(); rg.add(roof); rg.scale.set(10.6, 2.0, 8.6); rg.position.y = 5.3; g.add(rg); roof.castShadow = true
     const fascia = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.5, 12.0), new THREE.MeshStandardMaterial({ color: '#e9e6dc', roughness: 0.8 })); fascia.position.y = 4.3; g.add(fascia)
-    const lot = new THREE.Mesh(new THREE.PlaneGeometry(30, 15), new THREE.MeshStandardMaterial({ color: '#3f4447', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); lot.rotation.x = -Math.PI / 2; lot.position.set(3, 0.04, 14.5); lot.receiveShadow = true; g.add(lot)
+    const lot = new THREE.Mesh(new THREE.PlaneGeometry(30, 4.5), new THREE.MeshStandardMaterial({ color: '#3f4447', roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); lot.rotation.x = -Math.PI / 2; lot.position.set(3, 0.04, 9.6); lot.receiveShadow = true; g.add(lot)
     for (let i = 0; i < 9; i++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 4.6), new THREE.MeshBasicMaterial({ color: '#d8d4c4', polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); st.rotation.x = -Math.PI / 2; st.position.set(-7 + i * 2.8, 0.05, 9.6); g.add(st) }
     const hedge = new THREE.MeshStandardMaterial({ color: '#3d6b3c', roughness: 1, flatShading: true }); for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(blob, hedge); b.scale.set(0.8, 0.5, 0.6); b.position.set(-6.5 + i * 1.45, 0.4, 6.7); g.add(b) }
     const bark = new THREE.MeshStandardMaterial({ color: '#4f4336', roughness: 1 }), leaf = [new THREE.MeshStandardMaterial({ color: '#35602f', roughness: 1, flatShading: true }), new THREE.MeshStandardMaterial({ color: '#44743a', roughness: 1, flatShading: true })]
     const oak = (x, z, sc) => { const y = surfaceAt(x, z), t = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * sc, 0.4 * sc, 2.6 * sc, 7), bark); t.position.set(x, y + 1.3 * sc, z); t.rotation.z = 0.12; t.castShadow = true; scene.add(t)
       for (let i = 0; i < 4; i++) { const a = i * 1.57 + x, c = new THREE.Mesh(blob, leaf[i % 2]); c.scale.set(2.2 * sc, 1.1 * sc, 2.2 * sc); c.position.set(x + Math.sin(a) * 1.9 * sc, y + (3.6 + (i % 2) * 0.5) * sc, z + Math.cos(a) * 1.9 * sc); c.castShadow = true; scene.add(c) }
       const top = new THREE.Mesh(blob, leaf[0]); top.scale.set(2.5 * sc, 1.2 * sc, 2.5 * sc); top.position.set(x, y + 4.5 * sc, z); scene.add(top) }
-    for (const [ox, oz, sc] of [[-93.6, 397.6, 1.1], [-94.6, 400.6, 1.0], [-93.9, 403.2, 1.2], [-99.8, 398.2, 1.3], [-100.6, 402.4, 1.2], [-97.2, 404.4, 1.1]]) oak(ox * U, oz * U, sc)
+    for (const [ox, oz, sc] of [[-94.2, 397.6, 1.1], [-94.4, 400.6, 1.0], [-99.8, 398.2, 1.3], [-100.6, 401.6, 1.2]]) oak(ox * U, oz * U, sc)
     // Concrete utility poles with crossarms and a transformer now and then; sagging wires between them.
     const conc = new THREE.MeshStandardMaterial({ color: '#b3ada0', roughness: 0.9 }), dk = new THREE.MeshStandardMaterial({ color: '#4a4d50', roughness: 0.7 }), wire = new THREE.LineBasicMaterial({ color: '#1b1b1b' })
-    const line = [[-91.9, 401.5], ...ROAD_W].map(([x, z]) => [(x - 2.62) * U, z * U]), tops = []
+    const line = ROAD_W.filter(([, z]) => z < 386).map(([x, z]) => [(x - 2.62) * U, z * U]), tops = []
     line.forEach(([x, z], i) => { const y = surfaceAt(x, z), nxt = line[Math.min(i + 1, line.length - 1)], prv = line[Math.max(i - 1, 0)], ry = Math.atan2(nxt[0] - prv[0], nxt[1] - prv[1])
       circles.push([x, z, 0.3])
       const p = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.2, 10.5, 7), conc); p.position.set(x, y + 5.25, z); p.castShadow = true; scene.add(p)
@@ -1537,6 +1515,31 @@ const lotIslands = []
       tops.push([-1.1, 0, 1.1].map((o) => new V3(x + Math.cos(ry) * o, y + 10.0, z - Math.sin(ry) * o)).concat([new V3(x, y + 7.6, z)])) })
     for (let i = 0; i + 1 < tops.length; i++) for (let w = 0; w < 4; w++) { const a = tops[i][w], b = tops[i + 1][w], pts = []; for (let k = 0; k <= 12; k++) { const t = k / 12, q = a.clone().lerp(b, t); q.y -= Math.sin(t * Math.PI) * (w === 3 ? 1.1 : 0.7); pts.push(q) } scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wire)) }
   }
+
+  // --- The big road block across A1A south of the tip: striped barricades, a wall of cones, ROAD CLOSED boards, flashing ambers.
+  { const A = [-92.0 * U, 404.2 * U], B = [-82.4 * U, 403.2 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
+    const stripe = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 256, 32); x.fillStyle = '#e8641b'; for (let i = -32; i < 256; i += 48) { x.beginPath(); x.moveTo(i, 32); x.lineTo(i + 24, 32); x.lineTo(i + 56, 0); x.lineTo(i + 32, 0); x.fill() } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+    const board = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 512, 256); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 496, 240); x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 110px Anton, Impact, sans-serif'; x.fillText('ROAD', 256, 116); x.fillText('CLOSED', 256, 226); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
+    const sm = new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.7 }), bm = new THREE.MeshStandardMaterial({ map: board, roughness: 0.7 }), leg = new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.8 }), cone = new THREE.MeshStandardMaterial({ color: '#f26a1b', roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: '#f4f4f0', roughness: 0.6 }), amber = new THREE.MeshBasicMaterial({ color: '#ffb020' })
+    const at = (sA, d) => [A[0] + tx * sA + nx * d, A[1] + tz * sA + nz * d]
+    for (let i = 0; i < 6; i++) { const [x, z] = at(3.5 + i * (len - 7) / 5, 1.5), g = new THREE.Group(); g.position.set(x, surfaceAt(x, z), z); g.rotation.y = yaw + (i % 2 ? 0.08 : -0.06); scene.add(g)
+      for (const y of [1.25, 0.85, 0.45]) { const r = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.24, 0.05), sm); r.position.y = y; r.castShadow = true; g.add(r) }
+      for (const e of [-1.3, 1.3]) for (const f of [-0.35, 0.35]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.07), leg); l.position.set(e, 0.72, f * 0.6); l.rotation.x = -f * 0.5; g.add(l) }
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), amber); lamp.position.set(-1.3, 1.55, 0); g.add(lamp)
+      if (i % 2 === 0) { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), bm); b.position.set(0, 1.9, -0.04); b.rotation.y = Math.PI; g.add(b); const b2 = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), bm); b2.position.set(0, 1.9, 0.04); g.add(b2); const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.7, 0.04), leg); p.position.set(0, 1.5, 0); g.add(p) }
+      boxes.push({ c: new V2(x, z), a: new V2(tx, tz), hx: 1.6, hz: 0.4, low: true }) }
+    const cg = new THREE.ConeGeometry(0.2, 0.72, 10), bg = new THREE.CylinderGeometry(0.095, 0.125, 0.12, 10), fg = new THREE.BoxGeometry(0.46, 0.04, 0.46)
+    for (let i = 0; i < 26; i++) { const [x, z] = at(1 + i * (len - 2) / 25, 3.4 + (i % 2) * 1.1), y = surfaceAt(x, z); const c = new THREE.Mesh(cg, cone); c.position.set(x, y + 0.38, z); c.castShadow = true; scene.add(c); const b = new THREE.Mesh(bg, band); b.position.set(x, y + 0.45, z); scene.add(b); const f = new THREE.Mesh(fg, cone); f.position.set(x, y + 0.02, z); scene.add(f) }
+  }
+
+  // --- A bumpy hedge in a mulch strip behind the tall curb along A1A S: the lot is shut from that side.
+  { const runs = [[[-100.5, 355.3], [-92.5, 383.5]], [[-92.5, 383.5], [-92.2, 392.0]], [[-92.2, 392.0], [-89.9, 395.6]]], D = new THREE.Object3D(), ms = [], strip = []
+    let sd = 5; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+    for (const [[ax, az], [bx, bz]] of runs) { const len = Math.hypot(bx - ax, bz - az) * U, tx = (bx - ax) * U / len, tz = (bz - az) * U / len, nx = -tz, nz = tx, ins = nx > 0 ? 1 : -1
+      for (let d = 0.8; d < len - 0.4; d += 1.25) { const x = ax * U + tx * d + nx * ins * 1.15, z = az * U + tz * d + nz * ins * 1.15, sc = 0.55 + rn() * 0.3
+        D.position.set(x, GY + sc * 0.6, z); D.rotation.set(0, rn() * 6, 0); D.scale.set(sc * 1.25, sc, sc * 1.15); D.updateMatrix(); ms.push(D.matrix.clone()) }
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.7), mulchM); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-tz, tx)); m.position.set((ax + bx) / 2 * U + nx * ins * 1.15, GY + 0.02, (az + bz) / 2 * U + nz * ins * 1.15); m.receiveShadow = true; scene.add(m) }
+    const im = new THREE.InstancedMesh(blob, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), ms.length), c = new THREE.Color(); ms.forEach((m, n) => { im.setMatrixAt(n, m); im.setColorAt(n, c.set(['#3b6b30', '#4c7d38', '#335f2c'][n % 3])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im) }
 
   // --- The trashy back of publick: receiving dock, dumpsters, pallets, bags, a dead cart, drips down the wall.
   { const tx = -0.81, tz = -0.587, nx = -0.587, nz = 0.81, wallYaw = Math.atan2(nx, nz), alongYaw = Math.atan2(-tz, tx)
