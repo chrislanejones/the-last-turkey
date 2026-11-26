@@ -1665,7 +1665,6 @@ const lotIslands = []
     const rc = new THREE.Raycaster(from, dir), h = rc.intersectObject(world.scene, true)[0]
     if (h) { const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); n.y = 0; n.normalize(); m.position.copy(h.point).addScaledVector(n, 0.04); m.rotation.y = Math.atan2(n.x, n.z); scene.add(m) } }
 
-  sprayTag([['CHRISTY HOMES AND I WERE IN THE', 118], ['BACK OF THE JEEP LAST NIGHT', 270]], ['#ff4fb0', '#e0218a', '#7a2bd6', 'rgba(190,40,140,0.85)'], new V3(-97 * U, GY + 2.9, 366.2 * U), new V3(1, 0, 0), 19, 3.56) // the big blank wall facing A1A S
   // A union poster pasted on the wall under PIZZAZZ: old-school labor print, red and black on cream, a raised fist.
   { const c = document.createElement('canvas'); c.width = 768; c.height = 1024; const x = c.getContext('2d')
     x.fillStyle = '#efe4c8'; x.fillRect(0, 0, 768, 1024)
