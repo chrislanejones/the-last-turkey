@@ -34,9 +34,9 @@ const parts: Record<Layer, BufferGeometry[]> = { architecture: [], roof: [], gla
 let mode: 'layout' | 'final' = 'final'
 const UNIT = 13.4 * 0.3048 // one town unit is 13.4 ft
 
-let wb = false, loving = false
+let wb = false, loving = false, groundK = 0
 /** A1A S past the plaza, redrawn as one road: two lanes and a centre turn lane, set back from the plaza's curb. */
-const A1A_S: number[][] = [[-106.3, 340.0], [-105.15, 345.9], [-102.95, 355.3], [-94.95, 383.5], [-94.65, 392.0], [-92.35, 395.6], [-91.65, 398.4], [-91.0, 402.0], [-89.9, 406.0], [-89.3, 408.4], [-87.6, 415.0], [-86.9, 418.0]]
+const A1A_S: number[][] = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418]] // dead straight, clear of the plaza's curb all the way
 /** The neighborhood is lifted from Floridian Ave and set down south-west of the tip, where the map has a supermarket. */
 const HS = [3.4, 14.6] // its street now meets A1A S at the tip: Farmers on the north corner, PCN Bank on the south
 /** PCN Bank steps south to make room for the street. */
@@ -68,6 +68,7 @@ const add = (layer: Layer, input: BufferGeometry, color: string, x: number, y: n
   for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k)
   if (!g.getAttribute('normal')) g.computeVertexNormals()
   g.rotateY(rotation); g.translate(x, y, z)
+  if (layer === 'ground') g.translate(0, (groundK++ % 7) * .0002, 0) // overlapping paving never shares a plane: no flicker
   let fascia: number[] | null = null
   if (wb && !loving && layer === 'roof' && inHood(x, z)) {
     g.computeBoundingBox(); const b = g.boundingBox!, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2
@@ -242,7 +243,7 @@ const curbRun = (ax: number, az: number, bx: number, bz: number, force = 0) => {
   box('architecture', '#bdbab0', cx, .1, cz, .14, .15, len + .1, turn)
   box('architecture', '#d2cfc5', cx, .178, cz, .15, .012, len + .1, turn)
   box('ground', '#c4c1b6', sx, .062, sz, .52, .03, len + .1, turn)
-  for (let d = .3; d < len; d += .45) { const x = ax + (bx - ax) * d / len + Math.cos(turn) * o * .45, z = az + (bz - az) * d / len - Math.sin(turn) * o * .45; box('ground', '#a9a69c', x, .0625, z, .52, .03, .012, turn) }
+  for (let d = .3; d < len; d += .45) { const x = ax + (bx - ax) * d / len + Math.cos(turn) * o * .45, z = az + (bz - az) * d / len - Math.sin(turn) * o * .45; box('ground', '#a9a69c', x, .0645, z, .52, .03, .012, turn) }
 }
 /** +1 or -1: which side of a wall run is inside the arena (barrels go there). */
 function side(cx: number, cz: number, turn: number) {
@@ -258,12 +259,15 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // behind the neighbors' houses, across the street's west end, back along the fronts of the houses
 // opposite, and down to the road block south of the gas station.
 {
-  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.2, 365.1], [-98.45, 378.85], [-97.43, 382.6], [-96.75, 390.15], [-93.9, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-101.5, 406.1], [-101.5, 414.6], [-89.0, 414.6], [-88.4, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
+  const W0: [number, number][] = [[-108.55, 341], [-107.02, 346.83], [-104.6, 357.12], [-102.7, 365.1], [-99.5, 378.85], [-98.7, 382.6], [-96.95, 390.15], [-95.35, 397.2], [-121.1, 397.2], [-121.1, 406.1], [-101.5, 406.1], [-101.5, 414.6], [-91.2, 414.6], [-90.9, 416.8], [-83.2, 416.5]] // down A1A S, round the neighborhood, and across the road south of the tip
   const W = W0
   ;(DATA as any).treeRuns = []
   for (let i = 0; i + 1 < W.length; i++) {
     const [ax, az] = W[i], [bx, bz] = W[i + 1]
-    if (i < 7 || i > 11) { wallRun(ax, az, bx, bz); continue }
+    if (i > 11) { wallRun(ax, az, bx, bz); continue }
+    if (i < 7) { // along A1A S the trees and houses are the barrier: nothing drawn, just the edge you can't pass
+      const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
+      DATA.walls.push([(ax + bx) / 2 * UNIT, (az + bz) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT]); continue }
     // Round the neighborhood and the bank it's a wall of trees: the game plants them, this is only what you bump into.
     const len = Math.hypot(bx - ax, bz - az), turn = Math.atan2(bx - ax, bz - az)
     DATA.walls.push([(ax + bx) / 2 * UNIT, (az + bz) / 2 * UNIT, Math.sin(turn), Math.cos(turn), (len / 2 + .05) * UNIT])
@@ -273,7 +277,7 @@ PLAZA.forEach(([ax, az], i) => { if (i <= 5) return; const [bx, bz] = PLAZA[(i +
 // A wall down the lot's west side, from publick to the Square K: no cutting in from A1A S.
 // You have to come in past the gas station.
 curbRun(-102.7, 345.9, -101.99, 348.95); curbRun(-101.37, 351.6, -100.5, 355.3); // gap for the picnic tables
-curbRun(-100.5, 355.3, -92.5, 383.5) // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
+curbRun(-100.5, 355.3, -92.15, 392.0, -1); curbRun(-92.15, 392.0, -90.65, 398.6, -1) // one straight curb, parallel to the road, all the way to the tip // ...ending at the north edge of the Square K building, so Bumpkin's drive-thru is open from the west
 // Road closed across A1A S too, at the same two places.
 wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot's corner barrier
 // East side of the station: open at the pumps' exit to A1A Beach Blvd.
@@ -281,12 +285,13 @@ wallRun(-108.6, 340.2, -99.9, 342.54) // the west block runs right up to the lot
 // Road closed: across A1A Beach Blvd south of the gas station, and north of the plaza.
 wallRun(-71.1, 338.95, -68.7, 339.65)
 // The station is shut off from A1A S, and the tip with the welcome sign is fenced: the only way in is from A1A Beach Blvd.
-curbRun(-92.5, 383.5, -92.2, 392.0, -1); curbRun(-92.2, 392.0, -89.9, 395.6, -1); curbRun(-89.9, 395.6, -89.2, 398.4, -1) // the boulevard side of the tip is open
+{ // the wedge of lot the straight curb takes in, paved
+  const g = new BufferGeometry(); g.setAttribute('position', new BufferAttribute(new Float32Array([-100.5, .0462, 355.3, -92.15, .0462, 392.0, -92.4, .0462, 383.5]), 3)); g.computeVertexNormals(); add('ground', g, '#737b7c', 0, 0, 0) } // the boulevard side of the tip is open
 // Driveway aprons across the grass at both openings.
 box('ground', '#80868a', -84.4, .02, 391.3, 2.4, .03, 2.8); box('ground', '#80868a', -74.9, .053, 352.1, 2.6, .03, 2.8) // the first sits just under the station pad where they overlap
 
 // The neighborhood street's last stretch, out to A1A S.
-box('ground', '#737b7c', -94.0, .041, 389.3 + HS[1], 2.8, .03, 1.55)
+box('ground', '#737b7c', -93.1, .041, 389.3 + HS[1], 4.6, .03, 1.55)
 // The streets and neighbors around it, from the town's OSM data.
 const X0 = -110, X1 = -64, Zs = 328, Zn = 402
 const near = (x: number, z: number) => x > X0 && x < X1 && z > Zs && z < Zn
@@ -327,7 +332,7 @@ for (const r of PONCE_ROADS) {
   const pt = (p: number[]) => p
   for (let i = 0; i + 1 < r.p.length; i++) {
     const [ax, az] = pt(r.p[i]), [bx, bz] = pt(r.p[i + 1]), mx = (ax + bx) / 2, mz = (az + bz) / 2
-    if (!(near(mx, mz) || (mz >= Zn && mz < 419 && mx > -95 && mx < -78)) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz) || (r.w === 1.2 && mz > 336 && mz < 407 && mx < -86) || (r.w === 1 && mz > 394 && mx < -82.5 && mx > -91) || (r.w === 1.5 && mz > 405.8 && mx < -84.5)) { flush(); continue } // A1A S is redrawn; no slip roads round the tip
+    if (!(near(mx, mz) || (mz >= Zn && mz < 419 && mx > -95 && mx < -78)) || inPoly(mx, mz) || inStation(mx, mz) || inHood(mx, mz) || (r.w === 1.2 && mz > 336 && mz < 407 && mx < -86) || (r.w === 1 && mz > 394 && mx < -82.5 && mx > -91) || (r.w === 1.5 && mz > 403.9 && mx < -84.5)) { flush(); continue } // A1A S is redrawn; no slip roads round the tip
     if (!cur) cur = [[ax, az]]
     cur.push([bx, bz])
     roads.push([ax, az, bx, bz, r.w])
@@ -337,7 +342,11 @@ for (const r of PONCE_ROADS) {
 add('ground', ribbon(A1A_S, 1.5, .044, .4), '#737b7c', 0, 0, 0)
 for (let i = 0; i + 1 < A1A_S.length; i++) roads.push([...A1A_S[i], ...A1A_S[i + 1], 2.0])
 // Asphalt right up to the plaza's curb: no grass strip between the road and the sidewalk.
-add('ground', ribbon(A1A_S.filter(([, z]) => z > 345 && z < 399).map(([x, z]) => [x + 2.0, z]), .6, .040, 0), '#737b7c', 0, 0, 0)
+add('ground', ribbon(A1A_S.filter(([, z]) => z > 345).map(([x, z]) => [x + 1.75, z]).filter(([, z]) => z < 401), .85, .040, 0), '#737b7c', 0, 0, 0)
+// No hook round the tip: A1A Beach Blvd runs on south and meets A1A S in front of the surf shop.
+{ const C = [[-84.1, 403.6], [-84.8, 405.6], [-85.6, 407.8], [-86.6, 410], [-87.9, 412.2], [-89.3, 414.2]]
+  add('ground', ribbon(C, 1.125, .046, .3), '#737b7c', 0, 0, 0)
+  for (let i = 0; i + 1 < C.length; i++) roads.push([...C[i], ...C[i + 1], 1.5]) }
 const houses: number[][] = []
 const paints = ['#e9dcc0', '#d7c7a6', '#cfd8d2', '#e6d2b8', '#c9d3d8', '#e2c9a0']
 PONCE_HOUSES.forEach(([x, z, w, d, deg, storeys], i) => {

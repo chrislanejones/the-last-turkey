@@ -35,7 +35,7 @@ const P_START = { pos: new V2(HOME.me[0], HOME.me[1]), heading: Math.PI }
 const R_START = { pos: new V2(HOME.them[0], HOME.them[1] + 0.3), heading: Math.PI }
 // The wagon's way: down the street, round the tip past the welcome sign, into the gas station from A1A Beach Blvd,
 // up the back of the Square K and the bank, through the OOPS Store's boxes, out onto the boulevard and in at the plaza entrance.
-const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-90.6, 404.0), u2(-88.6, 403.0), u2(-87.0, 402.2), u2(-85.6, 401.6), u2(-84.5, 400.3), u2(-84.6, 398.3), u2(-85.0, 396.4), u2(-85.3, 394.4), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
+const PATH = [u2(-110.1, 403.9), u2(-101.6, 403.8), u2(-94.1, 404.0), u2(-91.7, 405.2), u2(-90.7, 408.5), u2(-89.9, 412.2), u2(-88.7, 414.4), u2(-87.5, 412.6), u2(-86.5, 410.0), u2(-85.5, 407.6), u2(-84.6, 405.2), u2(-83.8, 402.4), u2(-83.5, 399.6), u2(-84.0, 398.0), u2(-85.0, 396.4), u2(-85.3, 394.4), u2(-86.6, 392.8), u2(-89.6, 392.9), u2(-91.4, 391.0), u2(-91.8, 387.0), u2(-91.8, 384.4), u2(-91.2, 382.3), u2(-90.9, 379.5), u2(-90.3, 377.4), u2(-88.0, 376.6), u2(-85.6, 377.0), u2(-83.6, 376.4), u2(-81.6, 373.6), u2(-79.2, 367.0), u2(-77.0, 360.0), u2(-75.5, 355.0), u2(-75.0, 352.4), u2(-76.8, 350.6), u2(-80.0, 349.3), u2(-83.5, 348.2)]
 // The pump apron is a slab a little higher than the lot.
 const APRON = { x0: -91.6 * U, x1: -85.4 * U, z0: 386.9 * U, z1: 393.1 * U, y: 0.065 * U + 0.005 }
 const groundAt = (p) => (p.x > APRON.x0 && p.x < APRON.x1 && p.y > APRON.z0 && p.y < APRON.z1 ? APRON.y : GY)
@@ -43,7 +43,7 @@ const WAYPOINTS = [u2(-79.4, 349.5), u2(-77.5, 343.8), u2(-88.4, 357), u2(-84.8,
 
 // A1A S along the west side (both carriageways and the median), blocked at the same two places.
 // A1A S is one road now (two lanes and a centre turn lane); this line runs 1.1 east of its centre, so the drivable band (to 2.9 west of it) covers the whole road.
-const ROAD_W = [[-106.3, 340.0], [-105.15, 345.9], [-102.95, 355.3], [-94.95, 383.5], [-94.65, 392.0], [-92.35, 395.6], [-91.65, 398.4], [-91.0, 402.0], [-89.9, 406.0], [-89.3, 408.4], [-87.6, 415.0], [-86.9, 418.0]].map(([x, z]) => [x + 1.1, z])
+const ROAD_W = [[-106.34, 340], [-104.07, 350], [-101.79, 360], [-99.51, 370], [-97.23, 380], [-94.95, 390], [-92.68, 400], [-90.4, 410], [-88.58, 418]].map(([x, z]) => [x + 1.1, z])
 const $ = (id) => document.getElementById(id)
 const params = new URLSearchParams(location.search)
 
@@ -392,6 +392,7 @@ parade(-105.3 * U, 341 * U, Math.atan2(0.254, 0.967), 13.5, 'WE STILL HAVEN’T 
     for (const [ax, az, bx, bz] of DATA.treeRuns || []) { const len = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / len, tz = (bz - az) / len; let nx = tz, nz = -tx; if (inYard((ax + bx) / 2 + nx * 3, (az + bz) / 2 + nz * 3)) { nx = -nx; nz = -nz }
       const n = Math.ceil(len / 3.4)
       for (let j = 0; j < n; j++) for (const row of [0, 1]) { const d = (j + 0.3 + row * 0.5 + rn() * 0.3) / n * len, off = 2.0 + row * 3.2 + rn(), px = ax + tx * d + nx * off, pz = az + tz * d + nz * off, sc = 2.3 + rn() * 1.5 + row, hgt = sc * (1.25 + rn() * 0.5) + row * 1.6, ci = Math.floor(rn() * 5)
+        if (DATA.homes.some(([hx, hz, w, d, a]) => { const dx = px - hx, dz = pz - hz, c = Math.cos(a), sn = Math.sin(a); return Math.abs(dx * c - dz * sn) < w / 2 + sc * 1.25 && Math.abs(dx * sn + dz * c) < d / 2 + sc * 1.25 })) continue // not through a neighbor's house
         inst(trunkI, px, hgt * 0.5, pz, 0.22 + sc * 0.06, hgt, 0.22 + sc * 0.06, rn() * 6, (rn() - 0.5) * 0.25)
         inst(leafI, px, hgt + sc * 0.25, pz, sc * 1.05, sc * 0.62, sc * 1.05, rn() * 6, 0, ci)
         for (let c = 0; c < 3; c++) { const a = rn() * 6.28, dd = sc * (0.6 + rn() * 0.35); inst(leafI, px + Math.cos(a) * dd, hgt - sc * (0.05 + rn() * 0.3), pz + Math.sin(a) * dd, sc * 0.72, sc * 0.5, sc * 0.72, a, 0, (ci + c + 1) % 5) }
@@ -883,14 +884,14 @@ function rivalInput(dt) {
   if (game.ai === 'evade') { game.aiT -= dt; if (game.aiT <= 0 || R.pos.distanceTo(game.target) < 6) game.ai = 'seek' }
   // Every so often, when the Galaxie is close, he turns and goes for it instead.
   game.attackCool -= dt
-  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 22 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
+  if (game.ai === 'seek' && game.rams > 0 && game.pathI >= 27 && game.attackCool <= 0 && R.pos.distanceTo(P.pos) < 18) {
     game.attackCool = 5 + Math.random() * 5
     if (Math.random() < 0.6) { game.ai = 'attack'; game.aiT = 2.4 }
   }
   if (game.ai === 'attack') { game.aiT -= dt; game.target.copy(P.pos).addScaledVector(P.vel, 0.35); if (game.aiT <= 0) game.ai = 'seek' }
   if (game.ai === 'seek') {
     // Out of the station and up the lot, one waypoint at a time; then the door.
-    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 22 && R.pos.y < PATH[game.pathI].y))) game.pathI++
+    while (game.pathI < PATH.length && (R.pos.distanceTo(PATH[game.pathI]) < 5 || (game.pathI >= 27 && R.pos.y < PATH[game.pathI].y))) game.pathI++
     game.target.copy(game.pathI < PATH.length ? PATH[game.pathI] : DOOR)
   }
   const to = game.target.clone().sub(R.pos), dist = to.length()
@@ -1478,8 +1479,15 @@ const lotIslands = []
     boxes.push({ c: new V2(mx, mz), a: new V2(dx, dz), hx: A, hz: H })
   }
 
+  // --- The town sign's island: a curbed lawn filling the tip.
+  { const pts = [[-91.45, 394.9], [-90.2, 400.5], [-89.4, 404.0], [-88.6, 407.5], [-88.0, 410.0], [-87.5, 410.6], [-87.2, 408.5], [-86.6, 406.0], [-86.0, 403.6], [-85.5, 401.0], [-85.6, 398.0], [-86.1, 394.9]], mk2 = (k) => { const sh = new THREE.Shape(), cx = -88.3, cz = 402.5; pts.forEach(([x, z], i) => { const px = (cx + (x - cx) * k) * U, pz = -(cz + (z - cz) * k) * U; i ? sh.lineTo(px, pz) : sh.moveTo(px, pz) }); return sh }
+    const y = surfaceAt(-88.6 * U, 398.2 * U)
+    const curb = new THREE.Mesh(new THREE.ExtrudeGeometry(mk2(1), { depth: 0.2, bevelEnabled: false }).rotateX(-Math.PI / 2), curbM); curb.position.y = y; curb.receiveShadow = true; scene.add(curb)
+    const lawn = new THREE.Mesh(new THREE.ShapeGeometry(mk2(0.975)).rotateX(-Math.PI / 2), turfM); lawn.position.y = y + 0.21; lawn.receiveShadow = true; scene.add(lawn)
+    lotIslands.push({ x: -88.7 * U, z: 398.2 * U, hw: 2.3 * U, hd: 3.1 * U, c: 1, s: 0, h: 0.2 }, { x: -87.9 * U, z: 405.8 * U, hw: 1.2 * U, hd: 4.2 * U, c: 1, s: 0, h: 0.2 }) }
+
   // --- The sabal palm grove at the south tip, behind the welcome sign.
-  { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const tipEdge = (z) => z < 395.6 ? -92.2 + (z - 392) * 2.3 / 3.6 : -89.9 + (z - 395.6) * 0.25; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
+  { const D = new THREE.Object3D(), tr = [], fr = [], sk = [], gr = []; let sd = 11; const tipEdge = (z) => -92.15 + (z - 392) * 0.2278; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (let zi = 0; zi < 4; zi++) for (let xi = 0; xi < 7; xi++) { const z = (396.1 + zi * 0.5 + (rn() - 0.5) * 0.3) * U, half = (400.6 - z / U) / 4.6 * 2.9, x = -88.35 * U + ((xi - 3) / 3 * 2.6 + (rn() - 0.5) * 0.35) * U
       if (Math.abs(x / U + 88.35) > half - 0.25 || x / U < tipEdge(z / U) + 0.45) continue
       const h = 4.6 + rn() * 2.2, y0 = surfaceAt(x, z); D.position.set(x, y0 + h / 2, z); D.rotation.set((rn() - 0.5) * 0.08, 0, (rn() - 0.5) * 0.08); D.scale.set(1, h, 1); D.updateMatrix(); tr.push(D.matrix.clone())
@@ -1541,12 +1549,12 @@ const lotIslands = []
   }
 
   // --- The big road block across A1A south of the tip: striped barricades, a wall of cones, ROAD CLOSED boards, flashing ambers.
-  { const A = [-88.4 * U, 416.8 * U], B = [-83.2 * U, 416.5 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
+  { const A = [-90.9 * U, 416.8 * U], B = [-83.2 * U, 416.5 * U], len = Math.hypot(B[0] - A[0], B[1] - A[1]), tx = (B[0] - A[0]) / len, tz = (B[1] - A[1]) / len, nx = tz, nz = -tx, yaw = Math.atan2(-tz, tx)
     const stripe = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 256, 32); x.fillStyle = '#e8641b'; for (let i = -32; i < 256; i += 48) { x.beginPath(); x.moveTo(i, 32); x.lineTo(i + 24, 32); x.lineTo(i + 56, 0); x.lineTo(i + 32, 0); x.fill() } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const board = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#f4f4f0'; x.fillRect(0, 0, 512, 256); x.strokeStyle = '#111'; x.lineWidth = 10; x.strokeRect(8, 8, 496, 240); x.fillStyle = '#111'; x.textAlign = 'center'; x.font = '900 110px Anton, Impact, sans-serif'; x.fillText('ROAD', 256, 116); x.fillText('CLOSED', 256, 226); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t })()
     const sm = new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.7 }), bm = new THREE.MeshStandardMaterial({ map: board, roughness: 0.7 }), leg = new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.8 }), cone = new THREE.MeshStandardMaterial({ color: '#f26a1b', roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: '#f4f4f0', roughness: 0.6 }), amber = new THREE.MeshBasicMaterial({ color: '#ffb020' })
     const at = (sA, d) => [A[0] + tx * sA + nx * d, A[1] + tz * sA + nz * d]
-    for (let i = 0; i < 5; i++) { const [x, z] = at(2.2 + i * (len - 4.4) / 4, 1.5), g = new THREE.Group(); g.position.set(x, surfaceAt(x, z), z); g.rotation.y = yaw + (i % 2 ? 0.08 : -0.06); scene.add(g)
+    for (let i = 0; i < 7; i++) { const [x, z] = at(2.2 + i * (len - 4.4) / 6, 1.5), g = new THREE.Group(); g.position.set(x, surfaceAt(x, z), z); g.rotation.y = yaw + (i % 2 ? 0.08 : -0.06); scene.add(g)
       for (const y of [1.25, 0.85, 0.45]) { const r = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.24, 0.05), sm); r.position.y = y; r.castShadow = true; g.add(r) }
       for (const e of [-1.3, 1.3]) for (const f of [-0.35, 0.35]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.07), leg); l.position.set(e, 0.72, f * 0.6); l.rotation.x = -f * 0.5; g.add(l) }
       const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), amber); lamp.position.set(-1.3, 1.55, 0); g.add(lamp)
@@ -1554,12 +1562,12 @@ const lotIslands = []
       boxes.push({ c: new V2(x, z), a: new V2(tx, tz), hx: 1.6, hz: 0.4, low: true }) }
     const cg = new THREE.ConeGeometry(0.2, 0.72, 10), bg = new THREE.CylinderGeometry(0.095, 0.125, 0.12, 10), fg = new THREE.BoxGeometry(0.46, 0.04, 0.46)
     // The cones are loose: drive through them and they scatter.
-    for (let i = 0; i < 22; i++) { const [x, z] = at(1 + i * (len - 2) / 21, 3.4 + (i % 2) * 1.1), y = surfaceAt(x, z), m = new THREE.Group(); const c = new THREE.Mesh(cg, cone); c.castShadow = true; m.add(c); const b = new THREE.Mesh(bg, band); b.position.y = 0.07; m.add(b); const f = new THREE.Mesh(fg, cone); f.position.y = -0.36; m.add(f); scene.add(m)
+    for (let i = 0; i < 30; i++) { const [x, z] = at(1 + i * (len - 2) / 29, 3.4 + (i % 2) * 1.1), y = surfaceAt(x, z), m = new THREE.Group(); const c = new THREE.Mesh(cg, cone); c.castShadow = true; m.add(c); const b = new THREE.Mesh(bg, band); b.position.y = 0.07; m.add(b); const f = new THREE.Mesh(fg, cone); f.position.y = -0.36; m.add(f); scene.add(m)
       crates.push({ m, half: new V3(0.2, 0.38, 0.2), r: 0.24, home: { pos: new V3(x, y + 0.38, z), yaw: i }, vel: new V3(), spin: new V3(), awake: false }) }
   }
 
   // --- A bumpy hedge in a mulch strip behind the tall curb along A1A S: the lot is shut from that side.
-  { const runs = [[[-100.5, 355.3], [-92.5, 383.5]], [[-92.5, 383.5], [-92.2, 392.0]], [[-92.2, 392.0], [-89.9, 395.6]], [[-89.9, 395.6], [-89.2, 398.4]]], D = new THREE.Object3D(), ms = [], strip = []
+  { const runs = [[[-100.5, 355.3], [-92.15, 392.0]], [[-92.15, 392.0], [-90.65, 398.6]]], D = new THREE.Object3D(), ms = [], strip = []
     let sd = 5; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
     for (const [[ax, az], [bx, bz]] of runs) { const len = Math.hypot(bx - ax, bz - az) * U, tx = (bx - ax) * U / len, tz = (bz - az) * U / len, nx = -tz, nz = tx, ins = nx > 0 ? 1 : -1
       for (let d = 0.8; d < len - 0.4; d += 1.25) { const x = ax * U + tx * d + nx * ins * 1.15, z = az * U + tz * d + nz * ins * 1.15, sc = 0.55 + rn() * 0.3
