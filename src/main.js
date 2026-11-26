@@ -724,6 +724,8 @@ regions.push(mkRegion([[-101.5, 405.4], [-88.6, 405.4], [-88.6, 414.6], [-101.5,
 boxes.push({ c: new V2(-96.1 * U, 410.05 * U), a: new V2(1, 0), hx: 1.75 * U, hz: 1.75 * U })
 for (const [ox, oz] of [[-99.6, 408.0], [-100.0, 412.2]]) circles.push([ox * U, oz * U, 0.5])
 // The whole neighborhood, from the street at the south end to the new one at the north end: drive anywhere but the houses and woods.
+// The side street off A1A S by the parade end, in to the middle street.
+{ const A = (z) => -106.34 + (z - 340) * 0.2275; regions.push(mkRegion([[A(364.7) - 13.6, 364.7], [A(364.7) + 0.6, 364.7], [A(366.5) + 0.6, 366.5], [A(366.5) - 13.6, 366.5]].map(([x, z]) => [x * U, z * U]))) }
 // Where the north street meets A1A S: overlaps both so the car can turn in and out.
 { const A = (z) => -106.34 + (z - 340) * 0.2275; regions.push(mkRegion([[A(354.6) - 4.5, 354.6], [A(354.6) + 0.6, 354.6], [A(357.4) + 0.6, 357.4], [A(357.4) - 4.5, 357.4]].map(([x, z]) => [x * U, z * U]))) }
 regions.push(mkRegion([[-122.6, 354.3], [-106.34 + 14.3 * 0.2275 - 1.6, 354.3], [-106.34 + 66 * 0.2275 - 1.6, 406], [-122.6, 406]].map(([x, z]) => [x * U, z * U])))
@@ -1631,7 +1633,11 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
   { const A1A = (z) => -106.34 + (z - 340) * 0.2275, groups = {}, col = new THREE.Color()
     const put = (key, geo, color, x, y, z, ry = 0) => { geo.rotateY(ry); geo.translate(x, y, z); const c = col.set(color), n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b } geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); (groups[key] ||= []).push(geo.index ? geo.toNonIndexed() : geo) }
     const sidings = ['#e9d8b4', '#bcd6d9', '#f1e3c4', '#c9d9bf', '#e7c9b8', '#d8d2e6', '#f3efe6', '#cfe0ea'], roofs = ['#6d6a66', '#8a5a44', '#5d6b73', '#7a6e5c']
-    const house = (cx, cz, face, k, sz = 1) => { // face: the yaw the front door looks toward; sz > 1 is one of the big houses in back
+    const mid = (z) => A1A(z) - 12.6, ST = [[A1A(356) - 1.3, 356, -119.2, 356], [-121.7, 358.5, -121.7, 401.7], [mid(356.7), 356.7, mid(403.4), 403.4], [mid(365.6), 365.6, A1A(365.6) - 1.3, 365.6], [-121.5, 404.2, A1A(404.2), 404.2], [-121.7, 392.3, mid(392.3), 392.3]]
+    const toStreet = (x, z) => Math.min(...ST.map(([ax, az, bx, bz]) => { const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * t, z - az - dz * t) })) // in U
+    const houseBoxes = []
+    const fits = (cx, cz, face, sz) => { const hx = 1.15 * sz, hz = 0.95 * Math.min(sz, 1.3), c = Math.cos(face), sn = Math.sin(face); for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1], [0, -1], [1, 0], [-1, 0], [0, 0]]) { const lx = a * hx, lz = b * hz; if (toStreet(cx + lx * c + lz * sn, cz - lx * sn + lz * c) < 1.0) return false } return true }
+    const house = (cx, cz, face, k, sz = 1) => { if (!fits(cx, cz, face, sz)) return // face: the yaw the front door looks toward; sz > 1 is one of the big houses in back
       const W = 2.3 * U * sz, D = 1.9 * U * Math.min(sz, 1.3), H = sz > 1 ? 7.2 : 5.6, c = Math.cos(face), sn = Math.sin(face), at = (lx, lz) => [cx * U + lx * c + lz * sn, cz * U - lx * sn + lz * c]
       const box = (key, w, h, d, color, lx, y, lz) => { const [x, z] = at(lx, lz); put(key, new THREE.BoxGeometry(w, h, d), color, x, y, z, face) }
       box('wall', W, H, D, sidings[k % sidings.length], 0, H / 2, 0)
@@ -1642,21 +1648,22 @@ const lotIslands = [], bushes = [] // bushes: [x, z, r] — driving through one 
       box('trim', 1.1, 2.2, 0.08, ['#7a2e2e', '#2e4a6e', '#2f5a3c', '#3a3a3a'][k % 4], 0, 1.1, D / 2 + 0.04) // door
       box('trim', 3.2, 0.18, 1.6, '#f4f1ea', 0, 2.75, D / 2 + 0.8); for (const lx of [-1.4, 1.4]) box('trim', 0.16, 2.7, 0.16, '#f4f1ea', lx, 1.35, D / 2 + 1.5) // porch
       { const L = Math.max(2.5, 3.4 * U - D / 2 - 2); box('pave', 2.6, 0.04, L, '#a9a79e', W / 2 - 1.8, 0.07, D / 2 + L / 2) } // driveway to the street
-      const [bx, bz] = at(0, 0); boxes.push({ c: new V2(bx, bz), a: new V2(c, -sn), hx: W / 2 + 0.3, hz: D / 2 + 0.3 }) }
+      const [bx, bz] = at(0, 0); const hb = { c: new V2(bx, bz), a: new V2(c, -sn), hx: W / 2 + 0.3, hz: D / 2 + 0.3 }; boxes.push(hb); houseBoxes.push(hb) }
     let k = 0
     for (let z = 358.6; z < 389; z += (z < 380 ? 3.25 : 3.25)) {
-      const mid = A1A(z) - 12.6
+      const midX = A1A(z) - 12.6
       const tilt = Math.atan(0.2275), nx = Math.cos(tilt) * 2.35, nz = -Math.sin(tilt) * 2.35 // the street runs on the highway's slant, so the houses square up to it
-      house(mid - nx, z - nz, Math.PI / 2 + tilt, k++)   // west side of the middle street, facing it
-      house(mid + nx, z + nz, -Math.PI / 2 + tilt, k++)  // east side
+      house(midX - nx, z - nz, Math.PI / 2 + tilt, k++)   // west side of the middle street, facing it
+      const slot = Math.round((z - 358.6) / 3.25); if (slot % 3 === 0) house(midX + nx * 1.12, z + nz * 1.12 + 1.6, -Math.PI / 2 + tilt, k++, 1.45); else if (slot % 3 === 2) house(midX + nx, z + nz, -Math.PI / 2 + tilt, k++)  // east side: a big house every third lot
     }
     for (let z = 360.0; z < 389; z += 5.4) house(-119.2, z, -Math.PI / 2, k++, 1.5) // the big houses in back, along the far west street, with yards between
     for (const key in groups) { const g = BufferGeometryUtils.mergeGeometries(groups[key]); g.computeVertexNormals(); const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: key === 'glass' ? 0.2 : 0.85, metalness: key === 'glass' ? 0.3 : 0 })); m.castShadow = key !== 'pave'; m.receiveShadow = true; scene.add(m) }
     // Woods: between the two rows of backyards, and between the east houses and the highway.
     const D = new THREE.Object3D(), leaf = [], trunk = []; let sd = 87; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647
-    const oak = (x, z, sc) => { const h = sc * 1.6; D.position.set(x * U, h / 2, z * U); D.rotation.set(0, rn() * 6, 0); D.scale.set(0.3 + sc * 0.06, h, 0.3 + sc * 0.06); D.updateMatrix(); trunk.push(D.matrix.clone())
+    const clear = (x, z, r) => { if (toStreet(x, z) * U < 0.78 * U + r) return false; for (const b of houseBoxes) { const dx = x * U - b.c.x, dz = z * U - b.c.y, u = dx * b.a.x + dz * b.a.y, v = -dx * b.a.y + dz * b.a.x; if (Math.abs(u) < b.hx + r && Math.abs(v) < b.hz + r) return false } return true }
+    const oak = (x, z, sc) => { if (!clear(x, z, sc * 1.3)) return; const h = sc * 1.6; D.position.set(x * U, h / 2, z * U); D.rotation.set(0, rn() * 6, 0); D.scale.set(0.3 + sc * 0.06, h, 0.3 + sc * 0.06); D.updateMatrix(); trunk.push(D.matrix.clone())
       for (let c = 0; c < 3; c++) { const a = rn() * 6.28, dd = sc * 0.5 * (c ? 1 : 0); D.position.set(x * U + Math.cos(a) * dd, h + sc * 0.2, z * U + Math.sin(a) * dd); D.scale.set(sc * 0.9, sc * 0.6, sc * 0.9); D.updateMatrix(); leaf.push(D.matrix.clone()) } circles.push([x * U, z * U, 0.8]) }
-    for (let z = 357.5; z < 390; z += 1.6) { oak(-117.6 + (rn() - 0.5) * 0.3, z, 2.2 + rn() * 1.4); for (let x = A1A(z) - 9.2; x < A1A(z) - 2.4; x += 1.8) oak(x + (rn() - 0.5) * 0.4, z + (rn() - 0.5) * 0.4, 2.4 + rn() * 1.6) }
+    for (let z = 357.5; z < 390; z += 1.6) { oak(-117.6 + (rn() - 0.5) * 0.3, z, 1.6 + rn() * 0.9); for (let x = A1A(z) - 9.2; x < A1A(z) - 2.4; x += 1.8) oak(x + (rn() - 0.5) * 0.4, z + (rn() - 0.5) * 0.4, 2.4 + rn() * 1.6) }
     const im = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true }), leaf.length); leaf.forEach((m, i) => { im.setMatrixAt(i, m); im.setColorAt(i, col.set(['#35602f', '#44743a', '#2b5230', '#557f3c'][i % 4])) }); im.castShadow = true; im.frustumCulled = false; scene.add(im)
     const tm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 1, 1, 6), new THREE.MeshStandardMaterial({ color: '#5a4a3a', roughness: 1 }), trunk.length); trunk.forEach((m, i) => tm.setMatrixAt(i, m)); tm.frustumCulled = false; scene.add(tm) }
 
